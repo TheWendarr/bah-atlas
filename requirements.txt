@@ -1,0 +1,5 @@
+# Ingestion translators
+pandas>=2.0
+
+# Geometry association (pulls shapely, pyproj, GDAL via wheels)
+geopandas>=0.14

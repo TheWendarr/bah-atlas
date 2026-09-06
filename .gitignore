@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Node (web/ frontend, later)
+node_modules/
+
+# Data: keep the folder structure and docs, ignore the payloads
+data/raw/*
+!data/raw/README.md
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Large geo/tile build artifacts if they land elsewhere
+*.gpkg
+*.pmtiles
+*.mbtiles
