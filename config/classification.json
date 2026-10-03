@@ -1,0 +1,57 @@
+{
+  "_about": "A13 - classification and colour scheme for every mapped metric. Read by Layer 2 (F18 writes legend breakpoints into B21) and by Layer 3 (choropleth paint expressions and legend). Classes are half-open intervals [lower, upper). Validate with `make check-config`.",
+  "version": 1,
+  "coverage_target": 0.95,
+  "no_data_color": "#bdbdbd",
+  "palette_source": "ColorBrewer RdBu, 7 classes (colour-blind safe). Red = shortfall, blue = surplus, near-white = at the design point.",
+  "rationale": "Fixed breaks rather than quantiles: the research question is whether BAH meets a fixed 95% target, and fixed breaks keep the target visible and make maps comparable across profiles. Quantile breaks would always paint the same share of MHAs red, regardless of whether any MHA misses the target.",
+  "metrics": {
+    "coverage_ratio": {
+      "label": "Coverage ratio (BAH / local housing cost)",
+      "short_label": "Coverage",
+      "format": "percent",
+      "method": "fixed",
+      "neutral": 0.95,
+      "breaks": [0.85, 0.90, 0.94, 0.96, 1.00, 1.05],
+      "colors": ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac"],
+      "class_labels": [
+        "Below 85%: severe shortfall",
+        "85-90%: shortfall",
+        "90-94%: below target",
+        "94-96%: at the 95% target",
+        "96-100%: above target",
+        "100-105%: full coverage",
+        "105% and above: surplus"
+      ]
+    },
+    "surplus_usd": {
+      "label": "Monthly surplus or gap (BAH - local housing cost)",
+      "short_label": "Surplus / gap",
+      "format": "usd",
+      "method": "fixed",
+      "neutral": 0,
+      "breaks": [-500, -250, -50, 50, 250, 500],
+      "colors": ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac"],
+      "class_labels": [
+        "Gap over $500",
+        "Gap $250-500",
+        "Gap $50-250",
+        "Within $50 of full cost",
+        "Surplus $50-250",
+        "Surplus $250-500",
+        "Surplus over $500"
+      ],
+      "note": "$0 means BAH equals the full local cost. Because BAH is designed to cover ~95%, an MHA exactly at target shows a small gap (about 5% of local cost)."
+    }
+  },
+  "clusters": {
+    "_about": "LISA / Getis-Ord classes from B18 for the optional hotspot overlay (C16), computed on the coverage ratio.",
+    "classes": {
+      "HH": { "label": "Surplus cluster (high-high)", "color": "#2166ac" },
+      "LL": { "label": "Shortfall cluster (low-low)", "color": "#b2182b" },
+      "HL": { "label": "Surplus outlier among shortfalls (high-low)", "color": "#92c5de" },
+      "LH": { "label": "Shortfall outlier among surpluses (low-high)", "color": "#f4a582" },
+      "NS": { "label": "Not significant", "color": "#e0e0e0" }
+    }
+  }
+}

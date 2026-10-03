@@ -250,7 +250,7 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | 🟣 | **A4** | Zillow ZHVI (home value index) ZIP-level | required | — |  |
 | 🟣 | **A5** | HUD FMR / SAFMR FY2026 | required | — |  |
 | 🟣 | **A6** | DoD BAH Rate Component Breakdown | required | — |  |
-| ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS via FRED) | required | — |  |
+| ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
 | 🔴 | **A8** | Property tax and insurance reference | optional | — |  |
 | 🔴 | **A9** | Census ACS context | optional | — |  |
 | 🔴 | **A10** | BEA Regional Price Parities | optional | — |  |

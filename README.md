@@ -60,9 +60,12 @@ bah-atlas/
 │   ├── raw/         vendor artifacts as downloaded (gitignored)
 │   ├── interim/     tidy parsed outputs (gitignored)
 │   └── processed/   final web-ready geometry/tiles (gitignored)
+├── config/          authored config: profiles.json (A12), classification.json (A13)
 ├── pipeline/
+│   ├── fetch/       Layer 1 source fetcher with provenance manifest
 │   ├── ingest/      endpoint translators: raw release -> tidy CSVs + manifest
-│   └── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons
+│   ├── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons
+│   └── tiles/       PMTiles builders: MHA tiles (B7) and basemap cutout (A11)
 ├── web/             MapLibre GL JS frontend (later)
 ├── docs/            research framing, data dictionary, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
@@ -77,19 +80,16 @@ bah-atlas/
 ```bash
 pip install -r requirements.txt
 
-# Stage 1 — ingest the DTMO BAH ASCII release into tidy CSVs + manifest
-python pipeline/ingest/ingest_bah_ascii.py \
-    --zip data/raw/BAH-ASCII-2026.zip \
-    --out data/interim/bah_2026
-
-# Stage 2 — build MHA polygons (needs a Census ZCTA cartographic boundary file)
-python pipeline/geometry/build_mha_geometry.py \
-    --crosswalk data/interim/bah_2026/zip_mha_geo.csv \
-    --zcta data/raw/cb_2020_us_zcta520_500k.shp \
-    --out data/processed/mha_2026.gpkg
+make fetch          # download Layer 1 sources into data/raw (A2-A7) with checksums
+make check-config   # validate config/profiles.json and config/classification.json
+make geometry       # BAH ASCII -> tidy CSVs (B1-B4) -> MHA polygons (B6)
+make components     # rent/utilities split per MHA (A6 -> B5)
+make tiles          # MHA PMTiles for MapLibre (B6 -> B7); needs tippecanoe
+make basemap        # basemap cutout from a Protomaps build (A11); needs the pmtiles CLI
 ```
 
-Or run both stages with `make` (see `Makefile`).
+`make all` runs check-config, geometry, components, and tiles in order. Each
+script prints its own usage with `--help`.
 
 ## Status
 
@@ -100,14 +100,16 @@ updates.
 ### Updating project status
 
 ```bash
-# 1. Edit docs/wbs/nodes.csv: set status (complete | in_progress | not_started)
-#    and, when a node finishes, its completed date (YYYY-MM-DD).
-# 2. Regenerate the WBS page and scaffold this week's log entry:
-make wbs-week
-# 3. Write the narrative in docs/progress/<today>.md, then commit and push.
-# 4. Optional: mirror milestones and node issues to GitHub (needs the gh CLI):
-make wbs-sync
+make start N="B8"          # mark nodes in progress
+make done N="A3-A6 B5"     # mark nodes complete today (ranges allowed)
+make wbs-show              # print every node's status
+make wbs-week              # start this week's log entry in docs/progress/
+# write the narrative in docs/progress/<date>.md, then commit and push
+make wbs-sync              # optional: mirror milestones and issues to GitHub (gh CLI)
 ```
+
+`start` and `done` rewrite `docs/wbs/nodes.csv` and regenerate `docs/WBS.md`, so a
+status change is one command and one small diff.
 
 ## License
 

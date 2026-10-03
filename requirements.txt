@@ -3,3 +3,6 @@ pandas>=2.0
 
 # Geometry association (pulls shapely, pyproj, GDAL via wheels)
 geopandas>=0.14
+
+# Rate component breakdown PDF -> B5 (pure Python)
+pypdf>=4.0

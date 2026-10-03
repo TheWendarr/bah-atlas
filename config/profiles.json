@@ -1,0 +1,38 @@
+{
+  "_about": "A12 - housing profile definitions. Each profile selects one BAH cell (pay grade x dependency status from B4) and the bedroom count used to pick benchmark series (SAFMR, optional ZHVI bedroom files). Read by Layer 2 (F10) and shipped to Layer 3 inside B21 UI metadata. Validate with `make check-config`.",
+  "version": 1,
+  "bah_year": 2026,
+  "coverage_target": 0.95,
+  "default_profile": "e5_dep",
+  "profiles": [
+    {
+      "id": "e5_dep",
+      "label": "E-5 with dependents",
+      "role": "primary",
+      "pay_grade": "E5",
+      "has_dependents": true,
+      "anchor_dwelling": "2-bedroom townhouse",
+      "anchor_bedrooms": 2,
+      "rationale": "Primary research profile. DoD's housing standard for E-5 is a 2-bedroom townhouse, so the anchor maps to a single bedroom count without interpolation."
+    },
+    {
+      "id": "o3_dep",
+      "label": "O-3 with dependents",
+      "role": "contrast",
+      "pay_grade": "O3",
+      "has_dependents": true,
+      "anchor_dwelling": "3-bedroom single-family home",
+      "anchor_bedrooms": 3,
+      "rationale": "Contrast profile. DoD's O-3 standard sits 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home, so it differs from the primary in grade band, bedroom count, and dwelling type at once."
+    }
+  ],
+  "benchmarks": {
+    "rent_primary": "zori_utilities_adjusted",
+    "rent_crosscheck": "safmr",
+    "zori_bedroom_note": "ZORI has no bedroom breakdown: one ZIP-level series applies to every profile, adjusted to utilities-inclusive with B5. Bedroom-specific comparison comes from the SAFMR cross-check.",
+    "safmr_bedroom_field": "anchor_bedrooms"
+  },
+  "sources": [
+    "DoD BAH housing standards by pay grade (BAH Primer; summarized at military.com/paycheck-chronicles/2014/12/04/much-house-rate)"
+  ]
+}
