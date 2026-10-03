@@ -40,7 +40,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA; quantify and disclose the join dropouts.
 - **Verified:** 2026-10-03 — URL live, serves a valid zip archive.
 
-### A3 · Zillow Observed Rent Index (ZORI) — ZIP level  `[incorporated]`
+### A3 · Zillow Observed Rent Index (ZORI) — ZIP level  `[planned]`
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv · landing: https://www.zillow.com/research/data/ (Rentals → ZORI, all homes plus multifamily, smoothed → Geography: ZIP)
 - **Artifact:** `data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv` (vendor filename; current copy pulled 2026-09-07)
@@ -50,7 +50,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Asking rent, **excludes utilities** (known downward bias vs. BAH's utilities-inclusive target; corrected with A6 → B5). No bedroom breakdown: one series applies to every profile. Wide layout — RegionID, SizeRank, RegionName (ZIP; may lose leading zeros), RegionType, StateName, State, City, Metro, CountyName, then one column per month. ZIP coverage is incomplete and thin in rural areas — treat sparsity as data relevant to the clustering question, not just a footnote. Zillow occasionally moves its CSV paths: the fetcher pins the current path, and if it moves the pull fails loudly (HTML and size checks) instead of saving a bad file. Each pull's SHA-256 and date in the fetch manifest is the dated snapshot.
 - **Verified:** 2026-10-03 — URL live, serves CSV text.
 
-### A4 · Zillow Home Value Index (ZHVI) — ZIP level  `[incorporated]`
+### A4 · Zillow Home Value Index (ZHVI) — ZIP level  `[planned]`
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv · landing: https://www.zillow.com/research/data/ (Home Values → ZHVI, mid-tier 35th–65th pct, SFR+condo, smoothed & seasonally adjusted → Geography: ZIP)
 - **Artifact:** `data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` (vendor filename; current copy pulled 2026-09-07)
@@ -60,7 +60,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Same layout, download-path, and coverage caveats as ZORI. Bedroom-count variants follow `Zip_zhvi_bdrmcnt_<N>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` if buy mode needs a bedroom-matched anchor. Buy-vs-rent construct-validity limits already documented in the research framing.
 - **Verified:** 2026-10-03 — URL live, serves CSV text.
 
-### A5 · HUD Small Area Fair Market Rents (SAFMR) FY2026, revised  `[incorporated]`
+### A5 · HUD Small Area Fair Market Rents (SAFMR) FY2026, revised  `[planned]`
 - **Provider:** U.S. Department of Housing and Urban Development — Office of Policy Development & Research (HUD USER / PD&R)
 - **Link:** https://www.huduser.gov/portal/datasets/fmr/fmr2026/fy2026_safmrs_revised.xlsx · landing: https://www.huduser.gov/portal/datasets/fmr/smallarea/index.html · FMR: https://www.huduser.gov/portal/datasets/fmr.html · API: https://www.huduser.gov/hudapi/public/fmr
 - **Artifact:** `data/raw/fy2026_safmrs_revised.xlsx` (vendor filename)
@@ -70,7 +70,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** FMR is **gross rent (includes utilities)** — conceptually closer to BAH's 95% target than ZORI. SAFMR is ZIP-keyed with 0–4 bedroom columns, so no FMR-area crosswalk step. From FY2025 onward SAFMR covers metro **and** non-metro ZIPs. **Vintage choice:** the *revised* FY2026 release (effective 21 May 2026) is used as the current authoritative version; the original (effective 1 Oct 2025) is `fy2026_safmrs.xlsx` in the same folder. Record this for temporal alignment against 2026 BAH (effective 1 Jan 2026). Prefer the bulk xlsx over the token-gated REST API for a clean offline pipeline.
 - **Verified:** 2026-10-03 — full download returns HTTP 200, 4.4 MB Excel workbook. (HUD answers partial/range requests with an empty 202; the fetcher uses full downloads.)
 
-### A6 · DoD BAH Rate Component Breakdown 2026 (rent vs. utilities split)  `[incorporated]`
+### A6 · DoD BAH Rate Component Breakdown 2026 (rent vs. utilities split)  `[planned]`
 - **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
 - **Link:** https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH-Rate-Component-Breakdown/2026-BAH-Rate-Component-Breakdown.pdf
 - **Artifact:** `data/raw/dod_bah_rate_components_2026.pdf`
@@ -80,7 +80,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Published annually since the 2012 rates. One row per MHA (299): code and name, rent as average % of total BAH, utilities as average % of total BAH. Percentages are rounded to 1%, so the derived shares carry about ±0.5 percentage points of precision; DTMO notes that a member's actual split may differ from the average.
 - **Verified:** 2026-10-03 — document confirmed at this URL (299 MHA rows); scripted download blocked (403).
 
-### A7 · Freddie Mac Primary Mortgage Market Survey (PMMS), weekly history  `[incorporated]`
+### A7 · Freddie Mac Primary Mortgage Market Survey (PMMS), weekly history  `[planned]`
 - **Provider:** Freddie Mac
 - **Link:** https://www.freddiemac.com/pmms/docs/PMMS_history.csv · landing: https://www.freddiemac.com/pmms
 - **Artifact:** `data/raw/PMMS_history.csv` (vendor filename)
@@ -90,7 +90,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Weekly since 2 April 1971. Columns: `date` (M/D/YYYY), `pmms30` (30-year fixed rate, %), `pmms30p` (points), `pmms15`, `pmms15p`, and 5/1 ARM fields (`pmms51`, `pmms51p`, `pmms51m`, `pmms51spread`); blank cells may contain a single space. PMMS methodology changed on 17 Nov 2022; account for the break in any multi-year comparison. **Source change:** this replaces the FRED mirror (`fredgraph.csv?id=MORTGAGE30US`), which silently drops scripted requests — curl over HTTP/2, HTTP/1.1, and IPv4, and Python urllib, all timed out with 0 bytes on 2026-10-03. Freddie Mac is the original publisher, which also makes for a cleaner citation.
 - **Verified:** 2026-10-03 — HTTP 200, 97 KB CSV, latest observation 1 Oct 2026 (30-year 7.28%).
 
-### A11 · Protomaps basemap (OpenStreetMap-derived)  `[incorporated]`
+### A11 · Protomaps basemap (OpenStreetMap-derived)  `[planned]`
 - **Provider:** Protomaps (basemap build); map data © OpenStreetMap contributors
 - **Link:** daily planet builds at `https://build.protomaps.com/YYYYMMDD.pmtiles` · docs: https://docs.protomaps.com/basemaps/downloads
 - **Artifact:** `data/processed/basemap.pmtiles` + `basemap_provenance.json` (build date, bounding box, max zoom, SHA-256)
