@@ -2,6 +2,16 @@
 
 *Working title — see naming note in project docs.*
 
+> **Project status — live**
+>
+> | | |
+> |---|---|
+> | 📋 **[Work Breakdown Structure](docs/WBS.md)** | Milestones, due dates, every node's status, and the nodal map |
+> | 📝 **[Weekly progress log](docs/progress/)** | What was done, what is next, setbacks and changes, one entry per week |
+> | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
+>
+> Status is kept in [`docs/wbs/nodes.csv`](docs/wbs/nodes.csv); `make wbs` regenerates the WBS page from it.
+
 An open, reproducible atlas of how far the U.S. military **Basic Allowance for
 Housing (BAH)** stretches against real local housing costs — showing where the
 allowance meets its statutory coverage target and where it falls short, mapped
@@ -55,6 +65,10 @@ bah-atlas/
 │   └── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons
 ├── web/             MapLibre GL JS frontend (later)
 ├── docs/            research framing, data dictionary, attribution
+│   ├── WBS.md       live work breakdown structure (generated)
+│   ├── wbs/         nodes.csv + milestones.csv — project status source of truth
+│   └── progress/    weekly progress log
+├── tools/           project tooling (WBS renderer, GitHub milestone sync)
 └── tests/
 ```
 
@@ -79,9 +93,21 @@ Or run both stages with `make` (see `Makefile`).
 
 ## Status
 
-Early. The BAH ingestion translator is working and validated against the 2026
-release (299 MHAs, tidy rate table, provenance manifest). Geometry builder is in
-place pending the Census ZCTA input. Frontend not started.
+See the **[Work Breakdown Structure](docs/WBS.md)** for current milestone and
+node status, and the **[weekly progress log](docs/progress/)** for narrative
+updates.
+
+### Updating project status
+
+```bash
+# 1. Edit docs/wbs/nodes.csv: set status (complete | in_progress | not_started)
+#    and, when a node finishes, its completed date (YYYY-MM-DD).
+# 2. Regenerate the WBS page and scaffold this week's log entry:
+make wbs-week
+# 3. Write the narrative in docs/progress/<today>.md, then commit and push.
+# 4. Optional: mirror milestones and node issues to GitHub (needs the gh CLI):
+make wbs-sync
+```
 
 ## License
 

@@ -22,3 +22,23 @@ geometry: ingest
 
 clean:
 	rm -rf $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson
+
+# --- Project tracking (living WBS) -------------------------------------------
+# Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
+.PHONY: wbs wbs-week wbs-sync wbs-sync-dry
+
+# Regenerate docs/WBS.md from the CSVs.
+wbs:
+	python tools/wbs_render.py
+
+# Regenerate docs/WBS.md and scaffold this week's docs/progress/<date>.md entry.
+wbs-week:
+	python tools/wbs_render.py --new-entry
+
+# Mirror milestones and node issues to GitHub (requires an authenticated gh CLI).
+wbs-sync:
+	python tools/wbs_sync_github.py
+
+# Show what wbs-sync would change on GitHub without changing anything.
+wbs-sync-dry:
+	python tools/wbs_sync_github.py --dry-run
