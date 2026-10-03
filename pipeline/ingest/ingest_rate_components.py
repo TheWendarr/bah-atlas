@@ -32,7 +32,9 @@ Output (written to --out)
 ------------------------------------------------------------------------------
 Validation (loud)
 ------------------------------------------------------------------------------
-  * MHA codes match two letters + three digits and are unique
+  * MHA codes match two letters + three digits; an exact repeated row in the
+    source (2026: MS168) is merged and recorded as a warning, while a repeated
+    code with different values stops the run
   * rent_pct + utilities_pct is within 100 +/- 1 (the source rounds to 1%)
   * row count equals --expect (default 299, the 2026 MHA count)
   * with --mha-names (B3), every parsed code must be a real MHA in that list,
@@ -96,22 +98,33 @@ def pdf_text(pdf: Path) -> tuple[str, str]:
     raise AssertionError  # unreachable
 
 
-def parse(text: str) -> list[dict]:
-    rows: list[dict] = []
-    seen: set[str] = set()
+def parse(text: str) -> tuple[list[dict], list[str]]:
+    """Return (rows, duplicate notes).
+
+    The published PDF can repeat a row (the 2026 edition lists MS168 Gulfport twice,
+    identically). An exact repeat is merged and noted; a repeat with different values
+    is a real conflict and stops the run.
+    """
+    rows: dict[str, dict] = {}
+    dupes: list[str] = []
     for m in ROW.finditer(text):
-        code = m["mha"]
-        if code in seen:
-            die(f"MHA {code} appears twice in the source text")
-        seen.add(code)
-        rent, util = int(m["rent"]), int(m["util"])
-        rows.append({
-            "mha": code,
+        row = {
+            "mha": m["mha"],
             "name": " ".join(m["name"].split()),
-            "rent_pct": rent,
-            "utilities_pct": util,
-        })
-    return rows
+            "rent_pct": int(m["rent"]),
+            "utilities_pct": int(m["util"]),
+        }
+        prior = rows.get(row["mha"])
+        if prior is None:
+            rows[row["mha"]] = row
+        elif prior == row:
+            dupes.append(f"{row['mha']} ({row['name']}) is listed more than once with identical "
+                         "values in the source; kept one row")
+        else:
+            die(f"MHA {row['mha']} appears twice with different values: "
+                f"{prior['name']} {prior['rent_pct']}%/{prior['utilities_pct']}% vs "
+                f"{row['name']} {row['rent_pct']}%/{row['utilities_pct']}%")
+    return list(rows.values()), sorted(set(dupes))
 
 
 def load_real_mhas(path: Path) -> set[str]:
@@ -156,9 +169,9 @@ def main() -> None:
         m = re.search(r"(20\d{2})", in_path.name)
         year = int(m.group(1)) if m else None
 
-    rows = parse(text)
+    rows, duplicate_notes = parse(text)
     problems: list[str] = []
-    warnings: list[str] = []
+    warnings: list[str] = list(duplicate_notes)
 
     if not rows:
         die("no MHA rows found. If this is the right PDF, its text layer may extract "
