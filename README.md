@@ -1,7 +1,5 @@
 # BAH Atlas
 
-*Working title — see naming note in project docs.*
-
 > **Project status — live**
 >
 > | | |
