@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 08 October 2026  
-**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 8  ·  🟢 Completed this week: 9  ·  🟣 In progress: 4  ·  🔴 Not started: 44
+**Status as of:** 10 October 2026  
+**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 17  ·  🟢 Completed this week: 4  ·  🟣 In progress: 0  ·  🔴 Not started: 44
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -15,18 +15,15 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 |---|---|---|---|---|
 | **M1** Layer 1 Sources + 2.1 Ingest Outputs | Sat 26 Sep | 15 / 15 | `██████████ 100%` | ✅ Complete |
 | **M2** 2.2 Geometry | Sat 03 Oct | 2 / 2 | `██████████ 100%` | ✅ Complete |
-| **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏳ Due in 2 days |
-| **M4** 2.5 Computed Metrics | Sat 17 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
+| **M4** 2.5 Computed Metrics | Sat 17 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏳ Due in 7 days |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **B8** ZORI at MHA (utilities-adjusted) — due 10 Oct (M3)
-- 🟣 **B9** ZHVI at MHA — due 10 Oct (M3)
-- 🟣 **B10** FMR at MHA — due 10 Oct (M3)
-- 🟣 **B11** Ownership monthly cost at MHA — due 10 Oct (M3)
+_Nothing marked in progress._
 
 ## Nodal map
 
@@ -227,9 +224,8 @@ flowchart LR
     classDef prog fill:#7b1fa2,stroke:#000,color:#ffffff
     classDef todo fill:#c62828,stroke:#000,color:#ffffff
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
-    class A1,A2,A7,B1,B2,B3,B4,B6 done
-    class A3,A4,A5,A6,A11,A12,A13,B5,B7 week
-    class B8,B9,B10,B11 prog
+    class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7 done
+    class B8,B9,B10,B11 week
     class A8,A9,A10,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
@@ -246,17 +242,17 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 |:---:|---|---|---|---|---|
 | ⚫ | **A1** | DTMO BAH ASCII release (BAH-ASCII-2026.zip) | required | — |  |
 | ⚫ | **A2** | Census 2020 ZCTA cartographic boundaries | required | — |  |
-| 🟢 | **A3** | Zillow ZORI (rent index) ZIP-level | required | — | completed 03 Oct |
-| 🟢 | **A4** | Zillow ZHVI (home value index) ZIP-level | required | — | completed 03 Oct |
-| 🟢 | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
-| 🟢 | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
+| ⚫ | **A3** | Zillow ZORI (rent index) ZIP-level | required | — | completed 03 Oct |
+| ⚫ | **A4** | Zillow ZHVI (home value index) ZIP-level | required | — | completed 03 Oct |
+| ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
+| ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
 | 🔴 | **A8** | Property tax and insurance reference | optional | — |  |
 | 🔴 | **A9** | Census ACS context | optional | — |  |
 | 🔴 | **A10** | BEA Regional Price Parities | optional | — |  |
-| 🟢 | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
-| 🟢 | **A12** | Profile definitions config | required | — | completed 03 Oct |
-| 🟢 | **A13** | Classification and color scheme config | required | — | completed 03 Oct |
+| ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
+| ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |
+| ⚫ | **A13** | Classification and color scheme config | required | — | completed 03 Oct |
 
 ### Layer 2 — Data Processing
 
@@ -270,28 +266,28 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B2** | zip_mha_geo.csv - MHA geo metadata | required | A1 |  |
 | ⚫ | **B3** | mha_names.csv - MHA display names | required | A1 |  |
 | ⚫ | **B4** | bah_rates.csv - tidy BAH rates | required | A1 |  |
-| 🟢 | **B5** | rate_components.csv - rent/utilities split | required | A6 | completed 03 Oct |
+| ⚫ | **B5** | rate_components.csv - rent/utilities split | required | A6 | completed 03 Oct |
 
 #### 2.2 Geometry — due 03 October 2026 (M2)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | ⚫ | **B6** | MHA polygons (ZCTA dissolve) | required | A2, B1 |  |
-| 🟢 | **B7** | MHA PMTiles | required | B6 | completed 03 Oct |
+| ⚫ | **B7** | MHA PMTiles | required | B6 | completed 03 Oct |
 
 #### 2.3 MHA Benchmarks — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 |  |
-| 🟣 | **B9** | ZHVI at MHA | required | A4, B1 |  |
-| 🟣 | **B10** | FMR at MHA | required | A5, B1 |  |
+| 🟢 | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 | completed 08 Oct |
+| 🟢 | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
+| 🟢 | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities |
+| 🟢 | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; completed 08 Oct |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 
@@ -375,6 +371,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 ## Weekly progress log
 
+- [Week of 10 October 2026](progress/2026-10-10.md)
 - [Week of 03 October 2026](progress/2026-10-03.md)
 
 ## Live views on GitHub
