@@ -1,0 +1,38 @@
+{
+  "_about": "B11 parameters - how a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. Read by pipeline/benchmarks/ownership_cost.py, which validates every field. Property tax and insurance are national placeholders until A8 (property tax and insurance reference) lands; each carries its source and a status flag so B23 and the writeup can report them as assumptions.",
+  "version": 1,
+  "loan": {
+    "program": "VA purchase loan, first use",
+    "rationale": "Buy mode models the financing a service member most often uses: a VA-guaranteed loan with no down payment and no mortgage insurance. The funding fee is financed into the loan, as is common.",
+    "term_years": 30,
+    "down_payment_share": 0.0,
+    "funding_fee_share": 0.0215,
+    "funding_fee_financed": true,
+    "mortgage_insurance_annual_share": 0.0,
+    "rate_series": "pmms30",
+    "rate_window": "same months as the B9 ZHVI window (default: the BAH calendar year)",
+    "sources": [
+      "VA funding fee, purchase loans, first use with less than 5% down: 2.15% (rates effective 7 Apr 2023). https://www.va.gov/housing-assistance/home-loans/funding-fee-and-closing-costs/",
+      "Freddie Mac Primary Mortgage Market Survey, 30-year fixed (A7)"
+    ],
+    "notes": "Members with a service-connected disability rating are exempt from the funding fee; subsequent-use VA loans pay 3.3% with less than 5% down. Both are single-parameter sensitivity checks."
+  },
+  "property_tax": {
+    "method": "annual_share_of_value",
+    "annual_share": 0.0089,
+    "status": "placeholder until A8",
+    "source": "NAHB analysis of the 2024 American Community Survey: national average effective property tax rate on owner-occupied homes, $8.88 per $1,000 of value (eyeonhousing.org, Nov 2025).",
+    "notes": "State effective rates range from about 0.31% (Hawaii) to 1.79% (Illinois), so a national rate misstates cost in both directions. A8 should replace this with a state or county rate."
+  },
+  "insurance": {
+    "method": "flat_annual_usd",
+    "annual_usd": 1569,
+    "status": "placeholder until A8",
+    "source": "NAIC average HO-3 homeowners premium, data year 2022, as reported by the Insurance Information Institute (latest NAIC data available as of its May 2025 study).",
+    "notes": "A 2022 national average understates 2026 premiums, which have risen since, and ignores state and hazard variation. Flat dollars rather than a share of value, because premiums track replacement cost and regional hazard more than market value."
+  },
+  "utilities": {
+    "method": "from_B8",
+    "notes": "BAH's 95% target covers utilities, so the owner cost adds the same utilities dollars B8 derives for renters in that MHA (zori_utilities_adjusted - zori_median). Where an MHA has no ZORI, own_total_monthly is left blank and own_housing_monthly (PITI) still carries."
+  }
+}

@@ -6,3 +6,6 @@ geopandas>=0.14
 
 # Rate component breakdown PDF -> B5 (pure Python)
 pypdf>=4.0
+
+# HUD SAFMR workbook (.xlsx) -> B10
+openpyxl>=3.1

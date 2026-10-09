@@ -23,7 +23,8 @@ and warnings.
   Emits `rate_components.csv` (rent and utilities share per MHA) + manifest;
   cross-checks MHA codes against `mha_names.csv`.
 
-Planned: `ingest_zillow_zori.py`, `ingest_zillow_zhvi.py`, `ingest_hud_safmr.py`.
+The Zillow and HUD translators live in `benchmarks/`, because for those sources
+translating and rolling up to the MHA are one step.
 
 ## `geometry/` — spatial associators
 
@@ -32,6 +33,29 @@ Turns tabular keys into map geometry.
 - `build_mha_geometry.py` — dissolves Census ZCTA polygons up to the MHA level
   using the ZIP-to-MHA crosswalk. Emits a GeoPackage + GeoJSON with a coverage
   report.
+
+## `benchmarks/` — 2.3 MHA benchmarks and 2.4 ownership metrics
+
+ZIP-level cost benchmarks rolled up to the MHA through the B1 crosswalk. Run all
+four with `make benchmarks` (after `make ingest` and `make components`); outputs
+go to `data/interim/benchmarks_YYYY/`.
+
+- `mha_agg.py` — shared rule: real MHAs only, MHA value = median of its ZIP
+  values (unweighted), every MHA gets a row with its ZIP coverage, including
+  MHAs with no data. Stdlib only.
+- `zillow_to_mha.py` — Zillow ZORI (A3 -> B8) and ZHVI (A4 -> B9). Averages each
+  ZIP over a pinned window (default: the BAH calendar year), then aggregates.
+  For ZORI, grosses rent up to utilities-inclusive with the B5 rent share:
+  `zori_utilities_adjusted = zori_median / rent_share`.
+- `safmr_to_mha.py` — HUD SAFMR workbook (A5 -> B10), 0-4 bedrooms, long format.
+  Matches HUD's line-wrapped headers and stops with the headers it saw if the
+  layout changes.
+- `ownership_cost.py` — monthly cost of owning the B9 home value (B11): VA
+  loan amortised at the window-average PMMS 30-year rate (A7), plus property
+  tax, insurance and B8 utilities. Parameters and their sources are in
+  `config/ownership.json`; tax and insurance are national placeholders until A8.
+
+Tests for all four run on synthetic fixtures with `make test`.
 
 ## `tiles/` — web tiles
 

@@ -6,10 +6,19 @@ ZCTA_SHP ?= data/raw/cb_2020_us_zcta520_500k.zip   # geopandas reads the zipped 
 COMPONENTS_PDF ?= data/raw/dod_bah_rate_components_$(YEAR).pdf
 INTERIM  ?= data/interim/bah_$(YEAR)
 PROCESSED?= data/processed
+BENCH    ?= data/interim/benchmarks_$(YEAR)
+ZORI_CSV ?= data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv
+ZHVI_CSV ?= data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
+SAFMR_XLSX ?= data/raw/fy2026_safmrs_revised.xlsx
+PMMS_CSV ?= data/raw/PMMS_history.csv
+# Benchmark time window; empty = the BAH calendar year from config/profiles.json.
+WINDOW   ?=
+WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
-.PHONY: all fetch check-config ingest geometry components tiles basemap clean
+.PHONY: all fetch check-config ingest geometry components tiles basemap \
+	benchmarks zori zhvi safmr ownership test clean
 
-all: check-config geometry components tiles
+all: check-config geometry components tiles benchmarks
 
 # Stage 0: pull every auto-pullable Layer 1 source into data/raw (A2-A7).
 fetch:
@@ -49,8 +58,39 @@ tiles:
 basemap:
 	bash pipeline/tiles/build_basemap.sh
 
+# --- 2.3 MHA benchmarks + 2.4 ownership metrics (B8-B11) ---------------------
+# Each reads a ZIP-level Layer 1 source and rolls it up to the MHA through the B1
+# crosswalk. Needs `make ingest` and `make components` first (B1, B5).
+# Override the window with e.g. `make benchmarks WINDOW=2026-01:2026-06`.
+benchmarks: zori zhvi safmr ownership
+
+# A3 + B5 -> B8: ZORI at MHA, grossed up to utilities-inclusive.
+zori:
+	$(PYTHON) pipeline/benchmarks/zillow_to_mha.py --series zori --csv $(ZORI_CSV) \
+		--crosswalk $(INTERIM)/zip_mha.csv --rate-components $(INTERIM)/rate_components.csv \
+		--out $(BENCH) $(WINDOW_ARG)
+
+# A4 -> B9: ZHVI at MHA.
+zhvi:
+	$(PYTHON) pipeline/benchmarks/zillow_to_mha.py --series zhvi --csv $(ZHVI_CSV) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH) $(WINDOW_ARG)
+
+# A5 -> B10: 0-4 bedroom SAFMRs at MHA.
+safmr:
+	$(PYTHON) pipeline/benchmarks/safmr_to_mha.py --xlsx $(SAFMR_XLSX) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
+
+# A7 + B9 (+ B8 utilities) -> B11: monthly ownership cost; parameters in config/ownership.json.
+ownership: zori zhvi
+	$(PYTHON) pipeline/benchmarks/ownership_cost.py --zhvi $(BENCH)/mha_zhvi.csv \
+		--zori $(BENCH)/mha_zori.csv --pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
+
+# Unit tests against synthetic fixtures (no downloads needed).
+test:
+	$(PYTHON) -m unittest discover -s tests -v
+
 clean:
-	rm -rf $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
+	rm -rf $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
 		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json
 
 # --- Project tracking (living WBS) -------------------------------------------

@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 03 October 2026  
-**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 8  ·  🟢 Completed this week: 9  ·  🟣 In progress: 0  ·  🔴 Not started: 48
+**Status as of:** 08 October 2026  
+**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 8  ·  🟢 Completed this week: 9  ·  🟣 In progress: 4  ·  🔴 Not started: 44
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -15,7 +15,7 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 |---|---|---|---|---|
 | **M1** Layer 1 Sources + 2.1 Ingest Outputs | Sat 26 Sep | 15 / 15 | `██████████ 100%` | ✅ Complete |
 | **M2** 2.2 Geometry | Sat 03 Oct | 2 / 2 | `██████████ 100%` | ✅ Complete |
-| **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏳ Due in 7 days |
+| **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏳ Due in 2 days |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
@@ -23,7 +23,10 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 
 ## In progress now
 
-_Nothing marked in progress._
+- 🟣 **B8** ZORI at MHA (utilities-adjusted) — due 10 Oct (M3)
+- 🟣 **B9** ZHVI at MHA — due 10 Oct (M3)
+- 🟣 **B10** FMR at MHA — due 10 Oct (M3)
+- 🟣 **B11** Ownership monthly cost at MHA — due 10 Oct (M3)
 
 ## Nodal map
 
@@ -146,6 +149,7 @@ flowchart LR
     B1 --> B10
     A7 --> B11
     A8 --> B11
+    B8 --> B11
     B9 --> B11
     A12 --> B12
     B4 --> B12
@@ -225,7 +229,8 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A7,B1,B2,B3,B4,B6 done
     class A3,A4,A5,A6,A11,A12,A13,B5,B7 week
-    class A8,A9,A10,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class B8,B9,B10,B11 prog
+    class A8,A9,A10,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
 
@@ -278,15 +283,15 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 |  |
-| 🔴 | **B9** | ZHVI at MHA | required | A4, B1 |  |
-| 🔴 | **B10** | FMR at MHA | required | A5, B1 |  |
+| 🟣 | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 |  |
+| 🟣 | **B9** | ZHVI at MHA | required | A4, B1 |  |
+| 🟣 | **B10** | FMR at MHA | required | A5, B1 |  |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B11** | Ownership monthly cost at MHA | required | A7, A8, B9 |  |
+| 🟣 | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 

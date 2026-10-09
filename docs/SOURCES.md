@@ -67,7 +67,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Acquisition:** auto
 - **Role:** Affordability reference and utilities-inclusive cross-check against ZORI (via B10), selected by each profile's anchor bedroom count.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** FMR is **gross rent (includes utilities)** — conceptually closer to BAH's 95% target than ZORI. SAFMR is ZIP-keyed with 0–4 bedroom columns, so no FMR-area crosswalk step. From FY2025 onward SAFMR covers metro **and** non-metro ZIPs. **Vintage choice:** the *revised* FY2026 release (effective 21 May 2026) is used as the current authoritative version; the original (effective 1 Oct 2025) is `fy2026_safmrs.xlsx` in the same folder. Record this for temporal alignment against 2026 BAH (effective 1 Jan 2026). Prefer the bulk xlsx over the token-gated REST API for a clean offline pipeline.
+- **Notes:** FMR is **gross rent (includes utilities)**, set by HUD at the 40th percentile of standard-quality recent-mover rents, so it is a lower anchor than a typical market rent — conceptually closer to BAH's 95% target than ZORI. SAFMR is ZIP-keyed with 0–4 bedroom columns, so no FMR-area crosswalk step. From FY2025 onward SAFMR covers metro **and** non-metro ZIPs. **Vintage choice:** the *revised* FY2026 release (effective 21 May 2026) is used as the current authoritative version; the original (effective 1 Oct 2025) is `fy2026_safmrs.xlsx` in the same folder. Record this for temporal alignment against 2026 BAH (effective 1 Jan 2026). Prefer the bulk xlsx over the token-gated REST API for a clean offline pipeline.
 - **Verified:** 2026-10-03 — full download returns HTTP 200, 4.4 MB Excel workbook. (HUD answers partial/range requests with an empty 202; the fetcher uses full downloads.)
 
 ### A6 · DoD BAH Rate Component Breakdown 2026 (rent vs. utilities split)  `[incorporated]`
@@ -139,6 +139,25 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Cynthia A. Brewer, Pennsylvania State University — https://colorbrewer2.org
 - **Role:** RdBu 7-class diverging palette used for the coverage-ratio and surplus classes in `config/classification.json` (A13); chosen because it is colour-blind safe.
 - **License:** Apache License 2.0; credit ColorBrewer.
+
+### VA home loan funding fee  `[incorporated]`
+- **Provider:** U.S. Department of Veterans Affairs — https://www.va.gov/housing-assistance/home-loans/funding-fee-and-closing-costs/
+- **Role:** Financing assumption for buy mode (B11, `config/ownership.json`): VA purchase loan, first use, 0% down, funding fee 2.15% financed into the loan, no mortgage insurance.
+- **License:** U.S. Government work; not subject to domestic copyright.
+- **Notes:** Rates effective 7 Apr 2023. Subsequent use with less than 5% down is 3.3%; members receiving VA disability compensation, and active-duty Purple Heart recipients, are exempt.
+- **Verified:** 2026-10-08.
+
+### National effective property tax rate (B11 placeholder)  `[incorporated]`
+- **Provider:** National Association of Home Builders (NAHB) analysis of the 2024 American Community Survey — https://eyeonhousing.org/2025/11/property-taxes-by-state-2024/
+- **Role:** Placeholder property tax in B11 until A8 lands: 0.89% of home value per year ($8.88 per $1,000).
+- **Notes:** State rates run from about 0.31% (Hawaii) to 1.79% (Illinois); a single national rate is a stated limitation.
+- **Verified:** 2026-10-08.
+
+### National average homeowners insurance premium (B11 placeholder)  `[incorporated]`
+- **Provider:** NAIC homeowners insurance report, as summarised by the Insurance Information Institute — https://www.iii.org/fact-statistic/facts-statistics-homeowners-and-renters-insurance
+- **Role:** Placeholder insurance in B11 until A8 lands: $1,569 per year (HO-3 average, data year 2022).
+- **Notes:** The newest NAIC data year available; premiums have risen since, so this understates 2026 cost.
+- **Verified:** 2026-10-08.
 
 *Still to add as they are adopted: the statutory/regulatory basis for the ~95% coverage
 target (37 U.S.C. § 403, DoD BAH Primer, DTMO methodology) and spatial-statistics method
