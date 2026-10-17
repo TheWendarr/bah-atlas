@@ -79,3 +79,43 @@ including MHAs with no source data, whose value columns are blank.
 ### `*_manifest.json`
 Input file and SHA-256, window months actually used, coverage counts, MHAs
 without data, parameters (B11), and warnings.
+
+## Computed metrics (`pipeline/metrics/coverage_metrics.py`, written to `data/interim/metrics_YYYY/`)
+
+Long tables: one row per A12 profile x real MHA (2 x 299 in 2026), including MHAs
+with no benchmark, whose metric columns are blank. Target = A12 `coverage_target` (0.95).
+
+| column          | type  | notes |
+|-----------------|-------|-------|
+| profile         | str   | A12 profile id (`e5_dep`, `o3_dep`) |
+| mha             | str   | MHA code |
+| pay_grade, has_dependents | str | the B4 cell the profile selects |
+| bah_monthly     | float | B4 monthly rate, USD |
+| cost_monthly    | float | local monthly cost of the anchor dwelling (see each table) |
+| coverage_ratio  | float | `bah_monthly / cost_monthly` (R) |
+| gap_vs_target   | float | `R - 0.95`; the test variable for 2.6 spatial statistics |
+| surplus_usd     | float | `bah_monthly - cost_monthly`; A13 `surplus_usd` classes |
+| target_gap_usd  | float | `bah_monthly - 0.95 x cost_monthly`; dollars over/under the design point |
+| status          | str   | why a value is blank (see each table) |
+
+### `mha_rent_metrics.csv` (B12 coverage ratio, B13 surplus/gap)
+`cost_monthly` = B8 `zori_utilities_adjusted`. Extra columns:
+
+| column                | type  | notes |
+|-----------------------|-------|-------|
+| zori_zip_coverage     | float | B8 share of the MHA's ZIPs with ZORI data |
+| safmr_bedrooms        | int   | profile `anchor_bedrooms` |
+| safmr_monthly         | float | B10 `safmr_median` at that bedroom count (gross rent) |
+| safmr_coverage_ratio, safmr_gap_vs_target, safmr_surplus_usd | float | the same metrics against SAFMR: bedroom-matched cross-check |
+| status                | str   | `ok` or `no_zori` |
+
+### `mha_buy_metrics.csv` (B14 coverage ratio, B15 surplus/gap)
+`cost_monthly` = B11 `own_total_monthly` (PITI + utilities). Extra column
+`own_housing_monthly` (PITI only, from B11). `status` is `ok`, `no_home_value`
+(no ZHVI) or `no_utilities` (home value but no ZORI, so no utilities estimate).
+
+### `coverage_metrics_manifest.json`
+Input files and SHA-256, the definitions above, benchmark months per input (B8,
+B9, B11 rate window), and per profile and mode: MHAs with a value, coverage-ratio
+min/median/max, MHAs below target and at or above full cost, A13 class counts,
+status counts, and the median ZORI-minus-SAFMR ratio difference.

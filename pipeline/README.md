@@ -57,6 +57,16 @@ go to `data/interim/benchmarks_YYYY/`.
 
 Tests for all four run on synthetic fixtures with `make test`.
 
+## `metrics/` — 2.5 computed metrics
+
+- `coverage_metrics.py` — B12-B15 in one run (`make metrics`, after
+  `make benchmarks`). For each A12 profile and real MHA: coverage ratio
+  R = BAH / cost, gap vs the 95% target, and dollar surplus, in rent mode (B8
+  utilities-adjusted ZORI, with a bedroom-matched B10 SAFMR cross-check) and buy
+  mode (B11 ownership cost). Stops if B8 and B9 cover different months or if B11
+  was built from different B8/B9 files than the ones beside it. Outputs go to
+  `data/interim/metrics_YYYY/`. Stdlib only.
+
 ## `tiles/` — web tiles
 
 - `build_mha_pmtiles.py` — tiles the MHA polygons into `mha_YYYY.pmtiles`

@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 10 October 2026  
-**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 17  ·  🟢 Completed this week: 4  ·  🟣 In progress: 0  ·  🔴 Not started: 44
+**Status as of:** 17 October 2026  
+**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 0  ·  🟣 In progress: 4  ·  🔴 Not started: 40
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -16,14 +16,17 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 | **M1** Layer 1 Sources + 2.1 Ingest Outputs | Sat 26 Sep | 15 / 15 | `██████████ 100%` | ✅ Complete |
 | **M2** 2.2 Geometry | Sat 03 Oct | 2 / 2 | `██████████ 100%` | ✅ Complete |
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
-| **M4** 2.5 Computed Metrics | Sat 17 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏳ Due in 7 days |
-| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M4** 2.5 Computed Metrics | Sat 17 Oct | 0 / 4 | `░░░░░░░░░░ 0%` | ⏰ Due today |
+| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | `░░░░░░░░░░ 0%` | ⏳ Due in 7 days |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-_Nothing marked in progress._
+- 🟣 **B12** Rent coverage ratio — due 17 Oct (M4)
+- 🟣 **B13** Rent surplus/gap — due 17 Oct (M4)
+- 🟣 **B14** Buy coverage ratio — due 17 Oct (M4)
+- 🟣 **B15** Buy surplus/gap — due 17 Oct (M4)
 
 ## Nodal map
 
@@ -155,6 +158,7 @@ flowchart LR
     A12 --> B13
     B4 --> B13
     B8 --> B13
+    B10 --> B13
     A12 --> B14
     B4 --> B14
     B11 --> B14
@@ -224,9 +228,9 @@ flowchart LR
     classDef prog fill:#7b1fa2,stroke:#000,color:#ffffff
     classDef todo fill:#c62828,stroke:#000,color:#ffffff
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
-    class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7 done
-    class B8,B9,B10,B11 week
-    class A8,A9,A10,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
+    class B12,B13,B14,B15 prog
+    class A8,A9,A10,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
 
@@ -279,24 +283,24 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 | completed 08 Oct |
-| 🟢 | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
-| 🟢 | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
+| ⚫ | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 | completed 08 Oct |
+| ⚫ | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
+| ⚫ | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; completed 08 Oct |
+| ⚫ | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; completed 08 Oct |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B12** | Rent coverage ratio | required | A12, B4, B8, B10 |  |
-| 🔴 | **B13** | Rent surplus/gap | required | A12, B4, B8 |  |
-| 🔴 | **B14** | Buy coverage ratio | required | A12, B4, B11 |  |
-| 🔴 | **B15** | Buy surplus/gap | required | A12, B4, B11 |  |
+| 🟣 | **B12** | Rent coverage ratio | required | A12, B4, B8, B10 |  |
+| 🟣 | **B13** | Rent surplus/gap | required | A12, B4, B8, B10 | SAFMR cross-check at the profile's anchor bedrooms |
+| 🟣 | **B14** | Buy coverage ratio | required | A12, B4, B11 |  |
+| 🟣 | **B15** | Buy surplus/gap | required | A12, B4, B11 |  |
 
 #### 2.6 Spatial Statistics — due 24 October 2026 (M5)
 

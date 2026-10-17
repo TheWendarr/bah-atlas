@@ -7,6 +7,7 @@ COMPONENTS_PDF ?= data/raw/dod_bah_rate_components_$(YEAR).pdf
 INTERIM  ?= data/interim/bah_$(YEAR)
 PROCESSED?= data/processed
 BENCH    ?= data/interim/benchmarks_$(YEAR)
+METRICS  ?= data/interim/metrics_$(YEAR)
 ZORI_CSV ?= data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv
 ZHVI_CSV ?= data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
 SAFMR_XLSX ?= data/raw/fy2026_safmrs_revised.xlsx
@@ -16,9 +17,9 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry components tiles basemap \
-	benchmarks zori zhvi safmr ownership test clean
+	benchmarks zori zhvi safmr ownership metrics test clean
 
-all: check-config geometry components tiles benchmarks
+all: check-config geometry components tiles benchmarks metrics
 
 # Stage 0: pull every auto-pullable Layer 1 source into data/raw (A2-A7).
 fetch:
@@ -85,12 +86,21 @@ ownership: zori zhvi
 	$(PYTHON) pipeline/benchmarks/ownership_cost.py --zhvi $(BENCH)/mha_zhvi.csv \
 		--zori $(BENCH)/mha_zori.csv --pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
 
+# --- 2.5 computed metrics (B12-B15) ------------------------------------------
+# Coverage ratio, gap vs the 95% target, and dollar surplus for every A12 profile
+# x real MHA: rent (B8, with the B10 SAFMR cross-check) and buy (B11).
+# Needs `make benchmarks` first; stops if B8 and B9 cover different months.
+metrics:
+	$(PYTHON) pipeline/metrics/coverage_metrics.py --bah-rates $(INTERIM)/bah_rates.csv \
+		--zori $(BENCH)/mha_zori.csv --safmr $(BENCH)/mha_safmr.csv \
+		--ownership $(BENCH)/mha_ownership.csv --out $(METRICS)
+
 # Unit tests against synthetic fixtures (no downloads needed).
 test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 clean:
-	rm -rf $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
+	rm -rf $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
 		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json
 
 # --- Project tracking (living WBS) -------------------------------------------
