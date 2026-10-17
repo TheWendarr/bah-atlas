@@ -37,8 +37,8 @@ Method
      needs at least --min-months observations (default 3) to count.
   3. MHA value = median across its ZIPs (see mha_agg.py for the rule).
   4. B8 only: ZORI is asking rent WITHOUT utilities, while BAH's ~95% target
-     covers rent PLUS utilities. B5 gives each MHA's rent share s_r of total BAH
-     (DTMO's published split), so the utilities-inclusive benchmark is
+     covers rent PLUS utilities. B5 gives each MHA's rent share s_r of total housing
+     cost (DTMO's published rent/utilities split), so the utilities-inclusive benchmark is
 
          zori_utilities_adjusted = zori_median / s_r
          utilities_usd           = zori_utilities_adjusted - zori_median

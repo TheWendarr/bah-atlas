@@ -171,8 +171,22 @@ SOURCES: list[Source] = [
         landing_url="https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/",
         license="U.S. Government work (public domain)",
         min_bytes=10_000,
-        notes="One row per MHA (299): rent and utilities as average % of the total BAH "
-              "rate, rounded to 1%. Parsed into B5 by pipeline/ingest/ingest_rate_components.py.",
+        notes="One row per MHA (299): rent and utilities as average % of total housing "
+              "cost, rounded to 1%. Parsed into B5 by pipeline/ingest/ingest_rate_components.py.",
+    ),
+    Source(
+        node_id="A12",
+        name="DTMO 2026 BAH Out-of-Pocket Amounts (A12 cost_share_monthly)",
+        filename="2026-BAH_OOP_Amounts.pdf",
+        acquisition="browser",   # travel.dod.mil refuses scripted clients (see A6)
+        url="https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
+        landing_url="https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/",
+        license="U.S. Government work (public domain)",
+        min_bytes=5_000,
+        expected_sha256="375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
+        notes="Member cost share by pay grade, with and without dependents: 5% of the national "
+              "mean BAH for the grade. The E05 and O03 with-dependents dollars are copied into "
+              "config/profiles.json; this entry checksums the PDF they came from.",
     ),
     Source(
         node_id="A7",

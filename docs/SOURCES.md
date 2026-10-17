@@ -77,8 +77,18 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Acquisition:** browser — travel.dod.mil returns HTTP 403 to scripted clients, even with browser headers. Open the link in a browser, save it under the artifact name, then run `make fetch` to validate and checksum it.
 - **Role:** DoD's own published rent/utilities percentage split per MHA. Directly addresses the construct-validity gap where BAH's 95% target includes utilities but Zillow ZORI excludes them — this lets the utilities component be isolated rather than assumed. Parsed into B5 by `pipeline/ingest/ingest_rate_components.py`.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Published annually since the 2012 rates. One row per MHA (299): code and name, rent as average % of total BAH, utilities as average % of total BAH. Percentages are rounded to 1%, so the derived shares carry about ±0.5 percentage points of precision; DTMO notes that a member's actual split may differ from the average.
+- **Notes:** Published annually since the 2012 rates. One row per MHA (299): code and name, rent and utilities as average % of total housing cost (DTMO: "the average percentage that rent and utilities make of the total housing cost"). Percentages are rounded to 1%, so the derived shares carry about ±0.5 percentage points of precision; DTMO notes that a member's actual split may differ from the average.
 - **Verified:** 2026-10-03 — document confirmed at this URL (299 MHA rows); scripted download blocked (403).
+
+### A12 parameter · DTMO 2026 BAH Out-of-Pocket Amounts (member cost share)  `[incorporated]`
+- **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
+- **Link:** https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf · statute: https://www.law.cornell.edu/uscode/text/37/403
+- **Artifact:** `data/raw/2026-BAH_OOP_Amounts.pdf` (SHA-256 `375ff25e…20c3`, pinned in the fetcher)
+- **Acquisition:** browser — travel.dod.mil blocks scripted clients, as for A1 and A6.
+- **Role:** The statutory target. 37 U.S.C. 403(b)(3) sets BAH = local cost of adequate housing − a percentage (5% since 2019) of the *national* average cost for the pay grade and dependency status. This table gives that deduction in dollars per grade; E05 with dependents ($126/month) and O03 with dependents ($151/month) are recorded as `cost_share_monthly` in `config/profiles.json` (A12) and used by B12–B15: adequacy ratio = (BAH + cost share) / benchmark, target 1.00.
+- **License:** U.S. Government work; not subject to domestic copyright.
+- **Notes:** DTMO: "5% of the National Mean BAH Rate for each paygrade." The same dollars apply at every duty station, so BAH covers exactly 95% of local cost only where local cost equals the national mean. 2026 amounts range $93–$212/month across grades (DoD 2026 BAH release). Published annually; the 2024 edition gave E05 $118 and O03 $141 with dependents.
+- **Verified:** 2026-10-17 — PDF saved from a browser; E05 and O03 rows read with `pdftotext`.
 
 ### A7 · Freddie Mac Primary Mortgage Market Survey (PMMS), weekly history  `[incorporated]`
 - **Provider:** Freddie Mac

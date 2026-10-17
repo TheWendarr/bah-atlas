@@ -4,15 +4,53 @@
   "coverage_target": 0.95,
   "no_data_color": "#bdbdbd",
   "palette_source": "ColorBrewer RdBu, 7 classes (colour-blind safe). Red = shortfall, blue = surplus, near-white = at the design point.",
-  "rationale": "Fixed breaks rather than quantiles: the research question is whether BAH meets a fixed 95% target, and fixed breaks keep the target visible and make maps comparable across profiles. Quantile breaks would always paint the same share of MHAs red, regardless of whether any MHA misses the target.",
+  "rationale": "Fixed breaks rather than quantiles: the research question is whether BAH meets a fixed 95% target, and fixed breaks keep the target visible and make maps comparable across profiles. Quantile breaks would always paint the same share of MHAs red, regardless of whether any MHA misses the target. The statutory test variable is adequacy_ratio, centred on 1.00; coverage_ratio keeps its 95%-centred classes as a descriptive layer.",
   "metrics": {
+    "adequacy_ratio": {
+      "label": "Adequacy ratio ((BAH + member cost share) / local housing cost)",
+      "short_label": "Adequacy",
+      "format": "percent",
+      "method": "fixed",
+      "neutral": 1.0,
+      "breaks": [0.85, 0.92, 0.97, 1.03, 1.08, 1.15],
+      "colors": ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac"],
+      "class_labels": [
+        "Below 85%: far below the statutory design",
+        "85-92%: well below design",
+        "92-97%: below design",
+        "97-103%: at the statutory design point",
+        "103-108%: above design",
+        "108-115%: well above design",
+        "115% and above: far above design"
+      ],
+      "note": "1.00 means DoD's implied local cost (BAH + cost share) equals the independent benchmark, i.e. BAH meets 37 U.S.C. 403(b)(3) exactly. The +/-3% neutral band absorbs DTMO's 1%-rounded rent/utilities split and benchmark noise; it is a judgment, not a statutory tolerance."
+    },
+    "design_gap_usd": {
+      "label": "Monthly gap vs the statutory design (BAH + cost share - local housing cost)",
+      "short_label": "Gap vs design",
+      "format": "usd",
+      "method": "fixed",
+      "neutral": 0,
+      "breaks": [-500, -250, -50, 50, 250, 500],
+      "colors": ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac"],
+      "class_labels": [
+        "Short of design by over $500",
+        "Short by $250-500",
+        "Short by $50-250",
+        "Within $50 of design",
+        "Over by $50-250",
+        "Over by $250-500",
+        "Over by more than $500"
+      ],
+      "note": "$0 means BAH equals the benchmark cost minus the member's statutory cost share, as 37 U.S.C. 403(b)(3) intends."
+    },
     "coverage_ratio": {
       "label": "Coverage ratio (BAH / local housing cost)",
       "short_label": "Coverage",
       "format": "percent",
       "method": "fixed",
       "neutral": 0.95,
-      "breaks": [0.85, 0.90, 0.94, 0.96, 1.00, 1.05],
+      "breaks": [0.85, 0.9, 0.94, 0.96, 1.0, 1.05],
       "colors": ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#d1e5f0", "#67a9cf", "#2166ac"],
       "class_labels": [
         "Below 85%: severe shortfall",
@@ -22,7 +60,8 @@
         "96-100%: above target",
         "100-105%: full coverage",
         "105% and above: surplus"
-      ]
+      ],
+      "note": "Descriptive: the share of benchmark cost BAH pays. BAH's statutory design point for an MHA is 1 - cost_share / local cost (roughly 89-97% across MHAs), so the fixed 95% centre is approximate. Map adequacy_ratio for the statutory test."
     },
     "surplus_usd": {
       "label": "Monthly surplus or gap (BAH - local housing cost)",
@@ -45,13 +84,29 @@
     }
   },
   "clusters": {
-    "_about": "LISA / Getis-Ord classes from B18 for the optional hotspot overlay (C16), computed on the coverage ratio.",
+    "_about": "LISA / Getis-Ord classes from B18 for the optional hotspot overlay (C16), computed on adequacy_gap (adequacy_ratio - 1).",
     "classes": {
-      "HH": { "label": "Surplus cluster (high-high)", "color": "#2166ac" },
-      "LL": { "label": "Shortfall cluster (low-low)", "color": "#b2182b" },
-      "HL": { "label": "Surplus outlier among shortfalls (high-low)", "color": "#92c5de" },
-      "LH": { "label": "Shortfall outlier among surpluses (low-high)", "color": "#f4a582" },
-      "NS": { "label": "Not significant", "color": "#e0e0e0" }
+      "HH": {
+        "label": "Surplus cluster (high-high)",
+        "color": "#2166ac"
+      },
+      "LL": {
+        "label": "Shortfall cluster (low-low)",
+        "color": "#b2182b"
+      },
+      "HL": {
+        "label": "Surplus outlier among shortfalls (high-low)",
+        "color": "#92c5de"
+      },
+      "LH": {
+        "label": "Shortfall outlier among surpluses (low-high)",
+        "color": "#f4a582"
+      },
+      "NS": {
+        "label": "Not significant",
+        "color": "#e0e0e0"
+      }
     }
-  }
+  },
+  "default_metric": "adequacy_ratio"
 }

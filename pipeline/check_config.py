@@ -4,7 +4,8 @@
     python pipeline/check_config.py            # checks config/profiles.json + config/classification.json
 
 Fails loudly (exit 1) on anything Layer 2 or Layer 3 would trip over later:
-unknown pay grades, bedroom counts outside the SAFMR range, break lists that are
+unknown pay grades, bedroom counts outside the SAFMR range, a missing or
+uncited member cost share (cost_share_monthly), break lists that are
 not ascending, colour/label counts that do not match the class count, invalid
 hex colours, a neutral value outside the middle class, or the two files
 disagreeing on the coverage target.
@@ -70,6 +71,14 @@ def check_profiles(cfg: dict, grades: list[str], errors: list[str]) -> None:
         for key in ("label", "anchor_dwelling"):
             if not p.get(key):
                 errors.append(f"profiles.json [{pid}]: missing {key}")
+        share = p.get("cost_share_monthly")
+        if not isinstance(share, (int, float)) or isinstance(share, bool) or not 0 < share < 1000:
+            errors.append(f"profiles.json [{pid}]: cost_share_monthly must be the DTMO out-of-pocket dollars "
+                          f"for this cell (0 < x < 1000), found {share!r}")
+    cs = cfg.get("cost_share") or {}
+    for key in ("source", "url", "sha256"):
+        if not cs.get(key):
+            errors.append(f"profiles.json: cost_share.{key} is required (cite where the dollars come from)")
     target = cfg.get("coverage_target")
     if not isinstance(target, (int, float)) or not 0 < target <= 1:
         errors.append("profiles.json: coverage_target must be a number in (0, 1]")

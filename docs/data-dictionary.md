@@ -45,7 +45,7 @@ including MHAs with no source data, whose value columns are blank.
 | column                   | type  | notes |
 |--------------------------|-------|-------|
 | zori_median / _mean / _min / _max | float | USD/month asking rent across the MHA's ZIPs; each ZIP is its mean over the window months |
-| rent_share               | float | B5 rent share of total BAH |
+| rent_share               | float | B5 rent share of total housing cost (rent + utilities) |
 | zori_utilities_adjusted  | float | `zori_median / rent_share`; the primary rent benchmark (A12 `rent_primary`) |
 | utilities_usd            | float | `zori_utilities_adjusted - zori_median`; also used by B11 |
 
@@ -83,20 +83,32 @@ without data, parameters (B11), and warnings.
 ## Computed metrics (`pipeline/metrics/coverage_metrics.py`, written to `data/interim/metrics_YYYY/`)
 
 Long tables: one row per A12 profile x real MHA (2 x 299 in 2026), including MHAs
-with no benchmark, whose metric columns are blank. Target = A12 `coverage_target` (0.95).
+with no benchmark, whose metric columns are blank.
 
-| column          | type  | notes |
-|-----------------|-------|-------|
-| profile         | str   | A12 profile id (`e5_dep`, `o3_dep`) |
-| mha             | str   | MHA code |
+**Statutory target.** 37 U.S.C. 403(b)(3) sets BAH = local cost of adequate
+housing - 5% of the *national* average cost for the pay grade and dependency
+status. The deduction (the member cost share, A12 `cost_share_monthly`, from
+DTMO's out-of-pocket table) is the same dollars at every duty station, so BAH
+covers exactly 95% of local cost only where local cost equals the national
+mean. The test is therefore `adequacy_ratio` against 1.00, not `coverage_ratio`
+against 0.95.
+
+| column             | type  | notes |
+|--------------------|-------|-------|
+| profile            | str   | A12 profile id (`e5_dep`, `o3_dep`) |
+| mha                | str   | MHA code |
 | pay_grade, has_dependents | str | the B4 cell the profile selects |
-| bah_monthly     | float | B4 monthly rate, USD |
-| cost_monthly    | float | local monthly cost of the anchor dwelling (see each table) |
-| coverage_ratio  | float | `bah_monthly / cost_monthly` (R) |
-| gap_vs_target   | float | `R - 0.95`; the test variable for 2.6 spatial statistics |
-| surplus_usd     | float | `bah_monthly - cost_monthly`; A13 `surplus_usd` classes |
-| target_gap_usd  | float | `bah_monthly - 0.95 x cost_monthly`; dollars over/under the design point |
-| status          | str   | why a value is blank (see each table) |
+| bah_monthly        | float | B4 monthly rate, USD |
+| cost_share_monthly | float | A (A12): DTMO member cost share for the cell, USD/month |
+| cost_monthly       | float | C: local monthly cost of the anchor dwelling (see each table) |
+| coverage_ratio     | float | `BAH / C`: share of benchmark cost BAH pays (descriptive) |
+| design_coverage    | float | `1 - A / C`: share BAH is designed to pay at this cost level |
+| adequacy_ratio     | float | `(BAH + A) / C`: DoD's implied local cost vs the benchmark; target 1.00 |
+| adequacy_gap       | float | `adequacy_ratio - 1` (= coverage_ratio - design_coverage); the test variable for 2.6 |
+| surplus_usd        | float | `BAH - C`: full-cost dollars |
+| design_gap_usd     | float | `BAH + A - C`: dollars over (+) or short of (-) the statutory design |
+| flat95_gap         | float | `coverage_ratio - 0.95`: sensitivity column for the simple fixed-95% reading |
+| status             | str   | why a value is blank (see each table) |
 
 ### `mha_rent_metrics.csv` (B12 coverage ratio, B13 surplus/gap)
 `cost_monthly` = B8 `zori_utilities_adjusted`. Extra columns:
@@ -105,8 +117,8 @@ with no benchmark, whose metric columns are blank. Target = A12 `coverage_target
 |-----------------------|-------|-------|
 | zori_zip_coverage     | float | B8 share of the MHA's ZIPs with ZORI data |
 | safmr_bedrooms        | int   | profile `anchor_bedrooms` |
-| safmr_monthly         | float | B10 `safmr_median` at that bedroom count (gross rent) |
-| safmr_coverage_ratio, safmr_gap_vs_target, safmr_surplus_usd | float | the same metrics against SAFMR: bedroom-matched cross-check |
+| safmr_monthly         | float | B10 `safmr_median` at that bedroom count (gross rent, HUD 40th percentile) |
+| safmr_coverage_ratio, safmr_adequacy_ratio, safmr_design_gap_usd | float | the same metrics against SAFMR: bedroom-matched cross-check |
 | status                | str   | `ok` or `no_zori` |
 
 ### `mha_buy_metrics.csv` (B14 coverage ratio, B15 surplus/gap)
@@ -115,7 +127,10 @@ with no benchmark, whose metric columns are blank. Target = A12 `coverage_target
 (no ZHVI) or `no_utilities` (home value but no ZORI, so no utilities estimate).
 
 ### `coverage_metrics_manifest.json`
-Input files and SHA-256, the definitions above, benchmark months per input (B8,
-B9, B11 rate window), and per profile and mode: MHAs with a value, coverage-ratio
-min/median/max, MHAs below target and at or above full cost, A13 class counts,
-status counts, and the median ZORI-minus-SAFMR ratio difference.
+Input files and SHA-256, the statutory basis and cost-share parameters (source,
+URL, PDF checksum, dollars per profile), the definitions above, benchmark months
+per input (B8, B9, B11 rate window), and per profile and mode: MHAs with a value,
+adequacy and coverage ratio min/median/max, MHAs below design, A13 class counts
+for all four mapped metrics, status counts, `flat95_vs_design` (MHAs short under
+the fixed-95% reading only, and under the statutory reading only), and for the
+rent cross-check the median ZORI-minus-SAFMR adequacy difference.

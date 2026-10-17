@@ -15,25 +15,41 @@ coverage_metrics.py  (2.5 computed metrics: B12-B15)
         --out data/interim/metrics_2026
 
 ------------------------------------------------------------------------------
+The statutory target
+------------------------------------------------------------------------------
+37 U.S.C. 403(b)(3) sets BAH for an area as the local monthly cost of adequate
+housing MINUS a percentage (5% since 2019) of the NATIONAL average cost for the
+member's pay grade and dependency status. The deduction is a flat dollar amount
+per grade, the same at every duty station (DTMO publishes it each year; A12
+cost_share_monthly). BAH therefore covers exactly 95% of local cost only where
+local cost equals the national mean: more in expensive MHAs, less in cheap ones.
+A fixed 95% test would score that design as a gap, and because cost levels
+cluster in space it would also plant spatial autocorrelation in the test
+variable before 2.6 measures any.
+
+------------------------------------------------------------------------------
 Metrics, per A12 profile p and real MHA m
 ------------------------------------------------------------------------------
-  BAH   = B4 monthly_rate for (m, p.pay_grade, p.has_dependents)
-  C     = local monthly cost of the anchor dwelling
-            rent mode: B8 zori_utilities_adjusted   (A12 benchmarks.rent_primary)
-            buy mode:  B11 own_total_monthly        (PITI + B8 utilities)
+  BAH = B4 monthly_rate for (m, p.pay_grade, p.has_dependents)
+  A   = p.cost_share_monthly (DTMO member cost share, A12)
+  C   = local monthly cost of the anchor dwelling
+          rent mode: B8 zori_utilities_adjusted   (A12 benchmarks.rent_primary)
+          buy mode:  B11 own_total_monthly        (PITI + B8 utilities)
 
-  coverage_ratio   R = BAH / C
-  gap_vs_target      = R - target          target = A12 coverage_target (0.95).
-                                           The test variable for 2.6 (Moran's I, LISA).
-  surplus_usd        = BAH - C             full-cost dollars; A13 surplus_usd classes
-  target_gap_usd     = BAH - target * C    dollars over (+) or under (-) the 95% design point
+  coverage_ratio   R = BAH / C               share of benchmark cost BAH pays (descriptive)
+  design_coverage    = 1 - A / C             share BAH is designed to pay at this cost level
+  adequacy_ratio     = (BAH + A) / C         DoD's implied local cost vs the benchmark; target 1.00
+  adequacy_gap       = adequacy_ratio - 1    = R - design_coverage; the test variable for 2.6
+  surplus_usd        = BAH - C               full-cost dollars
+  design_gap_usd     = BAH + A - C           dollars over (+) or short of (-) the statutory design
+  flat95_gap         = R - 0.95              sensitivity: the simple fixed-95% reading
 
-Rent cross-check (B10). The same three metrics against the HUD SAFMR median at the
-profile's anchor_bedrooms (A12 benchmarks.safmr_bedroom_field). ZORI has one
-series for every bedroom count, so without this the E-5 vs O-3 contrast in rent
-mode comes only from the BAH numerator. SAFMR is gross rent (utilities included),
-so it needs no adjustment. It is reported next to the primary values and never
-replaces them.
+Rent cross-check (B10): coverage ratio, adequacy ratio and gap vs design against
+the HUD SAFMR median at the profile's anchor_bedrooms. ZORI has one series for
+every bedroom count, so without this the E-5 vs O-3 contrast in rent mode comes
+only from the BAH numerator. SAFMR is gross rent (utilities included) at HUD's
+40th percentile, so it sits below a median benchmark; it is reported beside the
+primary values and never replaces them.
 
 Every real MHA gets one row per profile, including MHAs with no benchmark. The
 `status` column says why a value is blank:
@@ -45,13 +61,14 @@ Output (written to --out)
 ------------------------------------------------------------------------------
   mha_rent_metrics.csv            B12 + B13, long: one row per profile x MHA
   mha_buy_metrics.csv             B14 + B15, long: one row per profile x MHA
-  coverage_metrics_manifest.json  input hashes, target, data windows, per-profile
-                                  summaries, A13 class counts, warnings
+  coverage_metrics_manifest.json  input hashes, cost-share parameters, data
+                                  windows, per-profile summaries, A13 class
+                                  counts, flat-95% vs statutory comparison, warnings
 
 ------------------------------------------------------------------------------
 Validation (loud)
 ------------------------------------------------------------------------------
-  * A12 profiles are well formed; target in (0, 1]
+  * A12 profiles are well formed and each carries a cost_share_monthly
   * B4 has a positive rate for every real MHA x profile
   * B8, B10 and B11 cover the same MHAs; B10 has the anchor bedroom row for each
   * every non-blank cost is a finite number > 0
@@ -78,14 +95,16 @@ import mha_agg as agg  # noqa: E402
 
 TOOL = "coverage_metrics"
 PLAUSIBLE_RATIO = (0.3, 2.5)
+CLASSED = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
 
-RENT_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "bah_monthly",
-               "cost_monthly", "coverage_ratio", "gap_vs_target", "surplus_usd", "target_gap_usd",
-               "zori_zip_coverage", "safmr_bedrooms", "safmr_monthly", "safmr_coverage_ratio",
-               "safmr_gap_vs_target", "safmr_surplus_usd", "status"]
-BUY_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "bah_monthly",
-              "cost_monthly", "own_housing_monthly", "coverage_ratio", "gap_vs_target",
-              "surplus_usd", "target_gap_usd", "status"]
+METRIC_FIELDS = ["coverage_ratio", "design_coverage", "adequacy_ratio", "adequacy_gap",
+                 "surplus_usd", "design_gap_usd", "flat95_gap"]
+BASE_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "bah_monthly", "cost_share_monthly",
+               "cost_monthly"]
+RENT_FIELDS = BASE_FIELDS + METRIC_FIELDS + [
+    "zori_zip_coverage", "safmr_bedrooms", "safmr_monthly", "safmr_coverage_ratio",
+    "safmr_adequacy_ratio", "safmr_design_gap_usd", "status"]
+BUY_FIELDS = BASE_FIELDS + ["own_housing_monthly"] + METRIC_FIELDS + ["status"]
 
 
 # --- inputs -------------------------------------------------------------------
@@ -100,7 +119,7 @@ def load_json(path: Path, what: str) -> dict:
     raise AssertionError
 
 
-def load_profiles(path: Path) -> tuple[list[dict], float]:
+def load_profiles(path: Path) -> tuple[list[dict], float, dict]:
     cfg = load_json(path, "A12 profiles config")
     problems: list[str] = []
     target = cfg.get("coverage_target")
@@ -117,15 +136,19 @@ def load_profiles(path: Path) -> tuple[list[dict], float]:
             problems.append(f"profile {pid}: has_dependents must be true or false")
         if not isinstance(p.get("anchor_bedrooms"), int) or not 0 <= p["anchor_bedrooms"] <= 4:
             problems.append(f"profile {pid}: anchor_bedrooms must be an integer 0-4")
+        share = p.get("cost_share_monthly")
+        if not isinstance(share, (int, float)) or isinstance(share, bool) or not 0 < share < 1000:
+            problems.append(f"profile {pid}: cost_share_monthly must be the DTMO out-of-pocket dollars "
+                            f"for this cell (found {share!r})")
     agg.fail_if([f"{path.name}: {p}" for p in problems], TOOL)
-    return profiles, float(target)
+    return profiles, float(target), cfg.get("cost_share") or {}
 
 
 def load_classes(path: Path) -> dict:
     """A13 breaks per metric, for the class counts in the manifest."""
     cfg = load_json(path, "A13 classification config")
     metrics = cfg.get("metrics") or {}
-    for name in ("coverage_ratio", "surplus_usd"):
+    for name in CLASSED:
         if name not in metrics or "breaks" not in metrics[name] or "class_labels" not in metrics[name]:
             agg.die(TOOL, f"{path.name} needs metrics.{name}.breaks and class_labels (run `make check-config`)")
     return metrics
@@ -133,7 +156,7 @@ def load_classes(path: Path) -> dict:
 
 def read_table(path: Path, needed: set[str], node: str) -> list[dict]:
     if not path.exists():
-        agg.die(TOOL, f"{node} not found: {path}")
+        agg.die(TOOL, f"{node} not found: {path} (run `make benchmarks` first)")
     with path.open(newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         if not reader.fieldnames or not needed <= set(reader.fieldnames):
@@ -195,12 +218,15 @@ def num(v: float, places: int) -> str:
     return f"{round(v, places) + 0.0:.{places}f}"
 
 
-def metrics(bah: float, c: float | None, target: float) -> dict:
+def metrics(bah: float, share: float, c: float | None, target: float) -> dict:
     if c is None:
-        return {"coverage_ratio": "", "gap_vs_target": "", "surplus_usd": "", "target_gap_usd": ""}
+        return {k: "" for k in METRIC_FIELDS}
     r = bah / c
-    return {"coverage_ratio": num(r, 4), "gap_vs_target": num(r - target, 4),
-            "surplus_usd": num(bah - c, 2), "target_gap_usd": num(bah - target * c, 2)}
+    adequacy = (bah + share) / c
+    return {"coverage_ratio": num(r, 4), "design_coverage": num(1 - share / c, 4),
+            "adequacy_ratio": num(adequacy, 4), "adequacy_gap": num(adequacy - 1, 4),
+            "surplus_usd": num(bah - c, 2), "design_gap_usd": num(bah + share - c, 2),
+            "flat95_gap": num(r - target, 4)}
 
 
 def class_counts(values: list[float], spec: dict) -> dict[str, int]:
@@ -211,21 +237,48 @@ def class_counts(values: list[float], spec: dict) -> dict[str, int]:
     return counts
 
 
-def summarize(rows: list[dict], target: float, classes: dict, prefix: str = "") -> dict:
-    ratios = [float(r[f"{prefix}coverage_ratio"]) for r in rows if r[f"{prefix}coverage_ratio"]]
-    surplus = [float(r[f"{prefix}surplus_usd"]) for r in rows if r[f"{prefix}surplus_usd"]]
-    if not ratios:
+def col(rows: list[dict], name: str) -> list[float]:
+    return [float(r[name]) for r in rows if r.get(name)]
+
+
+def summarize(rows: list[dict], target: float, classes: dict) -> dict:
+    valued = [r for r in rows if r["adequacy_ratio"]]
+    if not valued:
         return {"mhas": len(rows), "mhas_with_value": 0}
+    adequacy, ratio = col(valued, "adequacy_ratio"), col(valued, "coverage_ratio")
+    short_flat = {r["mha"] for r in valued if float(r["coverage_ratio"]) < target}
+    short_design = {r["mha"] for r in valued if float(r["adequacy_ratio"]) < 1}
     return {
         "mhas": len(rows),
-        "mhas_with_value": len(ratios),
-        "coverage_ratio": {"min": min(ratios), "median": round(statistics.median(ratios), 4),
-                           "max": max(ratios)},
-        "surplus_usd_median": round(statistics.median(surplus), 2),
-        "mhas_below_target": sum(r < target for r in ratios),
-        "mhas_at_or_above_full_cost": sum(r >= 1 for r in ratios),
-        "coverage_ratio_classes": class_counts(ratios, classes["coverage_ratio"]),
-        "surplus_usd_classes": class_counts(surplus, classes["surplus_usd"]),
+        "mhas_with_value": len(valued),
+        "adequacy_ratio": {"min": min(adequacy), "median": round(statistics.median(adequacy), 4),
+                           "max": max(adequacy)},
+        "coverage_ratio": {"min": min(ratio), "median": round(statistics.median(ratio), 4), "max": max(ratio)},
+        "design_coverage_median": round(statistics.median(col(valued, "design_coverage")), 4),
+        "design_gap_usd_median": round(statistics.median(col(valued, "design_gap_usd")), 2),
+        "mhas_below_design": len(short_design),
+        "mhas_at_or_above_full_cost": sum(r >= 1 for r in ratio),
+        "flat95_vs_design": {
+            "mhas_below_flat_95": len(short_flat),
+            "short_under_flat_95_only": sorted(short_flat - short_design),
+            "short_under_design_only": sorted(short_design - short_flat),
+        },
+        **{f"{name}_classes": class_counts(col(valued, name), classes[name]) for name in CLASSED},
+    }
+
+
+def summarize_crosscheck(rows: list[dict]) -> dict:
+    valued = [r for r in rows if r["safmr_adequacy_ratio"]]
+    if not valued:
+        return {"mhas_with_value": 0}
+    adequacy = col(valued, "safmr_adequacy_ratio")
+    both = [float(r["adequacy_ratio"]) - float(r["safmr_adequacy_ratio"]) for r in valued if r["adequacy_ratio"]]
+    return {
+        "mhas_with_value": len(valued),
+        "adequacy_ratio": {"min": min(adequacy), "median": round(statistics.median(adequacy), 4),
+                           "max": max(adequacy)},
+        "mhas_below_design": sum(a < 1 for a in adequacy),
+        "median_adequacy_diff_zori_minus_safmr": round(statistics.median(both), 4) if both else None,
     }
 
 
@@ -249,11 +302,12 @@ def main() -> None:
     if do_buy and not args.ownership:
         agg.die(TOOL, "buy mode needs --ownership (B11 mha_ownership.csv)")
 
-    profiles, target = load_profiles(args.profiles)
+    profiles, target, cost_share_cfg = load_profiles(args.profiles)
     classes = load_classes(args.classification)
     problems: list[str] = []
     warnings: list[str] = []
-    print(f"2.5 computed metrics (target {target:.0%}): {', '.join(p['id'] for p in profiles)}")
+    print("2.5 computed metrics: adequacy = (BAH + member cost share) / benchmark, target 1.00")
+    print("  " + ", ".join(f"{p['id']} (cost share ${p['cost_share_monthly']:,.0f})" for p in profiles))
 
     # B8 defines the MHA universe: every real MHA, one row each.
     zori = {r["mha"]: r for r in read_table(args.zori, {"mha", "zip_coverage", "zori_utilities_adjusted"}, "B8")}
@@ -322,19 +376,21 @@ def main() -> None:
     buy_rows: list[dict] = []
     for p in profiles:
         grade, deps, beds = p["pay_grade"].upper(), p["has_dependents"], p["anchor_bedrooms"]
+        share = float(p["cost_share_monthly"])
         for m in mhas:
             b = bah[(m, grade, deps)]
-            base = {"profile": p["id"], "mha": m, "pay_grade": grade,
-                    "has_dependents": str(deps).lower(), "bah_monthly": agg.fmt(b)}
+            base = {"profile": p["id"], "mha": m, "pay_grade": grade, "has_dependents": str(deps).lower(),
+                    "bah_monthly": agg.fmt(b), "cost_share_monthly": agg.fmt(share)}
             if do_rent:
                 c = cost(zori[m]["zori_utilities_adjusted"], f"B8 {m} zori_utilities_adjusted", problems)
                 s = cost(safmr[(m, beds)]["safmr_median"], f"B10 {m} {beds}BR safmr_median", problems)
-                cross = metrics(b, s, target)
+                cross = metrics(b, share, s, target)
                 rent_rows.append({
-                    **base, "cost_monthly": agg.fmt(c), **metrics(b, c, target),
+                    **base, "cost_monthly": agg.fmt(c), **metrics(b, share, c, target),
                     "zori_zip_coverage": zori[m]["zip_coverage"], "safmr_bedrooms": beds,
                     "safmr_monthly": agg.fmt(s), "safmr_coverage_ratio": cross["coverage_ratio"],
-                    "safmr_gap_vs_target": cross["gap_vs_target"], "safmr_surplus_usd": cross["surplus_usd"],
+                    "safmr_adequacy_ratio": cross["adequacy_ratio"],
+                    "safmr_design_gap_usd": cross["design_gap_usd"],
                     "status": "ok" if c is not None else "no_zori",
                 })
             if do_buy:
@@ -344,7 +400,7 @@ def main() -> None:
                 status = ("ok" if c is not None
                           else "no_home_value" if not o["zhvi_median"].strip() else "no_utilities")
                 buy_rows.append({**base, "cost_monthly": agg.fmt(c), "own_housing_monthly": agg.fmt(housing),
-                                 **metrics(b, c, target), "status": status})
+                                 **metrics(b, share, c, target), "status": status})
     agg.fail_if(problems[:25] + ([f"... and {len(problems) - 25} more"] if len(problems) > 25 else []), TOOL)
 
     lo, hi = PLAUSIBLE_RATIO
@@ -368,16 +424,12 @@ def main() -> None:
     summaries: dict = {}
     for p in profiles:
         entry: dict = {"pay_grade": p["pay_grade"], "has_dependents": p["has_dependents"],
-                       "anchor_bedrooms": p["anchor_bedrooms"]}
+                       "anchor_bedrooms": p["anchor_bedrooms"], "cost_share_monthly": p["cost_share_monthly"]}
         if do_rent:
             mine = [r for r in rent_rows if r["profile"] == p["id"]]
             entry["rent"] = summarize(mine, target, classes)
-            entry["rent_safmr_crosscheck"] = summarize(mine, target, classes, prefix="safmr_")
-            both = [float(r["coverage_ratio"]) - float(r["safmr_coverage_ratio"]) for r in mine
-                    if r["coverage_ratio"] and r["safmr_coverage_ratio"]]
-            entry["rent_safmr_crosscheck"]["median_ratio_diff_zori_minus_safmr"] = (
-                round(statistics.median(both), 4) if both else None)
             entry["rent"]["status_counts"] = {s: sum(r["status"] == s for r in mine) for s in ("ok", "no_zori")}
+            entry["rent_safmr_crosscheck"] = summarize_crosscheck(mine)
         if do_buy:
             mine = [r for r in buy_rows if r["profile"] == p["id"]]
             entry["buy"] = summarize(mine, target, classes)
@@ -396,14 +448,21 @@ def main() -> None:
         "generated_at": agg.now_utc(),
         "inputs": {k: v.name for k, v in inputs.items()},
         "input_sha256": {k: agg.sha256(v) for k, v in inputs.items()},
-        "coverage_target": target,
+        "statutory_basis": ("37 U.S.C. 403(b)(3): BAH = local cost of adequate housing - 5% of the national average "
+                            "cost for the pay grade and dependency status"),
+        "cost_share": {**{k: v for k, v in cost_share_cfg.items() if not k.startswith("_")},
+                       "per_profile": {p["id"]: p["cost_share_monthly"] for p in profiles}},
+        "flat_95_sensitivity_target": target,
         "definitions": {
             "coverage_ratio": "BAH / cost_monthly",
-            "gap_vs_target": "coverage_ratio - coverage_target",
+            "design_coverage": "1 - cost_share_monthly / cost_monthly",
+            "adequacy_ratio": "(BAH + cost_share_monthly) / cost_monthly; target 1.00",
+            "adequacy_gap": "adequacy_ratio - 1 (= coverage_ratio - design_coverage); the 2.6 test variable",
             "surplus_usd": "BAH - cost_monthly",
-            "target_gap_usd": "BAH - coverage_target * cost_monthly",
+            "design_gap_usd": "BAH + cost_share_monthly - cost_monthly",
+            "flat95_gap": "coverage_ratio - flat_95_sensitivity_target",
             "rent_cost": "B8 zori_utilities_adjusted (ZORI grossed up to utilities-inclusive with B5)",
-            "rent_crosscheck_cost": "B10 safmr_median at the profile's anchor_bedrooms (gross rent)",
+            "rent_crosscheck_cost": "B10 safmr_median at the profile's anchor_bedrooms (gross rent, HUD 40th pct)",
             "buy_cost": "B11 own_total_monthly (PITI + B8 utilities)",
         },
         "windows": {**windows, "B10": "HUD FY2026 SAFMR (fixed vintage, no monthly window)"},
@@ -419,9 +478,13 @@ def main() -> None:
     for pid, s in summaries.items():
         for mode in ("rent", "rent_safmr_crosscheck", "buy"):
             if mode in s and s[mode].get("mhas_with_value"):
-                cr = s[mode]["coverage_ratio"]
-                print(f"  {pid:8} {mode:22} R median {cr['median']:.3f} (min {cr['min']:.3f}, max {cr['max']:.3f}); "
-                      f"{s[mode]['mhas_below_target']} of {s[mode]['mhas_with_value']} below {target:.0%}")
+                a = s[mode]["adequacy_ratio"]
+                line = (f"  {pid:8} {mode:22} adequacy median {a['median']:.3f} "
+                        f"(min {a['min']:.3f}, max {a['max']:.3f}); "
+                        f"{s[mode]['mhas_below_design']} of {s[mode]['mhas_with_value']} below design")
+                if "flat95_vs_design" in s[mode]:
+                    line += f" (flat 95%: {s[mode]['flat95_vs_design']['mhas_below_flat_95']})"
+                print(line)
     for w in warnings:
         print(f"  warning: {w}")
     for o in outputs:
