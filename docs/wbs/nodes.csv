@@ -23,10 +23,10 @@ B8,2.3,ZORI at MHA (utilities-adjusted),required,A3 B1 B5,complete,2026-10-08,
 B9,2.3,ZHVI at MHA,required,A4 B1,complete,2026-10-08,
 B10,2.3,FMR at MHA,required,A5 B1,complete,2026-10-08,
 B11,2.4,Ownership monthly cost at MHA,required,A7 A8 B8 B9,complete,2026-10-08,A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities
-B12,2.5,Rent coverage ratio,required,A12 B4 B8 B10,in_progress,,
-B13,2.5,Rent surplus/gap,required,A12 B4 B8 B10,in_progress,,SAFMR cross-check at the profile's anchor bedrooms
-B14,2.5,Buy coverage ratio,required,A12 B4 B11,in_progress,,
-B15,2.5,Buy surplus/gap,required,A12 B4 B11,in_progress,,
+B12,2.5,Rent coverage ratio,required,A12 B4 B8 B10,complete,2026-10-17,
+B13,2.5,Rent surplus/gap,required,A12 B4 B8 B10,complete,2026-10-17,SAFMR cross-check at the profile's anchor bedrooms
+B14,2.5,Buy coverage ratio,required,A12 B4 B11,complete,2026-10-17,
+B15,2.5,Buy surplus/gap,required,A12 B4 B11,complete,2026-10-17,
 B16,2.6,Spatial weights matrix,required,B6,not_started,,
 B17,2.6,Global Moran's I,required,B12 B16,not_started,,
 B18,2.6,LISA / Getis-Ord Gi* clusters,required,B12 B16,not_started,,
