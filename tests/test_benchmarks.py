@@ -144,6 +144,21 @@ class TestZillow(Fixture):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("outside plausible range", p.stderr)
 
+    def test_seasonal_luxury_rent_warns(self) -> None:
+        # A Hamptons-style $95k summer rent is real: kept, listed, and does not stop the run.
+        hot = self.d / "hot.csv"
+        with self.zori.open(newline="") as fh:
+            rows = list(csv.reader(fh))
+        rows[4][-1] = "95000"                   # ZIP 10002 (AA002), 2026-03
+        write(hot, rows)
+        p = run("zillow_to_mha.py", "--series", "zori", "--csv", str(hot),
+                "--crosswalk", str(self.crosswalk), "--rate-components", str(self.components),
+                "--out", str(self.out), "--window", "2026-01:2026-12")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        man = json.loads((self.out / "mha_zori_manifest.json").read_text())
+        self.assertEqual(man["extreme_zips"], {"10002": 95000.0})
+        self.assertTrue(any("10002 (AA002, peak 95,000)" in w for w in man["warnings"]))
+
 
 class TestSafmr(Fixture):
     def make_xlsx(self, headers: list[str], rows: list[list]) -> Path:

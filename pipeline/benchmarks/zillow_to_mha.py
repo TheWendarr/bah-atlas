@@ -63,7 +63,8 @@ Validation (loud)
   * required Zillow columns present; at least one YYYY-MM-DD month column
   * every row is RegionType "zip"; ZIPs are 1-5 digits; no repeated ZIP
   * the window holds at least --min-months of the file's months
-  * every value is inside a plausible range for the series
+  * every value is inside a plausible range for the series (ZORI $100-$200k;
+    ZORI ZIPs above $25k, e.g. Hamptons summer rentals, are kept and listed as a warning)
   * B8: every real MHA has a B5 rent share in (0, 1]
 """
 
@@ -89,21 +90,29 @@ SERIES = {
         "node": "B8", "source_node": "A3",
         "source": "Zillow Observed Rent Index (ZORI), all homes plus multifamily, smoothed, ZIP level",
         "unit": "USD per month (asking rent, excludes utilities)",
-        "range": (100.0, 50_000.0),
+        # Seasonal luxury markets are real: Hamptons ZIPs (11930, 11963, 11976) run
+        # $50k-$100k+ a month in summer. The hard ceiling still stops a ZHVI file
+        # passed as ZORI; anything above warn_above is kept and listed in the manifest.
+        "range": (100.0, 200_000.0),
+        "warn_above": 25_000.0,
     },
     "zhvi": {
         "node": "B9", "source_node": "A4",
         "source": "Zillow Home Value Index (ZHVI), SFR+condo, mid tier (33rd-67th pct), smoothed and seasonally adjusted, ZIP level",
         "unit": "USD (typical home value)",
         "range": (1_000.0, 50_000_000.0),
+        "warn_above": None,
     },
 }
 
 
-def read_zillow(path: Path, window: tuple[str, str], min_months: int,
-                lo: float, hi: float) -> tuple[dict[str, float], dict[str, int], list[str], list[str], int]:
-    """Return ({zip: window mean}, {zip: months used}, months in window, problems, ZIPs too short)."""
+def read_zillow(path: Path, window: tuple[str, str], min_months: int, lo: float, hi: float,
+                warn_above: float | None = None
+                ) -> tuple[dict[str, float], dict[str, int], list[str], list[str], int, dict[str, float]]:
+    """Return ({zip: window mean}, {zip: months used}, months in window, problems,
+    ZIPs too short, {zip: highest in-window value} for ZIPs above warn_above)."""
     problems: list[str] = []
+    extreme: dict[str, float] = {}
     with path.open(newline="", encoding="utf-8-sig") as fh:
         reader = csv.reader(fh)
         try:
@@ -155,6 +164,8 @@ def read_zillow(path: Path, window: tuple[str, str], min_months: int,
                 if not lo <= v <= hi:
                     problems.append(f"ZIP {z} {header[i]}: {v:,.0f} outside plausible range {lo:,.0f}-{hi:,.0f}")
                     continue
+                if warn_above is not None and v > warn_above:
+                    extreme[z] = max(v, extreme.get(z, 0.0))
                 obs.append(v)
             if len(obs) >= min_months:
                 values[z] = statistics.fmean(obs)
@@ -163,7 +174,7 @@ def read_zillow(path: Path, window: tuple[str, str], min_months: int,
                 used[z] = len(obs)    # remembered so duplicates are still caught
                 short += 1
     used = {z: n for z, n in used.items() if z in values}
-    return values, used, sorted(in_window.values()), problems, short
+    return values, used, sorted(in_window.values()), problems, short, extreme
 
 
 def load_rent_shares(path: Path) -> dict[str, float]:
@@ -202,13 +213,19 @@ def main() -> None:
     crosswalk, cw_stats = agg.load_crosswalk(args.crosswalk, TOOL)
     lo, hi = spec["range"]
     print(f"{spec['node']} {args.series.upper()} at MHA: reading {args.csv.name}")
-    zip_values, months_used, window_months, problems, short = read_zillow(args.csv, window, args.min_months, lo, hi)
+    zip_values, months_used, window_months, problems, short, extreme = read_zillow(
+        args.csv, window, args.min_months, lo, hi, spec["warn_above"])
     agg.fail_if(problems[:25] + ([f"... and {len(problems) - 25} more"] if len(problems) > 25 else []), TOOL)
 
     rows, agg_stats = agg.aggregate(zip_values, crosswalk)
     warnings: list[str] = []
     if short:
         warnings.append(f"{short} ZIP(s) had fewer than {args.min_months} months in the window and were left out")
+    if extreme:
+        listed = ", ".join(f"{z} ({crosswalk.get(z, 'not in a real MHA')}, peak {v:,.0f})"
+                           for z, v in sorted(extreme.items()))
+        warnings.append(f"{len(extreme)} ZIP(s) above {spec['warn_above']:,.0f} in the window, kept "
+                        f"(seasonal luxury markets; the MHA median limits their pull): {listed}")
     if agg_stats["mhas_with_data"] < 0.5 * len(rows):
         warnings.append(f"only {agg_stats['mhas_with_data']} of {len(rows)} MHAs have {args.series.upper()} data")
 
@@ -266,6 +283,8 @@ def main() -> None:
         "coverage": agg_stats,
         "mha_median_summary": ({"min": round(min(medians), 2), "median": round(statistics.median(medians), 2),
                                 "max": round(max(medians), 2)} if medians else None),
+        "plausible_range": {"min": lo, "max": hi, "warn_above": spec["warn_above"]},
+        "extreme_zips": {z: round(v, 2) for z, v in sorted(extreme.items())},
         "warnings": warnings,
         "outputs": [f"zip_{s}.csv", f"mha_{s}.csv"],
     }
