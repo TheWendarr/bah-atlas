@@ -124,11 +124,12 @@ test:
 
 clean:
 	rm -rf $(SPATIAL) $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
-		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json
+		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json \
+		$(PROCESSED)/mha_$(YEAR)_geometry_manifest.json
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence hooks
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
@@ -158,6 +159,11 @@ wbs-week:
 # progress notes can link to results. Run after the pipeline, before wbs-week.
 evidence:
 	$(PYTHON) tools/collect_evidence.py
+
+# Check every recorded SHA-256: evidence copies, config hashes, the hash chain
+# between manifests, and (where data/ holds pipeline output) the live files.
+verify:
+	$(PYTHON) tools/verify_hashes.py
 
 # Turn on the commit-message check (subject must name a node or milestone id).
 hooks:

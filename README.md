@@ -102,6 +102,7 @@ make metrics        # adequacy and coverage metrics (B12-B15)
 make spatial        # spatial weights, Moran's I, LISA, Gi* (B16-B18)
 make test           # unit tests on synthetic fixtures
 make evidence       # copy manifests and test results into docs/evidence/
+make verify         # check every recorded SHA-256 against configs, evidence and data
 ```
 
 `make all` runs check-config, geometry, components, tiles, benchmarks, metrics,
@@ -120,6 +121,7 @@ make start N="B8"          # mark nodes in progress
 make done N="A3-A6 B5"     # mark nodes complete today (ranges allowed)
 make scrap N="B26"         # mark nodes scrapped (id and history kept)
 make wbs-show              # print every node's status
+make evidence && make verify   # refresh docs/evidence/ and prove its hashes agree
 make wbs-week              # scaffold this week's progress note in docs/progress/
 # fill in the author parts of docs/progress/<date>.md, then commit and push
 make wbs-sync              # optional: mirror milestones and issues to GitHub (gh CLI)

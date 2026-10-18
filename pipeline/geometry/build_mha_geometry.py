@@ -37,7 +37,9 @@ Inputs you supply
 ------------------------------------------------------------------------------
 Output
 ------------------------------------------------------------------------------
-  --out         GeoPackage (.gpkg), one row per MHA, plus a .geojson twin.
+  --out         GeoPackage (.gpkg), one row per MHA, plus a .geojson twin and a
+                provenance manifest <out stem>_geometry_manifest.json (node B6):
+                input and output SHA-256, counts, and the build report below.
 
 A build report prints at the end: MHAs written, non-contiguous (multipolygon)
 MHAs, ZIPs dropped as non-MHA (CCG/placeholder), and ZIPs with no ZCTA match.
@@ -45,8 +47,11 @@ Reconcile the MHA count against the official list for your BAH year.
 """
 
 import argparse
+import hashlib
+import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import geopandas as gpd
@@ -58,6 +63,14 @@ MHA_CODE = re.compile(r"^[A-Z]{2}\d{3}$")
 
 # MapLibre / web tiles expect lon-lat WGS84.
 WEB_CRS = "EPSG:4326"
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
 
 
 def load_crosswalk(path: str) -> pd.DataFrame:
@@ -143,12 +156,38 @@ def main() -> None:
     mha.to_file(out.with_suffix(".geojson"), driver="GeoJSON")
 
     multi = int((mha.geometry.geom_type == "MultiPolygon").sum())
+    geojson = out.with_suffix(".geojson")
+    inputs = {"A2": Path(args.zcta), "B2": Path(args.crosswalk)}
+    if args.valid_mha:
+        inputs["valid_mha"] = Path(args.valid_mha)
+    if args.zip_to_zcta:
+        inputs["zip_to_zcta"] = Path(args.zip_to_zcta)
+    manifest = {
+        "node": "B6",
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "method": "ZCTA polygons dissolved to MHA through the DTMO ZIP-to-MHA crosswalk "
+                  "(direct zip == zcta match unless --zip-to-zcta is given); no DoD MHA polygons exist",
+        "inputs": {k: p.name for k, p in inputs.items()},
+        "input_sha256": {k: sha256_file(p) for k, p in inputs.items()},
+        "crs": WEB_CRS,
+        "counts": {
+            "mhas": int(len(mha)),
+            "multipolygon_mhas": multi,
+            "zips_dropped_non_mha": int(dropped_codes),
+            "zips_without_zcta": unmatched,
+        },
+        "outputs": [out.name, geojson.name],
+        "output_sha256": {out.name: sha256_file(out), geojson.name: sha256_file(geojson)},
+    }
+    man_path = out.with_name(f"{out.stem}_geometry_manifest.json")
+    man_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
     print("---- MHA geometry build report ----")
     print(f"MHAs written:             {len(mha)}")
     print(f"  non-contiguous (multi): {multi}")
     print(f"ZIPs dropped (non-MHA):   {dropped_codes}  (CCG / ZZ / malformed)")
     print(f"ZIPs with no ZCTA match:  {unmatched}  (PO-box/point ZIPs; use --zip-to-zcta)")
-    print(f"Output:                   {out}  +  {out.with_suffix('.geojson')}")
+    print(f"Output:                   {out}  +  {geojson}  +  {man_path.name}")
     print("Reconcile 'MHAs written' against the official MHA count for your BAH year.")
     # NOTE: do NOT simplify here. Simplifying dissolved polygons creates slivers
     # and gaps. Simplify at tile generation instead (tippecanoe -> PMTiles),

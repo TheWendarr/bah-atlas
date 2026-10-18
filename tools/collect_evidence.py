@@ -11,7 +11,9 @@ copies them into docs/evidence/, where they are committed and linkable.
     docs/evidence/<name>_map.png         result maps a pipeline step drew (e.g. the B18 LISA
                                          cluster map), credited to the nodes of the manifest
                                          beside it that lists the map in its outputs
-    docs/evidence/index.csv              file, nodes it records, source path, generated time, sha256
+    docs/evidence/index.csv              file, nodes it records, source path, generated time,
+                                         sha256 (of the pipeline file) and copy_sha256 (of the
+                                         committed copy, which has machine paths scrubbed)
     docs/evidence/tests.txt              result of the unit-test suite, summary on the first line
 
 File names stay the same from week to week, so `git log -p docs/evidence/` shows
@@ -86,18 +88,20 @@ def collect() -> list[dict]:
             name = f"{src.parent.name}_{name}"
         used.add(name)
         text = scrub(raw)
-        (OUT / name).write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+        text = text if text.endswith("\n") else text + "\n"
+        (OUT / name).write_text(text, encoding="utf-8")
         rows.append({
             "file": name,
             "nodes": " ".join(nodes_of(manifest)),
             "source": src.relative_to(ROOT).as_posix(),
             "generated_at": generated_at(manifest),
             "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+            "copy_sha256": hashlib.sha256((OUT / name).read_bytes()).hexdigest(),
         })
         print(f"  {src.relative_to(ROOT)} -> docs/evidence/{name}  [{rows[-1]['nodes'] or 'no node id'}]")
     rows += collect_maps(used)
     with (OUT / "index.csv").open("w", newline="", encoding="utf-8") as fh:
-        wr = csv.DictWriter(fh, fieldnames=["file", "nodes", "source", "generated_at", "sha256"])
+        wr = csv.DictWriter(fh, fieldnames=["file", "nodes", "source", "generated_at", "sha256", "copy_sha256"])
         wr.writeheader()
         wr.writerows(rows)
     return rows
@@ -129,6 +133,7 @@ def collect_maps(used: set[str]) -> list[dict]:
             "source": src.relative_to(ROOT).as_posix(),
             "generated_at": generated_at(owner),
             "sha256": hashlib.sha256(raw).hexdigest(),
+            "copy_sha256": hashlib.sha256(raw).hexdigest(),
         })
         print(f"  {src.relative_to(ROOT)} -> docs/evidence/{name}  [{rows[-1]['nodes'] or 'no node id'}]")
     return rows

@@ -32,7 +32,8 @@ Output (written to --out)
   zip_mha_geo.csv  zip, mha                         (real MHAs only; feeds build_mha_geometry.py)
   mha_names.csv    mha, name, mha_class
   bah_rates.csv    mha, pay_grade, has_dependents, monthly_rate   (tidy/long)
-  manifest.json    source + year + row counts + class breakdown + schema + warnings
+  manifest.json    source + year + row counts + class breakdown + schema + warnings,
+                   plus the SHA-256 of the input zip (A1) and of each output CSV
 
 ------------------------------------------------------------------------------
 MHA classes
@@ -44,6 +45,7 @@ MHA classes
 """
 
 import argparse
+import hashlib
 import io
 import json
 import re
@@ -74,6 +76,14 @@ MEMBER_PATTERNS = {
     "rates_w":   re.compile(r"^bahw(\d{2})\.txt$", re.I),
     "rates_wo":  re.compile(r"^bahwo(\d{2})\.txt$", re.I),
 }
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
 
 
 def classify(code: str) -> str:
@@ -189,9 +199,14 @@ def main() -> None:
         out / "bah_rates.csv", index=False)
 
     class_counts = crosswalk["mha_class"].value_counts().to_dict()
+    outputs = ["zip_mha.csv", "zip_mha_geo.csv", "mha_names.csv", "bah_rates.csv"]
     manifest = {
+        "nodes": ["B1", "B2", "B3", "B4"],
+        "source_node": "A1",
         "source": SOURCE,
         "source_artifact": Path(args.zip).name,
+        "input_file": Path(args.zip).name,
+        "input_sha256": sha256_file(Path(args.zip)),
         "source_year": source_year,
         "ingested_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "pay_grade_schema": PAY_GRADES,
@@ -204,7 +219,8 @@ def main() -> None:
             "zips_by_class": {k: int(v) for k, v in class_counts.items()},
             "rate_rows": int(len(rates)),
         },
-        "outputs": ["zip_mha.csv", "zip_mha_geo.csv", "mha_names.csv", "bah_rates.csv"],
+        "outputs": outputs,
+        "output_sha256": {name: sha256_file(out / name) for name in outputs},
         "warnings": warnings,
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
