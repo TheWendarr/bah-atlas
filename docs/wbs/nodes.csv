@@ -6,7 +6,7 @@ A4,1,Zillow ZHVI (home value index) ZIP-level,required,,complete,2026-10-03,
 A5,1,HUD FMR / SAFMR FY2026,required,,complete,2026-10-03,
 A6,1,DoD BAH Rate Component Breakdown,required,,complete,2026-10-03,
 A7,1,Mortgage rate reference (Freddie Mac PMMS),required,,complete,,
-A8,1,Property tax and insurance reference,optional,,not_started,,
+A8,1,Property tax and insurance reference,optional,,in_progress,,Locality rates replace the B11 national placeholders: ACS aggregate tax / aggregate value by ZCTA; Treasury FIO ZIP premiums with NAIC state fallback (plan: docs/plans/m6-plan.md)
 A9,1,Census ACS context,optional,,not_started,,
 A10,1,BEA Regional Price Parities,optional,,not_started,,
 A11,1,Protomaps basemap source (OSM),required,,complete,2026-10-03,
@@ -31,15 +31,16 @@ B16,2.6,Spatial weights matrix,required,B6,complete,2026-10-18,
 B17,2.6,Global Moran's I,required,B12 B16,complete,2026-10-18,
 B18,2.6,LISA / Getis-Ord Gi* clusters,required,B12 B16,complete,2026-10-18,
 B19,2.6,Spatial regression,optional,B12 B16 B9 B24 B25,not_started,,
-B20,2.7,Attribute payload JSON (data contract),required,B12 B13 B14 B15 B3 A12,not_started,,
-B21,2.7,UI metadata JSON,required,A12 A13 B1 B3,not_started,,
-B22,2.7,Build manifest JSON,required,,not_started,,Reads every pipeline stage
-B23,2.8,QA / validation report,required,,not_started,,Samples intermediate stages
+B20,2.7,Attribute payload JSON (data contract),required,B12 B13 B14 B15 B3 A12,in_progress,,Keyed by area code; includes CCGs (B28) and AK/HI; schema in docs/plans/m6-plan.md
+B21,2.7,UI metadata JSON,required,A12 A13 B1 B3,in_progress,,
+B22,2.7,Build manifest JSON,required,B20 B21 B28,in_progress,,Also reads every pipeline manifest
+B28,2.7,"CCG and territory polygons (ZCTA dissolve, non-authoritative)",required,A2 B1,in_progress,,"DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18"
+B23,2.8,QA / validation report,required,B20 B22,in_progress,,Samples intermediate stages (B5-B18)
 B24,2.8,ACS context join,optional,A9 B1,not_started,,
 B25,2.8,BEA RPP context join,optional,A10 B1,not_started,,
-B26,2.8,H3 hex overlay (future),optional,B6,not_started,,
+B26,2.8,H3 hex overlay (future),optional,B6,scrapped,,"Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field)"
 B27,2.8,Hotspot overlay payload,optional,B18,not_started,,
-W1,2.8,Layer 2 writeup (how Layer 1 becomes Layer 3),required,,not_started,,Deliverable rather than a pipeline node
+W1,2.8,Layer 2 writeup (how Layer 1 becomes Layer 3),required,B23,in_progress,,Deliverable rather than a pipeline node; author-written from the plan outline
 C1,3.1,MHA PMTiles (served),required,B7,not_started,,
 C2,3.1,Attribute payload JSON (served),required,B20,not_started,,
 C3,3.1,UI metadata JSON (served),required,B21,not_started,,

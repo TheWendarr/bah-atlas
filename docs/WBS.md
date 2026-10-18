@@ -3,13 +3,13 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 7  ·  🟣 In progress: 0  ·  🔴 Not started: 37
+**Nodes tracked:** 66  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 7  ·  🟣 In progress: 7  ·  🔴 Not started: 30  ·  ⚪ Scrapped: 1
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
 ## Milestones
 
-Progress counts **required** nodes only; optional nodes are tracked but do not gate a milestone.
+Progress counts **required** nodes only; optional and scrapped nodes are tracked but do not gate a milestone.
 
 | Milestone | Due | Required complete | Progress | Status |
 |---|---|---|---|---|
@@ -18,16 +18,22 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 6 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-_Nothing marked in progress._
+- 🟣 **A8** Property tax and insurance reference — optional
+- 🟣 **B20** Attribute payload JSON (data contract) — due 30 Oct (M6)
+- 🟣 **B21** UI metadata JSON — due 30 Oct (M6)
+- 🟣 **B22** Build manifest JSON — due 30 Oct (M6)
+- 🟣 **B28** CCG and territory polygons (ZCTA dissolve, non-authoritative) — due 30 Oct (M6)
+- 🟣 **B23** QA / validation report — due 30 Oct (M6)
+- 🟣 **W1** Layer 2 writeup (how Layer 1 becomes Layer 3) — due 30 Oct (M6)
 
 ## Nodal map
 
-Colour key: ⚫ Complete (before this week)  ·  🟢 Completed this week  ·  🟣 In progress  ·  🔴 Not started  ·  dashed border = optional node. Arrows point from an input to the node built from it.
+Colour key: ⚫ Complete (before this week)  ·  🟢 Completed this week  ·  🟣 In progress  ·  🔴 Not started  ·  ⚪ Scrapped  ·  dashed border = optional node. Scrapped nodes stay listed so their ids and history are kept. Arrows point from an input to the node built from it.
 
 ```mermaid
 flowchart LR
@@ -86,6 +92,7 @@ flowchart LR
             B20["B20 Attribute payload JSON"]
             B21["B21 UI metadata JSON"]
             B22["B22 Build manifest JSON"]
+            B28["B28 CCG and territory polygons"]
         end
         subgraph S2_8["2.8 Writeup, QA and Enrichments"]
             B23["B23 QA / validation report"]
@@ -182,12 +189,20 @@ flowchart LR
     A13 --> B21
     B1 --> B21
     B3 --> B21
+    B20 --> B22
+    B21 --> B22
+    B28 --> B22
+    A2 --> B28
+    B1 --> B28
+    B20 --> B23
+    B22 --> B23
     A9 --> B24
     B1 --> B24
     A10 --> B25
     B1 --> B25
     B6 --> B26
     B18 --> B27
+    B23 --> W1
     B7 --> C1
     B20 --> C2
     B21 --> C3
@@ -224,10 +239,13 @@ flowchart LR
     classDef week fill:#2e7d32,stroke:#000,color:#ffffff
     classDef prog fill:#7b1fa2,stroke:#000,color:#ffffff
     classDef todo fill:#c62828,stroke:#000,color:#ffffff
+    classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
     class B12,B13,B14,B15,B16,B17,B18 week
-    class A8,A9,A10,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class A8,B20,B21,B22,B28,B23,W1 prog
+    class A9,A10,B19,B24,B25,B27,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class B26 gone
     class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
 
@@ -248,7 +266,7 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
 | ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
-| 🔴 | **A8** | Property tax and insurance reference | optional | — |  |
+| 🟣 | **A8** | Property tax and insurance reference | optional | — | Locality rates replace the B11 national placeholders: ACS aggregate tax / aggregate value by ZCTA; Treasury FIO ZIP premiums with NAIC state fallback (plan: docs/plans/m6-plan.md) |
 | 🔴 | **A9** | Census ACS context | optional | — |  |
 | 🔴 | **A10** | BEA Regional Price Parities | optional | — |  |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
@@ -312,20 +330,21 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, A12 |  |
-| 🔴 | **B21** | UI metadata JSON | required | A12, A13, B1, B3 |  |
-| 🔴 | **B22** | Build manifest JSON | required | — | Reads every pipeline stage |
+| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, A12 | Keyed by area code; includes CCGs (B28) and AK/HI; schema in docs/plans/m6-plan.md |
+| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3 |  |
+| 🟣 | **B22** | Build manifest JSON | required | B20, B21, B28 | Also reads every pipeline manifest |
+| 🟣 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18 |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B23** | QA / validation report | required | — | Samples intermediate stages |
+| 🟣 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18) |
 | 🔴 | **B24** | ACS context join | optional | A9, B1 |  |
 | 🔴 | **B25** | BEA RPP context join | optional | A10, B1 |  |
-| 🔴 | **B26** | H3 hex overlay (future) | optional | B6 |  |
+| ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
 | 🔴 | **B27** | Hotspot overlay payload | optional | B18 |  |
-| 🔴 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | — | Deliverable rather than a pipeline node |
+| 🟣 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline |
 
 ### Layer 3 — Front-End
 
