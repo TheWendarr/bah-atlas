@@ -134,3 +134,95 @@ adequacy and coverage ratio min/median/max, MHAs below design, A13 class counts
 for all four mapped metrics, status counts, `flat95_vs_design` (MHAs short under
 the fixed-95% reading only, and under the statutory reading only), and for the
 rent cross-check the median ZORI-minus-SAFMR adequacy difference.
+
+## Spatial statistics (`pipeline/spatial/`, written to `data/interim/spatial_YYYY/`)
+
+Scope is CONUS: MHAs coded AK, HI or a territory prefix are excluded from 2.6
+and listed in both manifests. Distances are in EPSG:5070 (Conus Albers, equal
+area) between one representative point per MHA, which always falls inside the
+polygon.
+
+### B16 spatial weights (`build_weights.py`)
+
+**Why k-nearest neighbours.** B6 polygons are dissolves of the ZCTAs DTMO assigns
+to each MHA. The County Cost Group counties between MHAs are not MHAs, so many MHAs
+touch no other MHA. Under contiguity weights those MHAs have no neighbour and drop
+out of every local statistic. KNN (k = 6) gives every MHA the same number of
+neighbours. Queen contiguity is built as a diagnostic, and its island count in the
+manifest is the evidence for the choice.
+
+#### `mha_weights_knn6.gal`
+Neighbour lists in GAL format (GeoDa / PySAL), stored unweighted. Moran's I and
+LISA apply row standardization; Gi* uses binary weights.
+
+#### `mha_neighbors.csv` (one row per KNN link)
+| column      | type  | notes |
+|-------------|-------|-------|
+| mha         | str   | MHA code |
+| neighbor    | str   | one of its k nearest MHAs; ties in distance break on MHA code |
+| rank        | int   | 1 = nearest |
+| distance_km | float | between representative points |
+| queen       | bool  | whether the two polygons also touch (queen contiguity) |
+
+#### `mha_weights_summary.csv` (one row per B6 MHA)
+| column           | type  | notes |
+|------------------|-------|-------|
+| mha              | str   | MHA code |
+| in_scope         | bool  | false for AK, HI and territory codes; other columns blank |
+| x_m, y_m         | float | representative point, EPSG:5070 metres |
+| queen_neighbors  | int   | 0 = island under contiguity weights |
+| knn_nearest_km, knn_farthest_km | float | distance to the 1st and k-th neighbour |
+| knn_component    | int   | connected piece of the KNN graph (0 = largest) |
+
+#### `weights_manifest.json` (node B16)
+B6 file and SHA-256, the scope rule and excluded MHAs, CRS, `primary` (k, tie
+break, components, share of one-way links, nearest and k-th neighbour distances,
+links over 500 km) and `diagnostic_queen` (islands and their codes, components,
+neighbour-count distribution, KNN links that also touch).
+
+### B17 global Moran's I and B18 LISA / Gi* (`spatial_stats.py`)
+
+One test runs for every A12 profile × mode (rent from B12, buy from B14) ×
+variable: `adequacy_gap` (primary; the statutory design test) and `flat95_gap`
+(sensitivity). The primary test is the A12 default profile (`e5_dep`), rent,
+`adequacy_gap`. The KNN weights are rebuilt for each test on the MHAs that have a
+value. Taking a subset of the B16 matrix instead would leave some MHAs with fewer
+than k neighbours. Defaults: 9,999 permutations, seed 2026, alpha 0.05.
+
+#### `mha_spatial_stats.csv` (long: one row per test × MHA)
+| column               | type  | notes |
+|----------------------|-------|-------|
+| profile, mode, variable | str | the test: A12 profile id; `rent` or `buy`; `adequacy_gap` or `flat95_gap` |
+| mha                  | str   | MHA code |
+| status               | str   | `tested`, `no_value` (blank in B12/B14), `no_geometry` (not in B6), `out_of_scope` (AK, HI, territory) |
+| value                | float | the variable tested, copied from B12/B14 |
+| neighbors            | int   | k used for this test |
+| lisa_i               | float | local Moran's I_i (row-standardized) |
+| lisa_quadrant        | str   | HH, LH, LL, HL: the MHA's value and its neighbours' average, each above (H) or below (L) the mean |
+| lisa_p_sim           | float | two-sided pseudo p-value from conditional permutation |
+| lisa_fdr_significant | bool  | significant after the Benjamini-Hochberg step-up across this test's MHAs, at alpha |
+| cluster              | str   | A13 cluster code: `lisa_quadrant` where `lisa_p_sim` < alpha, else `NS` |
+| gi_z                 | float | standardized Getis-Ord Gi* (self included, binary weights); positive = high values nearby |
+| gi_p_sim             | float | two-sided pseudo p-value for Gi* |
+| gi_class             | str   | `hot` (gi_z > 0), `cold` (gi_z < 0) where `gi_p_sim` < alpha, else `ns` |
+
+Stat columns are blank for rows that were not tested. Gi* is computed on the ratio
+behind each gap (`adequacy_ratio` = `adequacy_gap` + 1; `coverage_ratio` =
+`flat95_gap` + 0.95). The standardized z and its permutation p are unchanged by
+adding a constant, so these are the Gi* values of the gap.
+
+#### `spatial_stats_manifest.json` (nodes B17, B18)
+Input files and SHA-256; method (weights, permutations, seed, alpha, smallest
+attainable p-values, the two-sided local alternative, software versions); `headline`
+(the primary test: n, Moran's I, p_sim, the H1 reading, cluster counts, FDR count,
+Gi* hot and cold counts); `flat95_vs_adequacy_moran` (I for both variables per
+profile and mode, and the difference); and one entry per test. Each test entry holds
+`moran` (I, E[I], z and p by permutation and by normal approximation),
+`moran_sensitivity` (adequacy_gap tests: I and p at k = 4, k = 8 and under queen
+contiguity with islands dropped), `lisa` (cluster counts, FDR cut-off and counts),
+`gi_star` (hot, cold, and agreement with HH / LL), and `not_tested` counts.
+
+#### `mha_lisa_e5_dep_rent_map.png`
+LISA cluster map of the primary test, in A13 cluster colours, with the global
+result in the title. `make evidence` copies it to `docs/evidence/` and credits it to
+B17 and B18.

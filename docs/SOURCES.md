@@ -171,6 +171,23 @@ packages). Licenses were read from each project's license file or package metada
 - **Role:** Project tooling only: `make wbs-sync` mirrors the WBS milestones and node issues to GitHub (`tools/wbs_sync_github.py`). Not part of the data pipeline.
 - **License:** MIT.
 
+### libpysal  `[incorporated]`
+- **Provider:** PySAL developers — https://pysal.org/libpysal/
+- **Role:** Spatial weights objects for 2.6: the k-nearest-neighbour weights (B16, built from MHA representative points in `pipeline/spatial/build_weights.py`) and the queen contiguity weights used as a diagnostic and as a sensitivity check (B16, B17).
+- **License:** BSD-3-Clause (package metadata, read 2026-10-18).
+- **Notes:** Requires 4.10 or later. Cite the PySAL ecosystem paper (see *Concepts & methods*).
+
+### esda (Exploratory Spatial Data Analysis)  `[incorporated]`
+- **Provider:** PySAL developers — https://pysal.org/esda/
+- **Role:** Global Moran's I (B17), local Moran's I / LISA and Getis-Ord Gi\* (B18) in `pipeline/spatial/spatial_stats.py`, with permutation inference.
+- **License:** BSD-3-Clause (package metadata, read 2026-10-18).
+- **Notes:** Requires 2.10 or later: the local tests set `alternative="two-sided"` explicitly, because esda is changing the default alternative hypothesis for conditional randomization between releases and an unpinned default would change the p-values on upgrade.
+
+### Matplotlib  `[incorporated]`
+- **Provider:** Matplotlib Development Team — https://matplotlib.org
+- **Role:** Draws the LISA cluster map of the primary 2.6 test (`mha_lisa_e5_dep_rent_map.png`) that `make evidence` copies into `docs/evidence/` for the progress notes. Optional: the pipeline skips the map without it.
+- **License:** Matplotlib License (based on the PSF license; OSI-approved).
+
 ### MapLibre GL JS  `[planned]`
 - **Provider:** MapLibre contributors — https://github.com/maplibre/maplibre-gl-js
 - **Role:** Front-end map runtime for Layer 3 (C-nodes): renders the B7 MHA tiles and the A11 basemap, joining B20 attributes with feature-state.
@@ -225,20 +242,32 @@ packages). Licenses were read from each project's license file or package metada
 - **Notes:** The newest NAIC data year available; premiums have risen since, so this understates 2026 cost.
 - **Verified:** 2026-10-08.
 
-### Global Moran's I  `[planned]`
+### Global Moran's I  `[incorporated]`
 - **Reference:** Moran, P. A. P. (1950). Notes on continuous stochastic phenomena. *Biometrika*, 37(1–2), 17–23. https://doi.org/10.1093/biomet/37.1-2.17
-- **Role:** Global test for spatial autocorrelation in the adequacy gap (B17; hypothesis H1).
+- **Role:** Global test for spatial autocorrelation in the adequacy gap (B17; hypothesis H1). Row-standardized KNN weights, permutation inference; also run on the flat-95% gap to measure how much autocorrelation the fixed-95% reading builds in.
 
-### Local Indicators of Spatial Association (LISA)  `[planned]`
+### Local Indicators of Spatial Association (LISA)  `[incorporated]`
 - **Reference:** Anselin, L. (1995). Local indicators of spatial association — LISA. *Geographical Analysis*, 27(2), 93–115. https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
-- **Role:** Local cluster and outlier classes for each MHA (B18), and the hotspot overlay classes in `config/classification.json` (A13, C16).
+- **Role:** Local cluster and outlier classes for each MHA (B18: HH, LL, HL, LH, or NS at p < 0.05), using the cluster codes and colours in `config/classification.json` (A13); later the hotspot overlay (B27, C16).
 
-### Getis-Ord G and Gi\* statistics  `[planned]`
+### Getis-Ord G and Gi\* statistics  `[incorporated]`
 - **References:** Getis, A., & Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. *Geographical Analysis*, 24(3), 189–206. https://doi.org/10.1111/j.1538-4632.1992.tb00261.x · Ord, J. K., & Getis, A. (1995). Local spatial autocorrelation statistics: Distributional issues and an application. *Geographical Analysis*, 27(4), 286–306. https://doi.org/10.1111/j.1538-4632.1995.tb00912.x
 - **Role:** Hot-spot and cold-spot detection for the adequacy gap (B18), alongside LISA.
-- **Notes:** The 1992 paper introduces the G statistics; the 1995 paper gives the standardized Gi\* form usually reported in hotspot maps.
+- **Notes:** The 1992 paper introduces the G statistics; the 1995 paper gives the standardized Gi\* form usually reported in hotspot maps. B18 computes Gi\* on the adequacy ratio (= gap + 1): the standardized z-score is unchanged by adding a constant, and the unstandardized G divides by the sum of the variable, which is near zero for a gap (`tests/test_spatial.py` checks the equivalence).
+
+### Spatial weights: k-nearest neighbours  `[incorporated]`
+- **Reference:** Getis, A., & Aldstadt, J. (2004). Constructing the spatial weights matrix using a local statistic. *Geographical Analysis*, 36(2), 90–104. https://doi.org/10.1111/j.1538-4632.2004.tb01127.x
+- **Role:** B16 uses k = 6 nearest neighbours between MHA representative points (EPSG:5070), CONUS only. MHAs are dissolves of DTMO's ZCTAs and the County Cost Group counties between them are not MHAs, so contiguity weights leave many MHAs with no neighbour; KNN gives every MHA the same number of neighbours. Queen contiguity is kept as a diagnostic (island count in `weights_manifest.json`) and, with k = 4 and k = 8, as a sensitivity check on B17.
+- **Notes:** Getis & Aldstadt show that results depend on the weights specification, which is the reason for reporting the sensitivity check rather than one weights matrix.
+
+### False discovery rate for local statistics  `[incorporated]`
+- **References:** Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B*, 57(1), 289–300. https://doi.org/10.1111/j.2517-6161.1995.tb02031.x · Caldas de Castro, M., & Singer, B. H. (2006). Controlling the false discovery rate: A new application to account for multiple and dependent tests in local statistics of spatial association. *Geographical Analysis*, 38(2), 180–208. https://doi.org/10.1111/j.0016-7363.2006.00682.x
+- **Role:** B18 tests about 290 MHAs at once, so roughly 5% would read as significant by chance at p < 0.05. The Benjamini-Hochberg step-up procedure is applied to each test's LISA p-values and reported as `lisa_fdr_significant`, beside the conventional p < 0.05 cluster class; Caldas de Castro & Singer apply it to local spatial statistics.
+
+### PySAL  `[incorporated]`
+- **Reference:** Rey, S. J., Anselin, L., Amaral, P., Arribas-Bel, D., Cortes, R. X., Gaboardi, J. D., Kang, W., Knaap, E., Li, Z., Lumnitz, S., Oshan, T. M., Shao, H., & Wolf, L. J. (2022). The PySAL ecosystem: Philosophy and implementation. *Geographical Analysis*. https://doi.org/10.1111/gean.12276
+- **Role:** Citation for the libpysal and esda software used in 2.6.
   
 
 *Still to add as they are adopted: the DoD BAH Primer and DTMO's BAH methodology, cited
-directly rather than through summaries, and the spatial-weights method and software chosen
-for 2.6 (B16).*
+directly rather than through summaries.*

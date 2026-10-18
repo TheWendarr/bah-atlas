@@ -8,6 +8,9 @@ manifests are the analysis results a reviewer needs to see, so this script
 copies them into docs/evidence/, where they are committed and linkable.
 
     docs/evidence/<name>_manifest.json   one per pipeline manifest found under data/
+    docs/evidence/<name>_map.png         result maps a pipeline step drew (e.g. the B18 LISA
+                                         cluster map), credited to the nodes of the manifest
+                                         beside it that lists the map in its outputs
     docs/evidence/index.csv              file, nodes it records, source path, generated time, sha256
     docs/evidence/tests.txt              result of the unit-test suite, summary on the first line
 
@@ -92,10 +95,42 @@ def collect() -> list[dict]:
             "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         })
         print(f"  {src.relative_to(ROOT)} -> docs/evidence/{name}  [{rows[-1]['nodes'] or 'no node id'}]")
+    rows += collect_maps(used)
     with (OUT / "index.csv").open("w", newline="", encoding="utf-8") as fh:
         wr = csv.DictWriter(fh, fieldnames=["file", "nodes", "source", "generated_at", "sha256"])
         wr.writeheader()
         wr.writerows(rows)
+    return rows
+
+
+def collect_maps(used: set[str]) -> list[dict]:
+    """Copy result maps (*_map.png) and credit each to the manifest that lists it as an output."""
+    rows: list[dict] = []
+    for src in sorted(DATA.rglob("*_map.png")):
+        if src.stat().st_size > MAX_BYTES:
+            print(f"  skip {src.relative_to(ROOT)} (over {MAX_BYTES // 1000} kB)")
+            continue
+        owner: object = None
+        for man in sorted(src.parent.glob("*manifest*.json")):
+            try:
+                data = json.loads(man.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(data, dict) and src.name in (data.get("outputs") or []):
+                owner = data
+                break
+        name = src.name if src.name not in used else f"{src.parent.name}_{src.name}"
+        used.add(name)
+        raw = src.read_bytes()
+        (OUT / name).write_bytes(raw)
+        rows.append({
+            "file": name,
+            "nodes": " ".join(nodes_of(owner)),
+            "source": src.relative_to(ROOT).as_posix(),
+            "generated_at": generated_at(owner),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        })
+        print(f"  {src.relative_to(ROOT)} -> docs/evidence/{name}  [{rows[-1]['nodes'] or 'no node id'}]")
     return rows
 
 
@@ -120,7 +155,8 @@ def main() -> None:
         sys.exit("collect_evidence: no data/ folder; run the pipeline first")
     print("Pipeline manifests")
     rows = collect()
-    print(f"copied {len(rows)} manifest(s) to docs/evidence/")
+    maps = sum(r["file"].endswith(".png") for r in rows)
+    print(f"copied {len(rows) - maps} manifest(s) and {maps} map(s) to docs/evidence/")
     if not args.no_tests:
         print("Unit tests")
         print("  " + run_tests())

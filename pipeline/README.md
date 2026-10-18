@@ -69,6 +69,24 @@ Tests for all four run on synthetic fixtures with `make test`.
   was built from different B8/B9 files than the ones beside it. Outputs go to
   `data/interim/metrics_YYYY/`. Stdlib only.
 
+## `spatial/` — 2.6 spatial statistics
+
+Tests hypothesis H1 (adequacy gaps cluster in space) on the CONUS MHAs; AK, HI and
+territory codes are excluded. Run both with `make spatial` (after `make geometry`
+and `make metrics`); outputs go to `data/interim/spatial_YYYY/`. Needs libpysal and
+esda (PySAL); matplotlib for the map.
+
+- `build_weights.py` — B16 (`make weights`). k-nearest-neighbour weights (k = 6)
+  between MHA representative points in EPSG:5070, ties broken on MHA code. Queen
+  contiguity is built as a diagnostic: MHAs separated by County Cost Group counties
+  touch no other MHA, and the manifest counts those islands.
+- `spatial_stats.py` — B17 and B18 for every A12 profile × rent/buy ×
+  `adequacy_gap` (primary) / `flat95_gap` (sensitivity): global Moran's I with a
+  k = 4 / k = 8 / queen sensitivity check, LISA clusters (A13 codes) with a
+  Benjamini-Hochberg FDR column, and Getis-Ord Gi* hot and cold spots. Fixed seed
+  and permutation count, so a rerun gives the same result. Stops if B16 was built
+  from a different B6 file. Draws the LISA cluster map of the primary test.
+
 ## `tiles/` — web tiles
 
 - `build_mha_pmtiles.py` — tiles the MHA polygons into `mha_YYYY.pmtiles`
