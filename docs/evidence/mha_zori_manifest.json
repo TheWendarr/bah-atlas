@@ -5,7 +5,7 @@
   "unit": "USD per month (asking rent, excludes utilities)",
   "input_file": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
   "input_sha256": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
-  "generated_at": "2026-10-18T20:33:15+00:00",
+  "generated_at": "2026-10-18T22:00:33+00:00",
   "window_requested": "2026-01:2026-12",
   "window_months_used": [
     "2026-01",

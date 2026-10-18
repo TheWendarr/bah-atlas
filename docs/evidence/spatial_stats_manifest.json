@@ -3,7 +3,7 @@
     "B17",
     "B18"
   ],
-  "generated_at": "2026-10-18T20:33:28+00:00",
+  "generated_at": "2026-10-18T22:01:24+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -17,8 +17,8 @@
     "A13": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
     "B6": "fd76280780d1dbd1ac20f01eb75b770ef969129b012e665bb38843f647422b4f",
     "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
-    "B16": "bc75f9cfc4382307d3f973d6dedb8e68fbb256e910b49cb8c8409a3ef1f2c68e",
-    "B14": "ddc5d89fde0b21ae4c4643169930258036744df985bbabe76d7c0acc61167b3e"
+    "B16": "049c2155c2a8e84e64cc13f43a28d6833a3321c0a4e3d3d042682acf9f0d19c8",
+    "B14": "15777758c86086245f55b8751c5c055d73c906309cd42f67eb9f2e9b2501446a"
   },
   "hypothesis": "H1: adequacy gaps are spatially autocorrelated across CONUS MHAs, not randomly placed",
   "method": {
@@ -30,12 +30,12 @@
       "moran_and_lisa": "row-standardized",
       "gi_star": "binary, self included"
     },
-    "permutations": 9999,
+    "permutations": 99999,
     "seed": 2026,
     "alpha": 0.05,
     "min_attainable_p_sim": {
-      "global": 0.0001,
-      "local_two_sided": 0.0002
+      "global": 1e-05,
+      "local_two_sided": 2e-05
     },
     "global": "Moran's I; p_sim from random permutation, p_norm from the normal approximation",
     "lisa": "local Moran's I_i, conditional permutation, two-sided pseudo p-value; cluster = quadrant where lisa_p_sim < alpha, else NS",
@@ -73,7 +73,7 @@
     "test": "e5_dep rent adequacy_gap",
     "n": 283,
     "moran_I": 0.1515,
-    "p_sim": 0.0001,
+    "p_sim": 1e-05,
     "h1_reading": "reject spatial randomness at alpha 0.05: positive spatial autocorrelation",
     "lisa_clusters": {
       "HH": 20,
@@ -104,16 +104,16 @@
     {
       "profile": "e5_dep",
       "mode": "buy",
-      "I_adequacy_gap": 0.3965,
-      "I_flat95_gap": 0.3673,
-      "I_difference_flat95_minus_adequacy": -0.0292
+      "I_adequacy_gap": 0.3585,
+      "I_flat95_gap": 0.3265,
+      "I_difference_flat95_minus_adequacy": -0.032
     },
     {
       "profile": "o3_dep",
       "mode": "buy",
-      "I_adequacy_gap": 0.4819,
-      "I_flat95_gap": 0.462,
-      "I_difference_flat95_minus_adequacy": -0.0199
+      "I_adequacy_gap": 0.4339,
+      "I_flat95_gap": 0.4099,
+      "I_difference_flat95_minus_adequacy": -0.024
     }
   ],
   "tests": [
@@ -130,21 +130,21 @@
         "EI": -0.0035,
         "z_norm": 4.841,
         "p_norm": 0.0,
-        "z_sim": 4.793,
-        "p_sim": 0.0001
+        "z_sim": 4.841,
+        "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
           "I": 0.1796,
-          "p_sim": 0.0001
+          "p_sim": 1e-05
         },
         "knn8": {
           "I": 0.1525,
-          "p_sim": 0.0001
+          "p_sim": 1e-05
         },
         "queen": {
           "I": 0.2153,
-          "p_sim": 0.0013,
+          "p_sim": 0.00176,
           "n": 205,
           "islands_dropped": 78
         }
@@ -158,7 +158,7 @@
           "NS": 245
         },
         "significant": 38,
-        "fdr_cutoff_p": 0.0003,
+        "fdr_cutoff_p": 0.00011,
         "fdr_significant": 2,
         "fdr_clusters": {
           "HH": 0,
@@ -193,8 +193,8 @@
         "EI": -0.0035,
         "z_norm": 5.502,
         "p_norm": 0.0,
-        "z_sim": 5.45,
-        "p_sim": 0.0001
+        "z_sim": 5.502,
+        "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
@@ -205,7 +205,7 @@
           "NS": 239
         },
         "significant": 44,
-        "fdr_cutoff_p": 0.0003,
+        "fdr_cutoff_p": 5e-05,
         "fdr_significant": 2,
         "fdr_clusters": {
           "HH": 0,
@@ -240,21 +240,21 @@
         "EI": -0.0035,
         "z_norm": 8.076,
         "p_norm": 0.0,
-        "z_sim": 8.073,
-        "p_sim": 0.0001
+        "z_sim": 8.057,
+        "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
           "I": 0.2595,
-          "p_sim": 0.0001
+          "p_sim": 1e-05
         },
         "knn8": {
           "I": 0.2608,
-          "p_sim": 0.0001
+          "p_sim": 1e-05
         },
         "queen": {
           "I": 0.2684,
-          "p_sim": 0.0001,
+          "p_sim": 0.00016,
           "n": 205,
           "islands_dropped": 78
         }
@@ -262,16 +262,16 @@
       "lisa": {
         "clusters": {
           "HH": 22,
-          "LL": 22,
+          "LL": 20,
           "HL": 4,
           "LH": 6,
-          "NS": 229
+          "NS": 231
         },
-        "significant": 54,
-        "fdr_cutoff_p": 0.0005,
-        "fdr_significant": 3,
+        "significant": 52,
+        "fdr_cutoff_p": 0.00025,
+        "fdr_significant": 2,
         "fdr_clusters": {
-          "HH": 1,
+          "HH": 0,
           "LL": 1,
           "HL": 0,
           "LH": 1
@@ -279,10 +279,10 @@
       },
       "gi_star": {
         "hot": 28,
-        "cold": 26,
-        "ns": 229,
+        "cold": 24,
+        "ns": 231,
         "hh_also_hot": 22,
-        "ll_also_cold": 22
+        "ll_also_cold": 20
       },
       "not_tested": {
         "no_value": 6,
@@ -303,22 +303,22 @@
         "EI": -0.0035,
         "z_norm": 8.199,
         "p_norm": 0.0,
-        "z_sim": 8.186,
-        "p_sim": 0.0001
+        "z_sim": 8.183,
+        "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
           "HH": 31,
-          "LL": 24,
+          "LL": 23,
           "HL": 4,
           "LH": 4,
-          "NS": 220
+          "NS": 221
         },
-        "significant": 63,
-        "fdr_cutoff_p": 0.0005,
-        "fdr_significant": 4,
+        "significant": 62,
+        "fdr_cutoff_p": 0.00029,
+        "fdr_significant": 3,
         "fdr_clusters": {
-          "HH": 2,
+          "HH": 1,
           "LL": 1,
           "HL": 0,
           "LH": 1
@@ -326,10 +326,10 @@
       },
       "gi_star": {
         "hot": 35,
-        "cold": 28,
-        "ns": 220,
+        "cold": 27,
+        "ns": 221,
         "hh_also_hot": 31,
-        "ll_also_cold": 24
+        "ll_also_cold": 23
       },
       "not_tested": {
         "no_value": 6,
@@ -346,53 +346,53 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.3965,
+        "I": 0.3585,
         "EI": -0.0035,
-        "z_norm": 12.494,
+        "z_norm": 11.309,
         "p_norm": 0.0,
-        "z_sim": 12.6,
-        "p_sim": 0.0001
+        "z_sim": 11.317,
+        "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
-          "I": 0.4189,
-          "p_sim": 0.0001
+          "I": 0.3767,
+          "p_sim": 1e-05
         },
         "knn8": {
-          "I": 0.3747,
-          "p_sim": 0.0001
+          "I": 0.3383,
+          "p_sim": 1e-05
         },
         "queen": {
-          "I": 0.5313,
-          "p_sim": 0.0001,
+          "I": 0.4967,
+          "p_sim": 1e-05,
           "n": 205,
           "islands_dropped": 78
         }
       },
       "lisa": {
         "clusters": {
-          "HH": 19,
-          "LL": 40,
-          "HL": 1,
-          "LH": 9,
-          "NS": 214
+          "HH": 11,
+          "LL": 38,
+          "HL": 4,
+          "LH": 13,
+          "NS": 217
         },
-        "significant": 69,
-        "fdr_cutoff_p": 0.0057,
-        "fdr_significant": 34,
+        "significant": 66,
+        "fdr_cutoff_p": 0.00509,
+        "fdr_significant": 29,
         "fdr_clusters": {
-          "HH": 0,
-          "LL": 30,
-          "HL": 1,
-          "LH": 3
+          "HH": 1,
+          "LL": 25,
+          "HL": 2,
+          "LH": 1
         }
       },
       "gi_star": {
-        "hot": 28,
-        "cold": 41,
-        "ns": 214,
-        "hh_also_hot": 19,
-        "ll_also_cold": 40
+        "hot": 24,
+        "cold": 42,
+        "ns": 217,
+        "hh_also_hot": 11,
+        "ll_also_cold": 38
       },
       "not_tested": {
         "no_value": 6,
@@ -409,37 +409,37 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.3673,
+        "I": 0.3265,
         "EI": -0.0035,
-        "z_norm": 11.583,
+        "z_norm": 10.309,
         "p_norm": 0.0,
-        "z_sim": 11.664,
-        "p_sim": 0.0001
+        "z_sim": 10.31,
+        "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
-          "HH": 14,
-          "LL": 39,
-          "HL": 2,
-          "LH": 9,
-          "NS": 219
+          "HH": 9,
+          "LL": 38,
+          "HL": 3,
+          "LH": 13,
+          "NS": 220
         },
-        "significant": 64,
-        "fdr_cutoff_p": 0.0053,
-        "fdr_significant": 31,
+        "significant": 63,
+        "fdr_cutoff_p": 0.00233,
+        "fdr_significant": 22,
         "fdr_clusters": {
-          "HH": 0,
-          "LL": 28,
-          "HL": 2,
-          "LH": 1
+          "HH": 1,
+          "LL": 20,
+          "HL": 1,
+          "LH": 0
         }
       },
       "gi_star": {
-        "hot": 23,
+        "hot": 22,
         "cold": 41,
-        "ns": 219,
-        "hh_also_hot": 14,
-        "ll_also_cold": 39
+        "ns": 220,
+        "hh_also_hot": 9,
+        "ll_also_cold": 38
       },
       "not_tested": {
         "no_value": 6,
@@ -456,53 +456,53 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.4819,
+        "I": 0.4339,
         "EI": -0.0035,
-        "z_norm": 15.162,
+        "z_norm": 13.665,
         "p_norm": 0.0,
-        "z_sim": 15.25,
-        "p_sim": 0.0001
+        "z_sim": 13.671,
+        "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
-          "I": 0.5081,
-          "p_sim": 0.0001
+          "I": 0.4558,
+          "p_sim": 1e-05
         },
         "knn8": {
-          "I": 0.4465,
-          "p_sim": 0.0001
+          "I": 0.3994,
+          "p_sim": 1e-05
         },
         "queen": {
-          "I": 0.6226,
-          "p_sim": 0.0001,
+          "I": 0.5922,
+          "p_sim": 1e-05,
           "n": 205,
           "islands_dropped": 78
         }
       },
       "lisa": {
         "clusters": {
-          "HH": 29,
-          "LL": 43,
+          "HH": 24,
+          "LL": 42,
           "HL": 2,
-          "LH": 6,
-          "NS": 203
+          "LH": 5,
+          "NS": 210
         },
-        "significant": 80,
-        "fdr_cutoff_p": 0.0049,
-        "fdr_significant": 35,
+        "significant": 73,
+        "fdr_cutoff_p": 0.00361,
+        "fdr_significant": 23,
         "fdr_clusters": {
-          "HH": 5,
-          "LL": 28,
+          "HH": 4,
+          "LL": 18,
           "HL": 1,
-          "LH": 1
+          "LH": 0
         }
       },
       "gi_star": {
-        "hot": 35,
-        "cold": 45,
-        "ns": 203,
-        "hh_also_hot": 29,
-        "ll_also_cold": 43
+        "hot": 29,
+        "cold": 44,
+        "ns": 210,
+        "hh_also_hot": 24,
+        "ll_also_cold": 42
       },
       "not_tested": {
         "no_value": 6,
@@ -519,37 +519,37 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.462,
+        "I": 0.4099,
         "EI": -0.0035,
-        "z_norm": 14.542,
+        "z_norm": 12.912,
         "p_norm": 0.0,
-        "z_sim": 14.615,
-        "p_sim": 0.0001
+        "z_sim": 12.917,
+        "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
-          "HH": 27,
-          "LL": 42,
+          "HH": 22,
+          "LL": 37,
           "HL": 3,
-          "LH": 6,
-          "NS": 205
+          "LH": 4,
+          "NS": 217
         },
-        "significant": 78,
-        "fdr_cutoff_p": 0.0059,
-        "fdr_significant": 35,
+        "significant": 66,
+        "fdr_cutoff_p": 0.00439,
+        "fdr_significant": 25,
         "fdr_clusters": {
-          "HH": 5,
-          "LL": 28,
+          "HH": 4,
+          "LL": 20,
           "HL": 1,
-          "LH": 1
+          "LH": 0
         }
       },
       "gi_star": {
-        "hot": 33,
-        "cold": 45,
-        "ns": 205,
-        "hh_also_hot": 27,
-        "ll_also_cold": 42
+        "hot": 26,
+        "cold": 40,
+        "ns": 217,
+        "hh_also_hot": 22,
+        "ll_also_cold": 37
       },
       "not_tested": {
         "no_value": 6,

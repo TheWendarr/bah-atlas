@@ -5,7 +5,7 @@
     "B14",
     "B15"
   ],
-  "generated_at": "2026-10-18T20:33:19+00:00",
+  "generated_at": "2026-10-18T22:00:39+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -20,7 +20,7 @@
     "B4": "f1912660e5752189f2d8642c956a24615f5c7f710b0e256fe6626b2e1e6ffbf3",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
     "B10": "66df87450290c8306e19db85bc460ec2fa862d0500ce3a9ea4016a457bee345c",
-    "B11": "7a7f4abdffce1d08604444f37c567b7a7a70ad5f33df3cf3d28036b59aeb7bad"
+    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d"
   },
   "statutory_basis": "37 U.S.C. 403(b)(3): BAH = local cost of adequate housing - 5% of the national average cost for the pay grade and dependency status",
   "cost_share": {
@@ -165,70 +165,69 @@
         "mhas": 299,
         "mhas_with_value": 289,
         "adequacy_ratio": {
-          "min": 0.3835,
-          "median": 0.7793,
-          "max": 1.3477
+          "min": 0.3933,
+          "median": 0.7679,
+          "max": 1.3322
         },
         "coverage_ratio": {
-          "min": 0.3734,
-          "median": 0.7349,
-          "max": 1.2772
+          "min": 0.3829,
+          "median": 0.7217,
+          "max": 1.2624
         },
-        "design_coverage_median": 0.9565,
-        "design_gap_usd_median": -629.73,
+        "design_coverage_median": 0.9568,
+        "design_gap_usd_median": -653.86,
         "mhas_below_design": 267,
         "mhas_at_or_above_full_cost": 11,
         "flat95_vs_design": {
-          "mhas_below_flat_95": 269,
+          "mhas_below_flat_95": 271,
           "short_under_flat_95_only": [
-            "AL002",
-            "IL089",
-            "TX279"
+            "AL004",
+            "AL005",
+            "AR010",
+            "SC260"
           ],
-          "short_under_design_only": [
-            "AK404"
-          ]
+          "short_under_design_only": []
         },
         "adequacy_ratio_classes": {
-          "Below 85%: far below the statutory design": 193,
+          "Below 85%: far below the statutory design": 207,
           "85-92%: well below design": 35,
-          "92-97%: below design": 24,
-          "97-103%: at the statutory design point": 23,
-          "103-108%: above design": 3,
+          "92-97%: below design": 14,
+          "97-103%: at the statutory design point": 18,
+          "103-108%: above design": 6,
           "108-115%: well above design": 4,
-          "115% and above: far above design": 7
+          "115% and above: far above design": 5
         },
         "design_gap_usd_classes": {
-          "Short of design by over $500": 166,
-          "Short by $250-500": 51,
-          "Short by $50-250": 38,
-          "Within $50 of design": 18,
-          "Over by $50-250": 9,
+          "Short of design by over $500": 180,
+          "Short by $250-500": 47,
+          "Short by $50-250": 31,
+          "Within $50 of design": 15,
+          "Over by $50-250": 10,
           "Over by $250-500": 5,
-          "Over by more than $500": 2
+          "Over by more than $500": 1
         },
         "coverage_ratio_classes": {
-          "Below 85%: severe shortfall": 226,
-          "85-90%: shortfall": 19,
-          "90-94%: below target": 19,
+          "Below 85%: severe shortfall": 237,
+          "85-90%: shortfall": 16,
+          "90-94%: below target": 15,
           "94-96%: at the 95% target": 6,
-          "96-100%: above target": 8,
-          "100-105%: full coverage": 3,
-          "105% and above: surplus": 8
+          "96-100%: above target": 4,
+          "100-105%: full coverage": 4,
+          "105% and above: surplus": 7
         },
         "surplus_usd_classes": {
-          "Gap over $500": 191,
-          "Gap $250-500": 48,
-          "Gap $50-250": 36,
-          "Within $50 of full cost": 3,
-          "Surplus $50-250": 9,
-          "Surplus $250-500": 1,
-          "Surplus over $500": 1
+          "Gap over $500": 200,
+          "Gap $250-500": 50,
+          "Gap $50-250": 25,
+          "Within $50 of full cost": 6,
+          "Surplus $50-250": 6,
+          "Surplus $250-500": 2,
+          "Surplus over $500": 0
         },
         "status_counts": {
           "ok": 289,
-          "no_home_value": 0,
-          "no_utilities": 10
+          "piti_only_no_zori": 10,
+          "no_home_value": 0
         }
       }
     },
@@ -314,76 +313,83 @@
         "mhas": 299,
         "mhas_with_value": 289,
         "adequacy_ratio": {
-          "min": 0.4288,
-          "median": 0.985,
-          "max": 1.6554
+          "min": 0.4397,
+          "median": 0.9719,
+          "max": 1.6451
         },
         "coverage_ratio": {
-          "min": 0.4167,
-          "median": 0.9318,
-          "max": 1.5294
+          "min": 0.4273,
+          "median": 0.9167,
+          "max": 1.5312
         },
-        "design_coverage_median": 0.9479,
-        "design_gap_usd_median": -39.46,
-        "mhas_below_design": 159,
-        "mhas_at_or_above_full_cost": 102,
+        "design_coverage_median": 0.9482,
+        "design_gap_usd_median": -80.62,
+        "mhas_below_design": 166,
+        "mhas_at_or_above_full_cost": 92,
         "flat95_vs_design": {
-          "mhas_below_flat_95": 156,
+          "mhas_below_flat_95": 166,
           "short_under_flat_95_only": [
-            "OH233"
+            "AZ016",
+            "IL088",
+            "NC182",
+            "OH233",
+            "VA303"
           ],
           "short_under_design_only": [
-            "DE054",
-            "MD134",
-            "NY217",
-            "RI257"
+            "CT050",
+            "HI409",
+            "ME139",
+            "MI155",
+            "NH194"
           ]
         },
         "adequacy_ratio_classes": {
           "Below 85%: far below the statutory design": 75,
-          "85-92%: well below design": 26,
-          "92-97%: below design": 28,
-          "97-103%: at the statutory design point": 45,
-          "103-108%: above design": 28,
-          "108-115%: well above design": 22,
-          "115% and above: far above design": 65
+          "85-92%: well below design": 33,
+          "92-97%: below design": 36,
+          "97-103%: at the statutory design point": 40,
+          "103-108%: above design": 24,
+          "108-115%: well above design": 27,
+          "115% and above: far above design": 54
         },
         "design_gap_usd_classes": {
-          "Short of design by over $500": 75,
-          "Short by $250-500": 29,
-          "Short by $50-250": 36,
+          "Short of design by over $500": 80,
+          "Short by $250-500": 31,
+          "Short by $50-250": 42,
           "Within $50 of design": 24,
-          "Over by $50-250": 47,
-          "Over by $250-500": 45,
-          "Over by more than $500": 33
+          "Over by $50-250": 41,
+          "Over by $250-500": 44,
+          "Over by more than $500": 27
         },
         "coverage_ratio_classes": {
-          "Below 85%: severe shortfall": 93,
-          "85-90%: shortfall": 23,
-          "90-94%: below target": 32,
-          "94-96%: at the 95% target": 16,
-          "96-100%: above target": 23,
-          "100-105%: full coverage": 25,
-          "105% and above: surplus": 77
+          "Below 85%: severe shortfall": 95,
+          "85-90%: shortfall": 40,
+          "90-94%: below target": 28,
+          "94-96%: at the 95% target": 12,
+          "96-100%: above target": 22,
+          "100-105%: full coverage": 24,
+          "105% and above: surplus": 68
         },
         "surplus_usd_classes": {
-          "Gap over $500": 91,
-          "Gap $250-500": 34,
-          "Gap $50-250": 51,
-          "Within $50 of full cost": 24,
-          "Surplus $50-250": 37,
-          "Surplus $250-500": 37,
-          "Surplus over $500": 15
+          "Gap over $500": 98,
+          "Gap $250-500": 42,
+          "Gap $50-250": 47,
+          "Within $50 of full cost": 23,
+          "Surplus $50-250": 42,
+          "Surplus $250-500": 24,
+          "Surplus over $500": 13
         },
         "status_counts": {
           "ok": 289,
-          "no_home_value": 0,
-          "no_utilities": 10
+          "piti_only_no_zori": 10,
+          "no_home_value": 0
         }
       }
     }
   },
-  "warnings": [],
+  "warnings": [
+    "2 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2006, o3_dep/MA119=0.2513"
+  ],
   "outputs": [
     "mha_rent_metrics.csv",
     "mha_buy_metrics.csv"

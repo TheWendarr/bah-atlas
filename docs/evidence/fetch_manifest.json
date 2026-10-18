@@ -84,5 +84,26 @@
     "retrieved_at": "2026-10-03T19:38:42+00:00",
     "sha256": "d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f",
     "source_url": "https://www.freddiemac.com/pmms/docs/PMMS_history.csv"
+  },
+  "A8": {
+    "bytes": 14892818,
+    "filename": "Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+    "license": "U.S. Government work (public domain)",
+    "name": "Treasury FIO homeowners insurance metrics by ZIP, 2018-2022",
+    "node_id": "A8",
+    "retrieved_at": "2026-10-18T21:47:16+00:00",
+    "retrieved_at_basis": "file mtime",
+    "sha256": "99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e",
+    "source_url": "https://home.treasury.gov/system/files/311/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx"
+  },
+  "A9": {
+    "bytes": 1219849,
+    "filename": "acs5_2024_zcta.json",
+    "license": "U.S. Government work (public domain)",
+    "name": "Census ACS 5-year 2020-2024, ZCTA: real estate taxes, home value, population",
+    "node_id": "A9",
+    "retrieved_at": "2026-10-18T22:00:33+00:00",
+    "sha256": "51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30",
+    "source_url": "https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E&for=zip%20code%20tabulation%20area:*"
   }
 }

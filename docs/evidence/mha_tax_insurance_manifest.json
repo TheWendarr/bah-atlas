@@ -1,0 +1,87 @@
+{
+  "nodes": [
+    "A8"
+  ],
+  "role": "per-MHA property tax rate (A9 ACS) and homeowners premium (A8 FIO) for B11",
+  "generated_at": "2026-10-18T22:00:39+00:00",
+  "inputs": {
+    "A9": "acs5_2024_zcta.json",
+    "A8": "Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+    "B1": "zip_mha.csv"
+  },
+  "input_sha256": {
+    "A9": "51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30",
+    "A8": "99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b"
+  },
+  "config": "config/ownership.json",
+  "config_sha256": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "property_tax": {
+    "acs_vintage": 2024,
+    "acs_period": "2020-2024",
+    "variables": {
+      "taxes": "B25090_001E",
+      "value": "B25079_001E"
+    },
+    "method": "sum(B25090_001E) / sum(B25079_001E) over the MHA's ZCTAs (direct zip == zcta)",
+    "zctas_in_file": 33772,
+    "zctas_usable": 15196,
+    "zctas_missing_estimate": 18576,
+    "zctas_zero_value": 0,
+    "mhas_locality": 299,
+    "mhas_state_fallback": [],
+    "effective_rate_summary": {
+      "min": 0.00232,
+      "median": 0.00794,
+      "max": 0.024
+    }
+  },
+  "insurance": {
+    "data_year": 2022,
+    "scaled_to_bah_year": false,
+    "method": "median FIO average premium over the MHA's published ZIPs",
+    "sheet": "Supporting Underlying Metrics",
+    "premium_field": "Premiums Per Policy",
+    "years_in_file": {
+      "2018": 25593,
+      "2019": 25593,
+      "2020": 25593,
+      "2021": 25593,
+      "2022": 25593
+    },
+    "zips_published_for_year": 25593,
+    "blank_rows_skipped": 3975,
+    "zip_premium_summary": {
+      "min": 564.57,
+      "median": 1551.49,
+      "max": 40718.99
+    },
+    "zips_above_10000": 94,
+    "zips_in_real_mhas": 12397,
+    "mhas_locality": 299,
+    "mhas_state_fallback": [],
+    "premium_summary": {
+      "min": 833.0,
+      "median": 1625.0,
+      "max": 15638.0
+    }
+  },
+  "state_values_used": {},
+  "mhas": 299,
+  "outputs": [
+    "mha_tax_insurance.csv"
+  ],
+  "output_sha256": {
+    "mha_tax_insurance.csv": "e3e84b027a8f094097573207980a96323f6c3de64771be93b977ac800960aacd"
+  },
+  "warnings": []
+}

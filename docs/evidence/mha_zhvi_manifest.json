@@ -5,7 +5,7 @@
   "unit": "USD (typical home value)",
   "input_file": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
   "input_sha256": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
-  "generated_at": "2026-10-18T20:33:16+00:00",
+  "generated_at": "2026-10-18T22:00:34+00:00",
   "window_requested": "2026-01:2026-12",
   "window_months_used": [
     "2026-01",
