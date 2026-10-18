@@ -171,7 +171,7 @@ H2 asks what the adequacy gaps are associated with. The research question itself
 
 ### B22 · build manifest — target Thu 29 Oct
 
-- Gathers every stage manifest into one file: input checksums, windows, row counts, warnings, software versions, git commit.
+- Gathers every stage manifest into one file: input checksums, windows, row counts, warnings, software versions, git commit. It builds on `tools/verify_hashes.py` (`make verify`), which already proves the recorded hashes agree.
 - Its own SHA-256 is the `build_id` in B20, B21 and B27.
 - **Check:** the build stops if any stage manifest is missing, or was built from inputs (configs included) other than the ones beside it.
 
@@ -179,7 +179,7 @@ H2 asks what the adequacy gaps are associated with. The research question itself
 
 A generated `docs/qa/qa-2026.md` covering:
 
-1. Join coverage at each step: ZIPs → ZCTAs → MHAs; ZIPs with no ZORI, ZHVI or SAFMR.
+1. Join coverage at each step: ZIPs → ZCTAs → MHAs (5,609 of 20,280 MHA ZIPs have no ZCTA polygon, from the B6 manifest); ZIPs with no ZORI, ZHVI or SAFMR.
 2. Every warning carried in the stage manifests.
 3. A hand-checked trace of three MHAs from raw source to B20: one in surplus, one short, one with a fallback.
 4. ZORI against SAFMR agreement.

@@ -24,10 +24,24 @@ geometry builder.
 | has_dependents  | bool  | with- vs without-dependents table |
 | monthly_rate    | float | USD/month |
 
-### `manifest.json`
+### `manifest.json` (nodes B1-B4)
 Provenance and lineage: source, source year, pay-grade schema, row/class counts,
 and validation warnings. Feeds both reproducibility and the site's attribution
-section.
+section. `input_file` / `input_sha256` record the A1 zip read, and
+`output_sha256` the four CSVs written, so `make verify` can tie B1-B4 to the
+fetched release and to every stage that reads them.
+
+## Geometry outputs (`pipeline/geometry/build_mha_geometry.py`, written to `data/processed/`)
+
+### `mha_YYYY.gpkg` / `mha_YYYY.geojson` (B6)
+One row per real MHA: `mha`, geometry (EPSG:4326). Dissolved from Census ZCTAs
+through `zip_mha_geo.csv`; no DoD MHA polygon layer exists.
+
+### `mha_YYYY_geometry_manifest.json` (B6)
+`inputs` / `input_sha256` (A2 ZCTA file, B2 crosswalk), `counts` (MHAs written,
+multipolygon MHAs, ZIPs dropped as non-MHA, ZIPs with no ZCTA match),
+`outputs` / `output_sha256` (gpkg and geojson). 2026: 299 MHAs, 115
+multipolygon, 5,609 ZIPs without a ZCTA.
 
 ## Benchmark outputs (`pipeline/benchmarks/`, written to `data/interim/benchmarks_YYYY/`)
 

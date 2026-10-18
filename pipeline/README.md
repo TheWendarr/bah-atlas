@@ -31,8 +31,8 @@ translating and rolling up to the MHA are one step.
 Turns tabular keys into map geometry.
 
 - `build_mha_geometry.py` — dissolves Census ZCTA polygons up to the MHA level
-  using the ZIP-to-MHA crosswalk. Emits a GeoPackage + GeoJSON with a coverage
-  report.
+  using the ZIP-to-MHA crosswalk (B6). Emits a GeoPackage + GeoJSON, a coverage
+  report, and `mha_YYYY_geometry_manifest.json` with input and output SHA-256.
 
 ## `benchmarks/` — 2.3 MHA benchmarks and 2.4 ownership metrics
 
@@ -94,6 +94,14 @@ esda (PySAL); matplotlib for the map.
   the frontend joins metrics with `promoteId: "mha"` + feature-state.
 - `build_basemap.sh` — extracts a bounding box from a Protomaps daily planet
   build into `basemap.pmtiles` (A11 -> C4) with the pmtiles CLI.
+
+## Verifying a build
+
+`make verify` (`tools/verify_hashes.py`) checks every SHA-256 the manifests
+record: committed evidence copies, config hashes, the chain from fetched raw
+files through each stage, and, where `data/` holds pipeline output, the live
+files. Run it after `make evidence`; it should end with "all recorded hashes
+agree".
 
 ## `check_config.py`
 
