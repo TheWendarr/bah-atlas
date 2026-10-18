@@ -237,10 +237,7 @@ packages). Licenses were read from each project's license file or package metada
 - **References:** Getis, A., & Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. *Geographical Analysis*, 24(3), 189–206. https://doi.org/10.1111/j.1538-4632.1992.tb00261.x · Ord, J. K., & Getis, A. (1995). Local spatial autocorrelation statistics: Distributional issues and an application. *Geographical Analysis*, 27(4), 286–306. https://doi.org/10.1111/j.1538-4632.1995.tb00912.x
 - **Role:** Hot-spot and cold-spot detection for the adequacy gap (B18), alongside LISA.
 - **Notes:** The 1992 paper introduces the G statistics; the 1995 paper gives the standardized Gi\* form usually reported in hotspot maps.
-
-### GIS 490 instructor guidance  `[reference]`
-- **Provider:** GIS 490 Geospatial Capstone instructor, Delta State University (course feedback; not public)
-- **Role:** Shaped the project's framing and reporting: the redirect from an implementation plan to a research question about geographic disparities between BAH and housing cost ([research framing](research-proposal.md)); the move from weekly Word reports to living documentation in this repository (3 Oct 2026); and the five-part progress-note template with stable task ids linking notes, issues, and commits (17 Oct 2026; [template](progress/TEMPLATE.md)).
+  
 
 *Still to add as they are adopted: the DoD BAH Primer and DTMO's BAH methodology, cited
 directly rather than through summaries, and the spatial-weights method and software chosen
