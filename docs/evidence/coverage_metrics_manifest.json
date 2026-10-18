@@ -5,7 +5,7 @@
     "B14",
     "B15"
   ],
-  "generated_at": "2026-10-17T22:33:29+00:00",
+  "generated_at": "2026-10-18T20:33:19+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -15,8 +15,8 @@
     "B11": "mha_ownership.csv"
   },
   "input_sha256": {
-    "A12": "4a57c205016b89305c6a44863e6df240b9173b9e9173b90b5a472a46c73371e7",
-    "A13": "fa6c0bea9c2afd6ee621178b178926d81657f7c26c6c6b8ba682eaa3cd73b9c9",
+    "A12": "a92559c9d6a1a96eece241fc21fcb3a888d8d4d0ffd833f44885058089d2e3f3",
+    "A13": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
     "B4": "f1912660e5752189f2d8642c956a24615f5c7f710b0e256fe6626b2e1e6ffbf3",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
     "B10": "66df87450290c8306e19db85bc460ec2fa862d0500ce3a9ea4016a457bee345c",

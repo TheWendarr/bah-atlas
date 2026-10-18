@@ -3,7 +3,7 @@
     "B17",
     "B18"
   ],
-  "generated_at": "2026-10-18T18:07:44+00:00",
+  "generated_at": "2026-10-18T20:33:28+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -13,11 +13,11 @@
     "B14": "mha_buy_metrics.csv"
   },
   "input_sha256": {
-    "A12": "4a57c205016b89305c6a44863e6df240b9173b9e9173b90b5a472a46c73371e7",
-    "A13": "fa6c0bea9c2afd6ee621178b178926d81657f7c26c6c6b8ba682eaa3cd73b9c9",
-    "B6": "270c2e2ead572ebd608040938b330124cb283206c3d2ceed776238cbb48a9bd9",
+    "A12": "a92559c9d6a1a96eece241fc21fcb3a888d8d4d0ffd833f44885058089d2e3f3",
+    "A13": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
+    "B6": "fd76280780d1dbd1ac20f01eb75b770ef969129b012e665bb38843f647422b4f",
     "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
-    "B16": "c5e205e2bb3c05ec93173d6a0af78bcee56661a1bfbff25e67783385a6de5e6f",
+    "B16": "bc75f9cfc4382307d3f973d6dedb8e68fbb256e910b49cb8c8409a3ef1f2c68e",
     "B14": "ddc5d89fde0b21ae4c4643169930258036744df985bbabe76d7c0acc61167b3e"
   },
   "hypothesis": "H1: adequacy gaps are spatially autocorrelated across CONUS MHAs, not randomly placed",

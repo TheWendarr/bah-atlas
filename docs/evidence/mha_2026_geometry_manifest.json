@@ -1,0 +1,28 @@
+{
+  "node": "B6",
+  "generated_at": "2026-10-18T20:33:13+00:00",
+  "method": "ZCTA polygons dissolved to MHA through the DTMO ZIP-to-MHA crosswalk (direct zip == zcta match unless --zip-to-zcta is given); no DoD MHA polygons exist",
+  "inputs": {
+    "A2": "cb_2020_us_zcta520_500k.zip",
+    "B2": "zip_mha_geo.csv"
+  },
+  "input_sha256": {
+    "A2": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+    "B2": "864ad443ae23ed8ad3f457889f5f725e9e2a5c6a04228cd3f36e083ddccf6479"
+  },
+  "crs": "EPSG:4326",
+  "counts": {
+    "mhas": 299,
+    "multipolygon_mhas": 115,
+    "zips_dropped_non_mha": 0,
+    "zips_without_zcta": 5609
+  },
+  "outputs": [
+    "mha_2026.gpkg",
+    "mha_2026.geojson"
+  ],
+  "output_sha256": {
+    "mha_2026.gpkg": "fd76280780d1dbd1ac20f01eb75b770ef969129b012e665bb38843f647422b4f",
+    "mha_2026.geojson": "557543b4924954a19763bb3a367de842da1e8186d65c145b6bcfafb87ba7ec1d"
+  }
+}
