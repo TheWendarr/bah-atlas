@@ -126,6 +126,7 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - `ownership_cost.py` reads the per-MHA rate and premium and carries the source flags into `mha_ownership.csv`; `coverage_metrics.py` and `spatial_stats.py` implement the PITI-only rule above.
   - 12 new tests (73 in all) pass.
 - **Done when:** B11 has no placeholder warnings, every MHA has a sourced rate with its source flag, and the change in buy-mode results is recorded.
+- **Result (18 Oct, commit `bf65c6b`):** all 299 MHAs have local tax and insurance values (no state fallback). Tax rates 0.23–2.40% (median 0.79%); premiums $833–$15,638 (median $1,625). Buy mode: E-5 median adequacy 0.779 → 0.768 (267 of 289 below design, unchanged); O-3 0.985 → 0.972 (159 → 166 below). Moran's I buy: E-5 0.397 → 0.359, O-3 0.482 → 0.434. Rent unchanged. Details and the MA119 (Nantucket) extreme are in the [24 Oct note](../progress/2026-10-24.md), part 4.
 
 ### B20 · attribute payload — target Wed 28 Oct
 
@@ -151,6 +152,7 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
 - **Before building:** rerun B18 once with `make spatial PERMUTATIONS=99999`.
   - With 9,999 permutations, the smallest local p-value possible is 0.0002. The FDR cutoff for the top-ranked MHA is 0.05 ÷ 283 ≈ 0.00018, below that floor.
   - So the current count of two FDR survivors may be limited by permutation resolution rather than the data. The rerun settles which MHAs are marked; the result is recorded either way.
+  - **Result (18 Oct):** at 99,999 permutations the primary test still has 2 FDR survivors (1 HL, 1 LH; cut-off p = 0.00011), so the count reflects the data. Buy mode after A8: E-5 29, O-3 23.
 
 ### H2 chain (D8, reduced) — A9 and B24 by Sat 24 Oct with A8; B19 after M6, before 16 Nov (optional)
 
@@ -210,7 +212,8 @@ Wendell writes this; the outline points to the evidence each part draws on.
 |---|---|
 | Sun 18 Oct | W2 data contract (ICD) written |
 | ~~Wed 21 Oct~~ Sun 18 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) — done 3 days early |
-| Sat 24 Oct | A8 and A9 pulls; B24; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations |
+| ~~Sat 24 Oct~~ Sun 18 Oct | A8 and A9 pulls; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations — done 6 days early |
+| Sat 24 Oct | B24 (optional) |
 | Wed 28 Oct | B20, B21, B27 |
 | Thu 29 Oct | B22 (written before B20, B21, B27 in the build order), B23, `make handoff` |
 | Fri 30 Oct | W1; close M6 |

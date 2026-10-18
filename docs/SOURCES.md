@@ -111,7 +111,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** Daily builds are retained for about a week, so the provenance JSON records exactly which build was cut.
 - **Verified:** 2026-10-03 — build `20261002` available.
 
-### A8 · Property tax and homeowners insurance by locality  `[planned]`
+### A8 · Property tax and homeowners insurance by locality  `[incorporated]`
 Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B18 are rebuilt on it before the front-end payload. Replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).
 
 **Property tax — U.S. Census ACS 5-year detailed tables**
@@ -141,10 +141,10 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 - **License:** U.S. Government work; not subject to domestic copyright.
 - **Notes:** **Dropped 18 Oct 2026** when hypothesis H2 was reduced (node scrapped, with B25). RPP is published only for states and metro areas, coarser than MHAs, and its rent component is built from ACS rents, so it would largely repeat the rent-level variable already in the regression. Interactive-table deep links are less stable than API pulls — do not save an iTable URL as the source.
 
-### A9 · U.S. Census American Community Survey (ACS)  `[planned]`
+### A9 · U.S. Census American Community Survey (ACS)  `[incorporated]`
 - **Provider:** U.S. Census Bureau
 - **Link:** https://www.census.gov/data/developers/data-sets/acs-5year.html · query: `https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E&for=zip%20code%20tabulation%20area:*`
-- **Artifact:** `data/raw/acs5_2024_zcta.json` (Census API JSON: a header row, then one row per ZCTA).
+- **Artifact:** `data/raw/acs5_2024_zcta.json` (Census API JSON: a header row, then one row per ZCTA); 33,772 ZCTAs, 1.2 MB, SHA-256 `51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30` (pulled 18 Oct 2026). 15,196 ZCTAs have usable tax and value estimates; every MHA has at least one.
 - **Acquisition:** api — `make fetch` sends the pinned query above. **The API requires a key** (free, https://api.census.gov/data/key_signup.html): set `CENSUS_API_KEY` in the environment. The fetcher adds it to the request only; the manifest records the URL without it.
 - **Role:** Urbanicity for hypothesis H2: population and land area per ZCTA give population density per MHA (B24), one of three explanatory variables in the B19 spatial regression (reduced H2, decided 18 Oct 2026). Optional node, started 18 Oct.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -255,15 +255,15 @@ packages). Licenses were read from each project's license file or package metada
 - **Notes:** Rates effective 7 Apr 2023. Subsequent use with less than 5% down is 3.3%; members receiving VA disability compensation, and active-duty Purple Heart recipients, are exempt.
 - **Verified:** 2026-10-08.
 
-### National effective property tax rate (B11 placeholder)  `[incorporated]`
+### National effective property tax rate (former B11 placeholder)  `[reference]`
 - **Provider:** National Association of Home Builders (NAHB) analysis of the 2024 American Community Survey — https://eyeonhousing.org/2025/11/property-taxes-by-state-2024/
-- **Role:** Placeholder property tax in B11 until A8 lands: 0.89% of home value per year ($8.88 per $1,000). A8 (started 18 Oct) replaces it with locality rates; this entry becomes `[reference]` when that rerun is committed.
+- **Role:** Placeholder property tax in B11 until A8: 0.89% of home value per year ($8.88 per $1,000). Replaced on 18 Oct 2026 by locality rates (A8; commit `bf65c6b`), whose MHA median is 0.79%. Kept as the comparison point for the buy-mode change.
 - **Notes:** State rates run from about 0.31% (Hawaii) to 1.79% (Illinois); a single national rate is a stated limitation.
 - **Verified:** 2026-10-08.
 
-### National average homeowners insurance premium (B11 placeholder)  `[incorporated]`
+### National average homeowners insurance premium (former B11 placeholder)  `[reference]`
 - **Provider:** NAIC homeowners insurance report, as summarised by the Insurance Information Institute — https://www.iii.org/fact-statistic/facts-statistics-homeowners-and-renters-insurance
-- **Role:** Placeholder insurance in B11 until A8 lands: $1,569 per year (HO-3 average, data year 2022). A8 (started 18 Oct) replaces it with ZIP-level premiums and NAIC state fallbacks.
+- **Role:** Placeholder insurance in B11 until A8: $1,569 per year (HO-3 average, data year 2022). Replaced on 18 Oct 2026 by FIO ZIP-level premiums rolled up per MHA (A8), whose MHA median is $1,625. Kept as the comparison point for the buy-mode change.
 - **Notes:** The newest NAIC data year available; premiums have risen since, so this understates 2026 cost.
 - **Verified:** 2026-10-08.
 

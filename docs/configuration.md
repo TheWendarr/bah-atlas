@@ -111,7 +111,7 @@ LISA and Getis-Ord results come from B18, on `adequacy_gap`, for the hotspot ove
 
 The global Moran's I is the confirmatory test of H1: one test, I = 0.152, pseudo p = 0.0001 for the primary profile. The local classes are 283 separate tests at p < 0.05, so about 14 would be flagged by chance alone. They are therefore shown with an *exploratory* legend title.
 
-MHAs that survive the Benjamini–Hochberg false-discovery-rate correction get the `fdr_marker` outline. On 18 Oct, 2 survived (1 HL, 1 LH) at 9,999 permutations. A rerun at 99,999 permutations checks whether that count is limited by permutation resolution.
+MHAs that survive the Benjamini–Hochberg false-discovery-rate correction get the `fdr_marker` outline. On 18 Oct, 2 survived (1 HL, 1 LH) at 9,999 permutations, and the rerun at 99,999 permutations gave the same 2, so the count reflects the data rather than the permutation resolution.
 
 ---
 
