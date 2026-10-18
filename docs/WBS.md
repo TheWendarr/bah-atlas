@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 17 October 2026  
-**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 4  ·  🟣 In progress: 0  ·  🔴 Not started: 40
+**Status as of:** 18 October 2026  
+**Nodes tracked:** 65  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 7  ·  🟣 In progress: 0  ·  🔴 Not started: 37
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -17,7 +17,7 @@ Progress counts **required** nodes only; optional nodes are tracked but do not g
 | **M2** 2.2 Geometry | Sat 03 Oct | 2 / 2 | `██████████ 100%` | ✅ Complete |
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
-| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | `░░░░░░░░░░ 0%` | ⏳ Due in 7 days |
+| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
@@ -226,8 +226,8 @@ flowchart LR
     classDef todo fill:#c62828,stroke:#000,color:#ffffff
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
-    class B12,B13,B14,B15 week
-    class A8,A9,A10,B16,B17,B18,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class B12,B13,B14,B15,B16,B17,B18 week
+    class A8,A9,A10,B19,B20,B21,B22,B23,B24,B25,B26,B27,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
 
@@ -303,9 +303,9 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **B16** | Spatial weights matrix | required | B6 |  |
-| 🔴 | **B17** | Global Moran's I | required | B12, B16 |  |
-| 🔴 | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 |  |
+| 🟢 | **B16** | Spatial weights matrix | required | B6 | completed 18 Oct |
+| 🟢 | **B17** | Global Moran's I | required | B12, B16 | completed 18 Oct |
+| 🟢 | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | completed 18 Oct |
 | 🔴 | **B19** | Spatial regression | optional | B12, B16, B9, B24, B25 |  |
 
 #### 2.7 Front-End Payload — due 30 October 2026 (M6)
@@ -374,6 +374,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 The [progress index](progress/README.md) shows each milestone's status beside its latest note.
 
+- [24 October 2026](progress/2026-10-24.md) — M5
 - [17 October 2026](progress/2026-10-17.md) — M4
 - [10 October 2026](progress/2026-10-10.md) — M3
 - [03 October 2026](progress/2026-10-03.md) — M1, M2

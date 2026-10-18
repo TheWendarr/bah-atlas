@@ -2,9 +2,9 @@
 
 <!-- GENERATED FILE. Run `make wbs` to refresh. -->
 
-One note per reporting week, each written against a planned milestone using the five-part [template](TEMPLATE.md): reporting date and milestone · completed work and evidence · remaining work · blockers and decisions · next steps and dates. Status as of **17 October 2026**.
+One note per reporting week, each written against a planned milestone using the five-part [template](TEMPLATE.md): reporting date and milestone · completed work and evidence · remaining work · blockers and decisions · next steps and dates. Status as of **18 October 2026**.
 
-**Latest note:** [17 October 2026](2026-10-17.md) — M4
+**Latest note:** [24 October 2026](2026-10-24.md) — M5
 
 ## Milestone status
 
@@ -14,9 +14,9 @@ One note per reporting week, each written against a planned milestone using the 
 | **M2** 2.2 Geometry | Sat 03 Oct | 2 / 2 | ✅ Complete | [03 Oct](2026-10-03.md) |
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | ✅ Complete 08 Oct (2 days early) | [10 Oct](2026-10-10.md) |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | ✅ Complete 17 Oct (on its due date) | [17 Oct](2026-10-17.md) |
-| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 0 / 3 | ⏳ Open, due in 7 days | — |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | ⏳ Open, due in 13 days | — |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | ⏳ Open, due in 30 days | — |
+| **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | ✅ Complete 18 Oct (6 days early) | [24 Oct](2026-10-24.md) |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 5 | ⏳ Open, due in 12 days | — |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | ⏳ Open, due in 29 days | — |
 
 ## How a note connects to the rest of the project
 
@@ -34,6 +34,7 @@ Each note opens with a small machine-readable header (`milestone`, `milestone_st
 
 ## All notes
 
+- [24 October 2026](2026-10-24.md) — M5 · complete
 - [17 October 2026](2026-10-17.md) — M4 · complete
 - [10 October 2026](2026-10-10.md) — M3 · earlier format
 - [03 October 2026](2026-10-03.md) — M1, M2 · earlier format

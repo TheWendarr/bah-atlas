@@ -1,0 +1,567 @@
+{
+  "nodes": [
+    "B17",
+    "B18"
+  ],
+  "generated_at": "2026-10-18T18:07:44+00:00",
+  "inputs": {
+    "A12": "profiles.json",
+    "A13": "classification.json",
+    "B6": "mha_2026.gpkg",
+    "B12": "mha_rent_metrics.csv",
+    "B16": "weights_manifest.json",
+    "B14": "mha_buy_metrics.csv"
+  },
+  "input_sha256": {
+    "A12": "4a57c205016b89305c6a44863e6df240b9173b9e9173b90b5a472a46c73371e7",
+    "A13": "fa6c0bea9c2afd6ee621178b178926d81657f7c26c6c6b8ba682eaa3cd73b9c9",
+    "B6": "270c2e2ead572ebd608040938b330124cb283206c3d2ceed776238cbb48a9bd9",
+    "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
+    "B16": "c5e205e2bb3c05ec93173d6a0af78bcee56661a1bfbff25e67783385a6de5e6f",
+    "B14": "ddc5d89fde0b21ae4c4643169930258036744df985bbabe76d7c0acc61167b3e"
+  },
+  "hypothesis": "H1: adequacy gaps are spatially autocorrelated across CONUS MHAs, not randomly placed",
+  "method": {
+    "weights": {
+      "scheme": "knn",
+      "k": 6,
+      "crs": "EPSG:5070",
+      "source": "B16 spec, rebuilt per test on the MHAs with a value",
+      "moran_and_lisa": "row-standardized",
+      "gi_star": "binary, self included"
+    },
+    "permutations": 9999,
+    "seed": 2026,
+    "alpha": 0.05,
+    "min_attainable_p_sim": {
+      "global": 0.0001,
+      "local_two_sided": 0.0002
+    },
+    "global": "Moran's I; p_sim from random permutation, p_norm from the normal approximation",
+    "lisa": "local Moran's I_i, conditional permutation, two-sided pseudo p-value; cluster = quadrant where lisa_p_sim < alpha, else NS",
+    "fdr": "Benjamini-Hochberg step-up on the LISA p_sim values of each test, at alpha",
+    "gi_star": "Getis-Ord Gi* on the ratio behind each gap (a constant shift: same z and p_sim), conditional permutation, two-sided pseudo p-value; hot/cold where gi_p_sim < alpha",
+    "quadrants": "HH, LH, LL, HL: sign of the MHA's value and of its neighbours' average, relative to the mean (PySAL scheme)",
+    "sensitivity": "adequacy_gap tests repeat the global I with k in [4, 8] and with queen contiguity (islands dropped)",
+    "software": {
+      "esda": "2.10.0",
+      "libpysal": "4.15.0",
+      "numpy": "2.4.6"
+    }
+  },
+  "variables": {
+    "adequacy_gap": "(BAH + cost share) / benchmark - 1; target 0 (statutory design). Primary.",
+    "flat95_gap": "BAH / benchmark - 0.95. Sensitivity: the fixed-95% reading."
+  },
+  "scope": {
+    "rule": "CONUS only: MHA codes starting AK, HI, PR, GU, VI, AS, MP are excluded",
+    "excluded": [
+      "AK400",
+      "AK401",
+      "AK402",
+      "AK403",
+      "AK404",
+      "AK405",
+      "HI407",
+      "HI408",
+      "HI409",
+      "HI414"
+    ],
+    "in_scope_without_geometry": []
+  },
+  "headline": {
+    "test": "e5_dep rent adequacy_gap",
+    "n": 283,
+    "moran_I": 0.1515,
+    "p_sim": 0.0001,
+    "h1_reading": "reject spatial randomness at alpha 0.05: positive spatial autocorrelation",
+    "lisa_clusters": {
+      "HH": 20,
+      "LL": 6,
+      "HL": 5,
+      "LH": 7,
+      "NS": 245
+    },
+    "lisa_fdr_significant": 2,
+    "gi_star_hot": 27,
+    "gi_star_cold": 11
+  },
+  "flat95_vs_adequacy_moran": [
+    {
+      "profile": "e5_dep",
+      "mode": "rent",
+      "I_adequacy_gap": 0.1515,
+      "I_flat95_gap": 0.1726,
+      "I_difference_flat95_minus_adequacy": 0.0211
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "rent",
+      "I_adequacy_gap": 0.255,
+      "I_flat95_gap": 0.2589,
+      "I_difference_flat95_minus_adequacy": 0.0039
+    },
+    {
+      "profile": "e5_dep",
+      "mode": "buy",
+      "I_adequacy_gap": 0.3965,
+      "I_flat95_gap": 0.3673,
+      "I_difference_flat95_minus_adequacy": -0.0292
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "buy",
+      "I_adequacy_gap": 0.4819,
+      "I_flat95_gap": 0.462,
+      "I_difference_flat95_minus_adequacy": -0.0199
+    }
+  ],
+  "tests": [
+    {
+      "profile": "e5_dep",
+      "mode": "rent",
+      "variable": "adequacy_gap",
+      "gi_star_on": "adequacy_ratio",
+      "role": "primary",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.1515,
+        "EI": -0.0035,
+        "z_norm": 4.841,
+        "p_norm": 0.0,
+        "z_sim": 4.793,
+        "p_sim": 0.0001
+      },
+      "moran_sensitivity": {
+        "knn4": {
+          "I": 0.1796,
+          "p_sim": 0.0001
+        },
+        "knn8": {
+          "I": 0.1525,
+          "p_sim": 0.0001
+        },
+        "queen": {
+          "I": 0.2153,
+          "p_sim": 0.0013,
+          "n": 205,
+          "islands_dropped": 78
+        }
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 20,
+          "LL": 6,
+          "HL": 5,
+          "LH": 7,
+          "NS": 245
+        },
+        "significant": 38,
+        "fdr_cutoff_p": 0.0003,
+        "fdr_significant": 2,
+        "fdr_clusters": {
+          "HH": 0,
+          "LL": 0,
+          "HL": 1,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 27,
+        "cold": 11,
+        "ns": 245,
+        "hh_also_hot": 20,
+        "ll_also_cold": 6
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "e5_dep",
+      "mode": "rent",
+      "variable": "flat95_gap",
+      "gi_star_on": "coverage_ratio",
+      "role": "sensitivity",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.1726,
+        "EI": -0.0035,
+        "z_norm": 5.502,
+        "p_norm": 0.0,
+        "z_sim": 5.45,
+        "p_sim": 0.0001
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 24,
+          "LL": 8,
+          "HL": 5,
+          "LH": 7,
+          "NS": 239
+        },
+        "significant": 44,
+        "fdr_cutoff_p": 0.0003,
+        "fdr_significant": 2,
+        "fdr_clusters": {
+          "HH": 0,
+          "LL": 0,
+          "HL": 1,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 31,
+        "cold": 13,
+        "ns": 239,
+        "hh_also_hot": 24,
+        "ll_also_cold": 8
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "rent",
+      "variable": "adequacy_gap",
+      "gi_star_on": "adequacy_ratio",
+      "role": "contrast",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.255,
+        "EI": -0.0035,
+        "z_norm": 8.076,
+        "p_norm": 0.0,
+        "z_sim": 8.073,
+        "p_sim": 0.0001
+      },
+      "moran_sensitivity": {
+        "knn4": {
+          "I": 0.2595,
+          "p_sim": 0.0001
+        },
+        "knn8": {
+          "I": 0.2608,
+          "p_sim": 0.0001
+        },
+        "queen": {
+          "I": 0.2684,
+          "p_sim": 0.0001,
+          "n": 205,
+          "islands_dropped": 78
+        }
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 22,
+          "LL": 22,
+          "HL": 4,
+          "LH": 6,
+          "NS": 229
+        },
+        "significant": 54,
+        "fdr_cutoff_p": 0.0005,
+        "fdr_significant": 3,
+        "fdr_clusters": {
+          "HH": 1,
+          "LL": 1,
+          "HL": 0,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 28,
+        "cold": 26,
+        "ns": 229,
+        "hh_also_hot": 22,
+        "ll_also_cold": 22
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "rent",
+      "variable": "flat95_gap",
+      "gi_star_on": "coverage_ratio",
+      "role": "sensitivity",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.2589,
+        "EI": -0.0035,
+        "z_norm": 8.199,
+        "p_norm": 0.0,
+        "z_sim": 8.186,
+        "p_sim": 0.0001
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 31,
+          "LL": 24,
+          "HL": 4,
+          "LH": 4,
+          "NS": 220
+        },
+        "significant": 63,
+        "fdr_cutoff_p": 0.0005,
+        "fdr_significant": 4,
+        "fdr_clusters": {
+          "HH": 2,
+          "LL": 1,
+          "HL": 0,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 35,
+        "cold": 28,
+        "ns": 220,
+        "hh_also_hot": 31,
+        "ll_also_cold": 24
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "e5_dep",
+      "mode": "buy",
+      "variable": "adequacy_gap",
+      "gi_star_on": "adequacy_ratio",
+      "role": "primary",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.3965,
+        "EI": -0.0035,
+        "z_norm": 12.494,
+        "p_norm": 0.0,
+        "z_sim": 12.6,
+        "p_sim": 0.0001
+      },
+      "moran_sensitivity": {
+        "knn4": {
+          "I": 0.4189,
+          "p_sim": 0.0001
+        },
+        "knn8": {
+          "I": 0.3747,
+          "p_sim": 0.0001
+        },
+        "queen": {
+          "I": 0.5313,
+          "p_sim": 0.0001,
+          "n": 205,
+          "islands_dropped": 78
+        }
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 19,
+          "LL": 40,
+          "HL": 1,
+          "LH": 9,
+          "NS": 214
+        },
+        "significant": 69,
+        "fdr_cutoff_p": 0.0057,
+        "fdr_significant": 34,
+        "fdr_clusters": {
+          "HH": 0,
+          "LL": 30,
+          "HL": 1,
+          "LH": 3
+        }
+      },
+      "gi_star": {
+        "hot": 28,
+        "cold": 41,
+        "ns": 214,
+        "hh_also_hot": 19,
+        "ll_also_cold": 40
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "e5_dep",
+      "mode": "buy",
+      "variable": "flat95_gap",
+      "gi_star_on": "coverage_ratio",
+      "role": "sensitivity",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.3673,
+        "EI": -0.0035,
+        "z_norm": 11.583,
+        "p_norm": 0.0,
+        "z_sim": 11.664,
+        "p_sim": 0.0001
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 14,
+          "LL": 39,
+          "HL": 2,
+          "LH": 9,
+          "NS": 219
+        },
+        "significant": 64,
+        "fdr_cutoff_p": 0.0053,
+        "fdr_significant": 31,
+        "fdr_clusters": {
+          "HH": 0,
+          "LL": 28,
+          "HL": 2,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 23,
+        "cold": 41,
+        "ns": 219,
+        "hh_also_hot": 14,
+        "ll_also_cold": 39
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "buy",
+      "variable": "adequacy_gap",
+      "gi_star_on": "adequacy_ratio",
+      "role": "contrast",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.4819,
+        "EI": -0.0035,
+        "z_norm": 15.162,
+        "p_norm": 0.0,
+        "z_sim": 15.25,
+        "p_sim": 0.0001
+      },
+      "moran_sensitivity": {
+        "knn4": {
+          "I": 0.5081,
+          "p_sim": 0.0001
+        },
+        "knn8": {
+          "I": 0.4465,
+          "p_sim": 0.0001
+        },
+        "queen": {
+          "I": 0.6226,
+          "p_sim": 0.0001,
+          "n": 205,
+          "islands_dropped": 78
+        }
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 29,
+          "LL": 43,
+          "HL": 2,
+          "LH": 6,
+          "NS": 203
+        },
+        "significant": 80,
+        "fdr_cutoff_p": 0.0049,
+        "fdr_significant": 35,
+        "fdr_clusters": {
+          "HH": 5,
+          "LL": 28,
+          "HL": 1,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 35,
+        "cold": 45,
+        "ns": 203,
+        "hh_also_hot": 29,
+        "ll_also_cold": 43
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    },
+    {
+      "profile": "o3_dep",
+      "mode": "buy",
+      "variable": "flat95_gap",
+      "gi_star_on": "coverage_ratio",
+      "role": "sensitivity",
+      "n": 283,
+      "weights": "knn k=6",
+      "moran": {
+        "I": 0.462,
+        "EI": -0.0035,
+        "z_norm": 14.542,
+        "p_norm": 0.0,
+        "z_sim": 14.615,
+        "p_sim": 0.0001
+      },
+      "lisa": {
+        "clusters": {
+          "HH": 27,
+          "LL": 42,
+          "HL": 3,
+          "LH": 6,
+          "NS": 205
+        },
+        "significant": 78,
+        "fdr_cutoff_p": 0.0059,
+        "fdr_significant": 35,
+        "fdr_clusters": {
+          "HH": 5,
+          "LL": 28,
+          "HL": 1,
+          "LH": 1
+        }
+      },
+      "gi_star": {
+        "hot": 33,
+        "cold": 45,
+        "ns": 205,
+        "hh_also_hot": 27,
+        "ll_also_cold": 42
+      },
+      "not_tested": {
+        "no_value": 6,
+        "no_geometry": 0,
+        "out_of_scope": 10
+      }
+    }
+  ],
+  "outputs": [
+    "mha_spatial_stats.csv",
+    "mha_lisa_e5_dep_rent_map.png",
+    "spatial_stats_manifest.json"
+  ],
+  "warnings": []
+}
