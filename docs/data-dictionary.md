@@ -243,11 +243,12 @@ B17 and B18.
 
 ## Front-end payload (2.7, in progress)
 
-B20 (attribute payload), B21 (UI metadata), B22 (build manifest), B27 (hotspot
-overlay) and B28 (County Cost Group and territory polygons) are being built in M6.
-The draft contract and the 18 Oct decisions behind it are in the
-[M6 plan](plans/m6-plan.md); each file gets a section here when its schema is
-fixed.
+The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI
+metadata, B22 build manifest, B27 hotspot overlay) are specified field by field in
+the [data contract (Layer 2 → Layer 3 ICD)](data-contract.md), which governs
+them. B28 (County Cost Group and territory polygons) is merged into B7 under
+decision D9. The decisions behind the contract are in the
+[M6 plan](plans/m6-plan.md).
 
 ## Configuration
 

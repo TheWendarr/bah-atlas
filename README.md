@@ -8,6 +8,7 @@
 > | 📝 **[Progress notes](docs/progress/)** | One note per week on a fixed five-part template, tied to a milestone, with linked evidence; the folder index shows each milestone's status and latest note |
 > | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
 > | 🧭 **[M6 plan](docs/plans/m6-plan.md)** | The Layer 2 → Layer 3 handoff: decisions taken, decisions open, and how each M6 node will be built |
+> | 📐 **[Data contract (ICD)](docs/data-contract.md)** | Every file Layer 3 receives from the pipeline: fields, codes, rules for missing values, and the checks the handoff must pass |
 >
 > Status is kept in [`docs/wbs/nodes.csv`](docs/wbs/nodes.csv); `make wbs` regenerates the WBS page from it.
 
@@ -76,7 +77,7 @@ bah-atlas/
 │   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18)
 │   └── tiles/       PMTiles builders: MHA tiles (B7) and basemap cutout (A11)
 ├── web/             MapLibre GL JS frontend (Layer 3, not started)
-├── docs/            research framing, data dictionary, configuration reference, attribution
+├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
 │   ├── wbs/         nodes.csv + milestones.csv — project status source of truth
 │   ├── progress/    progress notes on the five-part template, with index

@@ -15,7 +15,7 @@ One note per reporting week, each written against a planned milestone using the 
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | ✅ Complete 08 Oct (2 days early) | [10 Oct](2026-10-10.md) |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | ✅ Complete 17 Oct (on its due date) | [17 Oct](2026-10-17.md) |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | ✅ Complete 18 Oct (6 days early) | [24 Oct](2026-10-24.md) |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 7 | ⏳ Open, due in 12 days | — |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 8 | ⏳ Open, due in 12 days | — |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | ⏳ Open, due in 29 days | — |
 
 ## How a note connects to the rest of the project

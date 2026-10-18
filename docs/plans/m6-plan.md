@@ -8,11 +8,11 @@ M6 is the handoff from the offline pipeline to the map. When it closes, Layer 3 
 - **B21** UI metadata
 - **B22** build manifest
 - **B27** hotspot overlay
-- **B7** and **B28** polygon tiles
+- **B7** polygon tiles, rebuilt with the B28 polygons merged in (D9)
 
-This page records the decisions taken on 18 Oct and how each node will be built and checked.
+The exact shape of every one of these files is fixed in the **[data contract (Layer 2 → Layer 3 ICD)](../data-contract.md)**, tracked as W2. This page records the decisions behind it and how each node will be built and checked.
 
-**In progress (18 Oct):** A8, B20, B21, B22, B23, B28, W1 (required); A9, B24, B19, B27 (optional).
+**In progress (18 Oct):** A8, B20, B21, B22, B23, B28, W1, W2 (required); A9, B24, B19, B27 (optional).
 **Scrapped:** B26, A10, B25.
 **Layer 3 (C1–C24):** not started until this handoff exists.
 
@@ -34,10 +34,14 @@ This page records the decisions taken on 18 Oct and how each node will be built 
 | 2.7 | Property tax and insurance come from authoritative locality sources. A8 is now **required** and tracked under M6, because B11–B18 are rebuilt on it before the payload is built. | A8. |
 | 2.9 | H3 is removed from the project. | B26 scrapped. |
 | 2.10 | Front-end build choices (bundler, hosting, basemap) wait until this handoff exists. | No Layer 3 work in M6. |
+| D9 | **One tile layer for every area.** B7 becomes a single vector layer `areas` holding the 299 MHAs, 39 CCGs and the territory bucket, keyed on `code` with a `class` property, tiled in one tippecanoe run. (Option B, a second `non_mha` layer beside B7's `mha` layer, was rejected: separate runs simplify each side of an MHA-to-CCG border independently and leave slivers, the id field `mha` would hold CCG codes, and every front-end join would have to be routed between two layers.) | B7 is rebuilt in M6 with B28 as an input; B6 and B16–B18 are unchanged. The ICD (W2) specifies the layer. C1 reads B7 only. |
+| D10 | **Processed outputs stay off the repository until Layers 1 and 2 are complete.** They are then added in one commit with the author's write-up of every action and decision, and Layer 3 starts after that commit. | ICD section 12. No release or `web/data/` copy during M6. |
 
 **Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
 
 ## 2. Draft data contract (B20)
+
+**Superseded on 18 Oct by the [data contract (ICD)](../data-contract.md#5-b20--attribute-payload-payload_2026json).** The ICD uses the pipeline's own column names (`bah_monthly`, `cost_share_monthly`, `cost_monthly`) in place of the short names below, adds `design_coverage`, `safmr_monthly` and `own_housing_monthly` as inputs, and adds area-level caveats. The draft is kept as the record of the 18 Oct discussion.
 
 Illustrative numbers; conventions per D6. Comments mark the decision each part follows.
 
@@ -83,7 +87,7 @@ Illustrative numbers; conventions per D6. Comments mark the decision each part f
 
 Every script follows the existing pattern: read inputs as-is, validate loudly, write tidy outputs plus a manifest, and test on synthetic fixtures. `make evidence` copies each new manifest into `docs/evidence/`.
 
-### B28 · CCG and territory polygons — target Wed 21 Oct
+### B28 · CCG and territory polygons, and the B7 rebuild — target Wed 21 Oct
 
 - **Why:** DoD publishes no polygons for County Cost Groups. The DTMO crosswalk does assign ZIPs to them: in 2026, 20,465 ZIPs map to the 39 ZZ codes and 214 ZIPs to the single XX code.
 - **Method:** the same ZIP → ZCTA → dissolve that builds B6 (A2 + B1), applied to the `ccg` and `unknown` classes.
@@ -95,7 +99,7 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - no ZCTA is assigned to both an MHA and a CCG
   - unmatched ZIPs are reported, as B6 does
   - confirm which territory the XX bucket covers (expected: Puerto Rico)
-- **Tiles:** a second layer `non_mha` beside B7's `mha` layer, or a second PMTiles file. Settled when C1 is planned; the GeoJSON is the M6 deliverable.
+- **Tiles (D9):** B28 is not tiled on its own. `build_mha_pmtiles.py` takes the B6 and B28 GeoJSONs, writes each feature with `code` and `class`, and tiles all of them in one run to `areas_2026.pmtiles`, layer `areas`, `promoteId: "code"` (ICD section 4). The B7 manifest records both inputs and their hashes; its docstring and `make tiles` change to match. B7 stays complete in M2: the rebuild is M6 work, as A8 is.
 
 ### A8 · property tax and insurance by locality — target Sat 24 Oct (required, tracked under M6)
 
@@ -111,20 +115,17 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - Change A8 in `fetch_sources.py` from `manual` to `api` (ACS) plus `direct` (FIO workbook).
   - Add `benchmarks/tax_insurance_to_mha.py`, which writes `mha_tax_insurance.csv` with a source flag per MHA (`locality` or `state_fallback`).
   - Point `config/ownership.json` at it. The ACS client is shared with A9.
-- **Rerun chain:** B11 → B14/B15 → B17/B18 buy-mode tests. Rent results do not change. The M5 buy-mode Moran's I values (E-5 0.397, O-3 0.482) are replaced, and the progress note reports old against new.
+- **Rerun chain:** B11 → B14/B15 → B17/B18 buy-mode tests. Rent results do not change.
+- **PITI-only rows (decision 2.4) are computed in B14/B15, not B20.** `coverage_metrics.py` gives the 10 home-value-but-no-ZORI MHAs their metrics against PITI (`own_housing_monthly`) with status `piti_only_no_zori`, replacing `no_utilities`. `spatial_stats.py` then tests only buy rows with status `ok`, so these MHAs stay out of the buy-mode statistics exactly as they are today (6 of them are in CONUS). The M5 buy-mode Moran's I values (E-5 0.397, O-3 0.482) are replaced, and the progress note reports old against new.
 - **Done when:** B11 has no placeholder warnings, every MHA has a sourced rate with its source flag, and the change in buy-mode results is recorded.
 
 ### B20 · attribute payload — target Wed 28 Oct
 
-- **Content:** the contract in section 2.
+- **Content:** the payload in [ICD section 5](../data-contract.md#5-b20--attribute-payload-payload_2026json); written after B22, whose hash it carries as `build_id`.
 - **Areas:** the 299 MHAs, the 39 CCGs (BAH rate only, N1) and the XX bucket (status `no_rate`). Alaska and Hawaii are included with `cluster_scope: false`.
 - **Values:** taken only from the B12–B15 output and B4; B20 computes nothing new.
-- **Checks:**
-  - every code in B6 ∪ B28 has an entry, and vice versa
-  - every non-null value matches its source row
-  - every status and caveat id resolves in B21
-  - the file size is reported (expected under 300 KB)
-- **Docs:** a new data-dictionary section, and the contract published as `docs/data-contract.md`.
+- **Checks:** the conformance checks in [ICD section 11](../data-contract.md#11-conformance-checks), run by a standard-library validator in `tests/` against B20, B21 and B27. The file size is reported (expected under 300 KB after gzip).
+- **Docs:** the ICD is the reference; the data dictionary points to it.
 
 ### B21 · UI metadata — target Wed 28 Oct
 
@@ -132,24 +133,12 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - `flat95_gap` uses the `coverage_ratio` breaks shifted by −0.95, which draws the same map as `coverage_ratio`, labelled as the fixed-95% reading
   - `safmr_adequacy_ratio` uses the `adequacy_ratio` breaks
   - `safmr_design_gap_usd` uses the `design_gap_usd` breaks
-- **Names and caveats:** area names and classes (B3, B1, B28), and the caveat texts by id:
-  - `utilities_grossed_up`
-  - `tax_insurance_locality`
-  - `insurance_2022_dollars`
-  - `ccg_geometry`
-  - `ccg_no_benchmark`
-  - `piti_only_no_zori`
-  - `outside_cluster_scope`
-  - `lisa_exploratory`
+- **Names and caveats:** area names and classes (B3, B1, B28), status texts, and the caveat texts for the ten ids in [ICD section 5.5](../data-contract.md#55-caveat-ids). Writing the ICD added `tax_state_fallback` and `insurance_state_fallback`, one per A8 source flag.
 - **Also:** benchmark windows and the source attributions that C20 will display.
 
 ### B27 · hotspot overlay payload — target Wed 28 Oct (optional)
 
-- **Content:** keyed like B20, one entry per in-scope MHA, profile and mode:
-  - `lisa_class` (HH, LL, HL, LH or NS at p < 0.05)
-  - `lisa_p`
-  - `fdr_significant`
-  - `gi_class`
+- **Content:** [ICD section 7](../data-contract.md#7-b27--hotspot-overlay-hotspots_2026json-optional): `adequacy_gap` only, keyed like B20, one entry per in-scope MHA, profile and mode, using the B18 column names (`cluster`, `lisa_p_sim`, `lisa_fdr_significant`, `gi_class`), plus the global result per test.
 - **Labelling (D2):** the file and its legend label the p < 0.05 classes as exploratory and mark the FDR survivors.
 - **Before building:** rerun B18 once with `make spatial PERMUTATIONS=99999`.
   - With 9,999 permutations, the smallest local p-value possible is 0.0002. The FDR cutoff for the top-ranked MHA is 0.05 ÷ 283 ≈ 0.00018, below that floor.
@@ -173,7 +162,9 @@ H2 asks what the adequacy gaps are associated with. The research question itself
 
 - Gathers every stage manifest into one file: input checksums, windows, row counts, warnings, software versions, git commit. It builds on `tools/verify_hashes.py` (`make verify`), which already proves the recorded hashes agree.
 - Its own SHA-256 is the `build_id` in B20, B21 and B27.
+- **Build order (found while writing the ICD):** B22 cannot list the hashes of files that embed its own hash. So B22 is written first, from the stage manifests and B7; B20, B21 and B27 follow; a `SHA256SUMS` file over all five is written last ([ICD section 8](../data-contract.md#8-b22--build-manifest-build_manifest_2026json)). `nodes.csv` now shows B22 feeding B20, B21 and B27 instead of the reverse.
 - **Check:** the build stops if any stage manifest is missing, or was built from inputs (configs included) other than the ones beside it.
+- **`make handoff`:** one target that runs `all`, B28, B7, B22, B20, B21, B27, `SHA256SUMS`, B23 and `verify` in that order (ICD conformance check 1).
 
 ### B23 · QA / validation report — target Thu 29 Oct
 
@@ -188,6 +179,12 @@ A generated `docs/qa/qa-2026.md` covering:
 
 C21 (the about / data-caveats page) is built from this report.
 
+### W2 · data contract (ICD) — written Sun 18 Oct
+
+- **What:** [`docs/data-contract.md`](../data-contract.md), the Layer 2 → Layer 3 Interface Control Document. It widens the September "data contract" from the attribute payload to every delivered file: B7, B20, B21, B22, B27 and `SHA256SUMS`.
+- **Contents:** parties; delivered files; common conventions (D6); one section per file with every field, type, status code and caveat id; consumer obligations; versioning; conformance checks; delivery (D10); change log.
+- **Done when:** the author has reviewed it. Its conformance checks (section 11) are then the exit criteria M6 closes on; B20–B23 implement them.
+
 ### W1 · Layer 2 writeup — target Fri 30 Oct (author-written)
 
 Wendell writes this; the outline points to the evidence each part draws on.
@@ -196,17 +193,18 @@ Wendell writes this; the outline points to the evidence each part draws on.
 2. **From sources to areas** — the crosswalk, the synthesized geometry (B6, B28), and the median rule. Evidence: B1–B11 manifests.
 3. **The adequacy test** — the statute, the cost share, and why `adequacy_gap` replaced the flat 95% target (D1). Evidence: coverage manifest.
 4. **Spatial statistics** — the weights choice, the global result for H1 (confirmatory), and the local clusters (exploratory, D2). Evidence: spatial manifest, LISA map.
-5. **The handoff** — the B20/B21/B22/B27 files and what the map may and may not do with them.
+5. **The handoff** — the B7/B20/B21/B22/B27 files and what the map may and may not do with them. Evidence: the [ICD](../data-contract.md), sections 2 and 9.
 6. **Limitations** — every caveat from B23, including N1 and N2.
 
 ## 4. Sequence
 
 | Target | Work |
 |---|---|
-| Wed 21 Oct | B28 polygons |
+| Sun 18 Oct | W2 data contract (ICD) written |
+| Wed 21 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) |
 | Sat 24 Oct | A8 and A9 pulls; B24; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations |
 | Wed 28 Oct | B20, B21, B27 |
-| Thu 29 Oct | B22, B23 |
+| Thu 29 Oct | B22 (written before B20, B21, B27 in the build order), B23, `make handoff` |
 | Fri 30 Oct | W1; close M6 |
 | By 16 Nov | B19 (H2) |
 
