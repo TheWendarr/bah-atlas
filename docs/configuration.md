@@ -147,7 +147,27 @@ How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `
 - **Insurance:** FIO "Premiums Per Policy" (written premium ÷ policies in force at year end), the median over the MHA's published ZIPs. Flat dollars rather than a share of value, because premiums track replacement cost and hazard more than market value.
 - **State fallback:** the same ratio (tax) or median (insurance) over every real-MHA ZIP in the MHA's state, the state being the MHA code's two letters. Each MHA's row carries `tax_source` and `insurance_source` (`locality` or `state_fallback`), which become the payload caveats `tax_state_fallback` and `insurance_state_fallback`.
 
+**Insurance state fallback (D11, decided 18 Oct 2026).** The FIO workbook has no state column, so the fallback is the median over the published ZIPs of every real MHA in the same state, rather than the NAIC state average: one source and one data year for every premium. No 2026 MHA needed it.
+
 **Why not scaled to 2026 (decision N2).** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance. Scaling would need an inflator the project would have to choose and defend; using the published year keeps the number traceable. B11 records the limitation in its manifest, and B23 and the write-up state it.
+
+---
+
+## `config/ui_text.json` (A13 display text)
+
+The wording the map shows, read only by B21 (`build_ui_metadata.py`), which copies it into `ui_metadata_2026.json`. It sits beside A13 as part of the display configuration, in its own file so that a wording change touches only B21: B12–B18 record the hash of `classification.json`, not this file, and are not rerun (decided 18 Oct 2026).
+
+| Field | Meaning |
+|---|---|
+| `_doc`, `version` | Pointer to this page; schema version of this file. |
+| `modes` | Display label for `rent` and `buy`. |
+| `statuses` | A `label` and a `text` for each status code in data contract section 5.4. B21 stops if a code is missing or an extra one appears. |
+| `caveats` | A `title` and a `text` for each caveat id in section 5.5; B21 adds each id's level from the contract. Same check. |
+| `global_caveats` | Limitations that apply to the whole map: `id`, `title`, `text`. |
+| `geometry` | `method` and `authority` statements for the area outlines. |
+| `sources` | One entry per incorporated source shown in the map's attribution (C20): `id` (node), `title`, `provider`, `url`, `license`, `used_for`. Follows [SOURCES.md](SOURCES.md). |
+
+**Wording rules.** Each text says what the reader is looking at and why a value is missing or qualified, in plain language, without the project's node ids. A text that states a number (a year, a count) is avoided where B21 already carries it, so the file does not go stale when a window changes; `insurance_2022_dollars` names its year because the caveat id does.
 
 ---
 

@@ -1,6 +1,6 @@
 # Data contract — Layer 2 → Layer 3 Interface Control Document
 
-**ICD version:** 1.0.1 · **contract `schema_version`:** 1.0.1 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
+**ICD version:** 1.0.2 · **contract `schema_version`:** 1.0.2 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
 
 This document fixes everything that crosses the boundary between the offline pipeline (Layer 2, B nodes) and the static map (Layer 3, C nodes): which files are handed over, the exact shape of each, the rules for missing values, and what the map may and may not do with them. Layer 3 is built against this document, not against the pipeline code.
 
@@ -44,7 +44,7 @@ These follow decision D6 (18 Oct 2026).
 | Build link | B20, B21 and B27 carry `build_id`, the SHA-256 of the B22 file. All three must carry the same value (section 8). |
 | Area code | `^[A-Z]{2}[0-9]{3}$`, exactly as DTMO publishes it (`CO018`, `ZZ001`; the territory bucket follows the same `XX###` form). It is the only join key across files. |
 | Ordering | Area entries are sorted by code; profiles follow A12 order; modes are `rent`, `buy`. |
-| Ratios | Plain decimals (1.0463 means 104.63%), rounded to 4 decimal places. Never pre-multiplied to percent. |
+| Ratios | Plain decimals (1.0463 means 104.63%), rounded to 4 decimal places. Never pre-multiplied to percent. p-values (B27) are rounded to 5 decimal places, the resolution of 99,999 permutations. |
 | Dollars | US dollars per month, rounded to whole dollars, half away from zero. |
 | Missing values | The field is present and `null`, and the row's `status` says why (section 5.3). A field is never omitted to mean "missing". |
 | Caveats | Arrays of caveat ids. The text for each id lives in B21 (section 6.4). |
@@ -88,7 +88,7 @@ B20 packs values already computed by B4 and B12–B15. It computes nothing new.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `schema_version` | string | `"1.0.1"` |
+| `schema_version` | string | `"1.0.2"` |
 | `bah_year` | integer | `2026` |
 | `build_id` | string | SHA-256 (64 hex characters) of the B22 file |
 | `profiles` | array of string | A12 profile ids in A12 order: `["e5_dep", "o3_dep"]` |
@@ -164,7 +164,7 @@ Illustrative numbers.
 
 ```json
 {
-  "schema_version": "1.0.1",
+  "schema_version": "1.0.2",
   "bah_year": 2026,
   "build_id": "9c1e…(64 hex)",
   "profiles": ["e5_dep", "o3_dep"],
@@ -234,7 +234,7 @@ Everything the map needs to label and colour B20, so no wording or class break i
 | `statuses` | object | By status code: `label` and `text` |
 | `caveats` | object | By caveat id: `title`, `text`, `level` (`area`, `row`, `overlay`) |
 | `global_caveats` | array | `{ "id", "title", "text" }` for limitations that apply to the whole map |
-| `windows` | object | Benchmark periods: ZORI and ZHVI months, mortgage-rate window, SAFMR vintage, A8 data years |
+| `windows` | object | Display strings for each period: `bah_rates`, `rent_zillow_zori`, `home_value_zillow_zhvi`, `mortgage_rate_pmms`, `rent_crosscheck_hud_safmr`, `property_tax_acs`, `insurance_fio` |
 | `sources` | array | `{ "id", "title", "provider", "url", "license", "used_for" }` for every incorporated source in [SOURCES.md](SOURCES.md) |
 | `geometry` | object | `method` and `authority` statements for the polygons, as shown in the UI |
 
@@ -251,14 +251,14 @@ Decision D2 (option C) and D5. Local results for the primary variable `adequacy_
 | `schema_version`, `bah_year`, `build_id` | | As in B20 |
 | `variable` | string | `"adequacy_gap"` |
 | `caveats` | array | `["lisa_exploratory"]` |
-| `tests` | object | By profile, then mode: `n`, `k`, `permutations`, `alpha`, `moran_i`, `moran_p_sim`, `fdr_cutoff` |
+| `tests` | object | By profile, then mode: `n`, `k`, `permutations`, `alpha`, `moran_i` (4 decimals), `moran_p_sim` and `fdr_cutoff` (5 decimals) |
 | `areas` | object | By code, then profile, then mode: the fields below. Only areas with `cluster_scope: true` appear. |
 
 | Area field | Type | Meaning |
 |---|---|---|
 | `status` | string | `tested` or `no_value` (the B18 status) |
 | `cluster` | string \| null | `HH`, `LL`, `HL`, `LH` where pseudo p < 0.05, else `NS`; null when not tested |
-| `lisa_p_sim` | number \| null | Two-sided pseudo p-value, 4 decimal places |
+| `lisa_p_sim` | number \| null | Two-sided pseudo p-value, 5 decimal places |
 | `lisa_fdr_significant` | boolean \| null | Survives the Benjamini–Hochberg correction across the test |
 | `gi_class` | string \| null | `hot`, `cold` or `ns` |
 
@@ -270,13 +270,15 @@ The overlay is labelled exploratory wherever it is shown, and FDR-significant ar
 |---|---|
 | `schema_version`, `bah_year` | As above |
 | `generated_at` | UTC timestamp |
-| `git_commit` | Commit the pipeline ran from; `dirty: true` if the tree had changes |
+| `node`, `build_order` | `"B22"`, and the build order below as text |
+| `git` | `commit` the pipeline ran from, and `dirty: true` if the tree had uncommitted changes |
 | `software` | Python and package versions; tippecanoe version |
 | `raw_inputs` | Every Layer 1 file used, with SHA-256 (from the fetch record and A8/A9 pulls) |
 | `configs` | A12, A13, `ownership.json` with SHA-256 |
-| `stages` | One entry per stage manifest (B1–B18, B24, B28, A8 benchmarks, B7): file, SHA-256, warnings |
+| `stages` | One entry per stage manifest (fetch, B1–B18, B28, the A8 rollup, B7): nodes, file, SHA-256, generated time, warnings |
 | `windows` | The benchmark periods B21 also shows |
-| `outputs` | B7 file name and SHA-256 |
+| `spatial` | Permutations, seed and alpha of the B17/B18 run |
+| `outputs` | B7 file name, SHA-256 and features by class |
 
 **Build order.** B22 is written before B20, B21 and B27, because they embed its hash as `build_id`. B22 therefore records B7 and the stage manifests, but not the three JSON files that point to it. Their hashes go into `SHA256SUMS`, written last.
 
@@ -322,7 +324,7 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 1. `make handoff` runs from `data/raw` to `SHA256SUMS` without error.
 2. `make verify` reports no failed checks.
-3. Each JSON file validates against this document: required fields present, types correct, every enumeration value from its closed list, ratios at 4 decimal places, dollars whole.
+3. Each JSON file validates against this document: required fields present, types correct, every enumeration value from its closed list, ratios at no more than 4 decimal places (p-values 5), dollars whole.
 4. The B7 codes and the B20 codes match exactly, except areas with no ZCTA polygon, which are listed in B23.
 5. Every non-null B20 value equals its source row (B4, B12–B15) after rounding.
 6. Every status code and caveat id in B20 and B27 has an entry in B21.
@@ -334,12 +336,13 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 1. Layers 1 and 2 are completed in full first.
 2. The delivered files, `SHA256SUMS`, and the author's write-up of every action and decision behind them are then added to the repository together. The repository location is recorded here when that commit is made.
-3. Layer 3 work begins after that commit. Until then, the files exist only on the author's workstation under `data/processed/`, which git ignores.
+3. Layer 3 work begins after that commit. Until then, the files exist only on the author's workstation in `data/processed/handoff/` (written by `make handoff`), which git ignores.
 
 ## 13. Change log
 
 | Version | Date | Change |
 |---|---|---|
+| 1.0.2 | 18 Oct 2026 | p-values in B27 rounded to 5 decimal places instead of 4: at 99,999 permutations the smallest p is 0.00002, which 4 places would show as 0. Section 8 lists the fields B22 carries; section 6 names the window keys; section 12 names the handoff folder. Made before any file was produced under 1.0.x, so no consumer is affected. |
 | 1.0.1 | 18 Oct 2026 | Section 4: the 2026 feature count (339) and the territory bucket's extent, from the first B28/B7 run. No interface change. |
 | 1.0.0 | 18 Oct 2026 | First issue. Interface fixed from the 18 Oct decisions (D1–D8, N1, N2, 2.1–2.10) and D9 (one tile layer keyed on `code`). |
 

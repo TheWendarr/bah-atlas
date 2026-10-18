@@ -303,7 +303,11 @@ B17 and B18.
 The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI
 metadata, B22 build manifest, B27 hotspot overlay) are specified field by field in
 the [data contract (Layer 2 → Layer 3 ICD)](data-contract.md), which governs
-them. B28 (County Cost Group and territory polygons) is merged into B7 under
+them. `make handoff` writes them, with `SHA256SUMS`, to `data/processed/handoff/`
+(`pipeline/handoff/`: `build_manifest.py` B22, `build_payload.py` B20,
+`build_ui_metadata.py` B21, `build_hotspots.py` B27) and then runs
+`validate_handoff.py`, which applies contract checks 3–8. The names, codes and
+rounding rules all builders share are in `pipeline/handoff/contract.py`. B28 (County Cost Group and territory polygons) is merged into B7 under
 decision D9. The decisions behind the contract are in the
 [M6 plan](plans/m6-plan.md).
 

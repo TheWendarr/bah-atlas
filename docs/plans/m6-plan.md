@@ -36,7 +36,10 @@ The exact shape of every one of these files is fixed in the **[data contract (La
 | 2.10 | Front-end build choices (bundler, hosting, basemap) wait until this handoff exists. | No Layer 3 work in M6. |
 | D9 | **One tile layer for every area.** B7 becomes a single vector layer `areas` holding the 299 MHAs, 39 CCGs and the territory bucket, keyed on `code` with a `class` property, tiled in one tippecanoe run. (Option B, a second `non_mha` layer beside B7's `mha` layer, was rejected: separate runs simplify each side of an MHA-to-CCG border independently and leave slivers, the id field `mha` would hold CCG codes, and every front-end join would have to be routed between two layers.) | B7 is rebuilt in M6 with B28 as an input; B6 and B16–B18 are unchanged. The ICD (W2) specifies the layer. C1 reads B7 only. |
 | D10 | **Processed outputs stay off the repository until Layers 1 and 2 are complete.** They are then added in one commit with the author's write-up of every action and decision, and Layer 3 starts after that commit. | ICD section 12. No release or `web/data/` copy during M6. |
-| D11 | **Proposed 18 Oct, for the author: insurance state fallback from FIO itself.** The FIO workbook has no state column. The fallback premium is the median over the published ZIPs of every real MHA in the same state, instead of the NAIC state average named in the 18 Oct plan. | One source and one data year for every premium; no second (NAIC) source to fetch and cite. The NAIC figure covers HO-3 policies statewide, not ZIPs near installations. To be confirmed; if not, A8 adds the NAIC table as a third input. |
+| D11 | **Insurance state fallback from FIO itself (decided 18 Oct).** The FIO workbook has no state column. The fallback premium is the median over the published ZIPs of every real MHA in the same state, instead of the NAIC state average named in the 18 Oct plan. | One source and one data year for every premium; no second (NAIC) source to fetch and cite. The NAIC figure covers HO-3 policies statewide, not ZIPs near installations. No 2026 MHA needed it. |
+| D12 | **Map wording in `config/ui_text.json`** (part of A13), read only by B21: status and caveat texts, global caveats, boundary statements, source attributions. | A wording change reruns only B21; B12–B18 keep their recorded hashes. Documented in `docs/configuration.md`. |
+| D13 | **99,999 permutations is the Makefile default**, matching the recorded run. | A full rebuild reproduces the recorded B17/B18 evidence. |
+| D14 | **Handoff files are written to `data/processed/handoff/`**, apart from the intermediate outputs. | The D10 delivery commit copies one folder. ICD 1.0.2, section 12. |
 
 **Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
 
@@ -130,6 +133,8 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
 
 ### B20 · attribute payload — target Wed 28 Oct
 
+- **Built (code, 18 Oct):** `pipeline/handoff/` holds the four builders (B22, B20, B21, B27), `contract.py` (the contract's names, codes and rounding rules, shared by all of them) and `validate_handoff.py` (ICD checks 3–8). `make handoff` writes the five files and `SHA256SUMS` to `data/processed/handoff/` and validates them; 8 synthetic tests cover a build that conforms and four kinds of break. Writing it moved B27's p-values to 5 decimals (ICD 1.0.2).
+
 - **Content:** the payload in [ICD section 5](../data-contract.md#5-b20--attribute-payload-payload_2026json); written after B22, whose hash it carries as `build_id`.
 - **Areas:** the 299 MHAs, the 39 CCGs (BAH rate only, N1) and the XX bucket (status `no_rate`). Alaska and Hawaii are included with `cluster_scope: false`.
 - **Values:** taken only from the B12–B15 output and B4; B20 computes nothing new.
@@ -214,8 +219,8 @@ Wendell writes this; the outline points to the evidence each part draws on.
 | ~~Wed 21 Oct~~ Sun 18 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) — done 3 days early |
 | ~~Sat 24 Oct~~ Sun 18 Oct | A8 and A9 pulls; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations — done 6 days early |
 | Sat 24 Oct | B24 (optional) |
-| Wed 28 Oct | B20, B21, B27 |
-| Thu 29 Oct | B22 (written before B20, B21, B27 in the build order), B23, `make handoff` |
+| Wed 28 Oct | B20, B21, B27 — code written Sun 18 Oct; run with `make handoff` |
+| Thu 29 Oct | B22 (code written Sun 18 Oct, first in the build order), `make handoff` (written 18 Oct); B23 |
 | Fri 30 Oct | W1; close M6 |
 | By 16 Nov | B19 (H2) |
 

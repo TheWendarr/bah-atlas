@@ -21,7 +21,7 @@ FIO_XLSX ?= data/raw/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_o
 WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
-.PHONY: all fetch check-config ingest geometry non-mha components tiles basemap \
+.PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
 	benchmarks zori zhvi safmr taxins ownership metrics weights spatial test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
@@ -133,14 +133,44 @@ weights:
 # B12/B14 + B16 -> B17, B18: global Moran's I, LISA and Getis-Ord Gi* for every A12
 # profile x rent/buy x adequacy_gap (primary) / flat95_gap (sensitivity), plus a LISA
 # cluster map of the primary test. Needs `make metrics` first. Reproducible: fixed
-# seed; override with e.g. `make spatial PERMUTATIONS=999` for a quick run.
-PERMUTATIONS ?= 9999
+# seed; override with e.g. `make spatial PERMUTATIONS=999` for a quick run. 99,999 is the
+# recorded run (18 Oct 2026): at 9,999 the smallest local p sat above the FDR cut-off.
+PERMUTATIONS ?= 99999
 SEED ?= 2026
 spatial: weights
 	$(PYTHON) pipeline/spatial/spatial_stats.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
 		--weights-manifest $(SPATIAL)/weights_manifest.json \
 		--rent-metrics $(METRICS)/mha_rent_metrics.csv --buy-metrics $(METRICS)/mha_buy_metrics.csv \
 		--permutations $(PERMUTATIONS) --seed $(SEED) --out $(SPATIAL)
+
+# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27; docs/data-contract.md) ---
+# Writes the five delivered files and SHA256SUMS into $(HANDOFF), then validates them
+# against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
+# build is proven before B22 records it. A full rebuild from data/raw is
+# `make all handoff`. Afterwards run `make evidence verify` to record the B22 manifest.
+HANDOFF ?= $(PROCESSED)/handoff
+HANDOFF_PY = $(PYTHON) pipeline/handoff
+handoff:
+	$(PYTHON) tools/collect_evidence.py --no-tests
+	$(PYTHON) tools/verify_hashes.py
+	mkdir -p $(HANDOFF)
+	cp $(PROCESSED)/areas_$(YEAR).pmtiles $(HANDOFF)/
+	$(HANDOFF_PY)/build_manifest.py --year $(YEAR) --out $(HANDOFF)/build_manifest_$(YEAR).json
+	$(HANDOFF_PY)/build_payload.py --year $(YEAR) --names $(INTERIM)/mha_names.csv \
+		--bah-rates $(INTERIM)/bah_rates.csv --rent $(METRICS)/mha_rent_metrics.csv \
+		--buy $(METRICS)/mha_buy_metrics.csv --ownership $(BENCH)/mha_ownership.csv \
+		--spatial-manifest $(SPATIAL)/spatial_stats_manifest.json \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/payload_$(YEAR).json
+	$(HANDOFF_PY)/build_ui_metadata.py --year $(YEAR) --names $(INTERIM)/mha_names.csv \
+		--coverage-manifest $(METRICS)/coverage_metrics_manifest.json \
+		--tax-manifest $(BENCH)/mha_tax_insurance_manifest.json \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/ui_metadata_$(YEAR).json
+	$(HANDOFF_PY)/build_hotspots.py --year $(YEAR) --spatial-stats $(SPATIAL)/mha_spatial_stats.csv \
+		--spatial-manifest $(SPATIAL)/spatial_stats_manifest.json --payload $(HANDOFF)/payload_$(YEAR).json \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/hotspots_$(YEAR).json
+	cd $(HANDOFF) && sha256sum areas_$(YEAR).pmtiles payload_$(YEAR).json ui_metadata_$(YEAR).json \
+		hotspots_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
+	$(HANDOFF_PY)/validate_handoff.py --year $(YEAR) --handoff $(HANDOFF)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:

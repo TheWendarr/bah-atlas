@@ -104,6 +104,7 @@ make benchmarks     # ZORI, ZHVI, SAFMR, A8 tax and insurance, ownership cost at
 make metrics        # adequacy and coverage metrics (B12-B15)
 make spatial        # spatial weights, Moran's I, LISA, Gi* (B16-B18)
 make test           # unit tests on synthetic fixtures
+make handoff        # the Layer 3 handoff files + SHA256SUMS in data/processed/handoff, validated
 make evidence       # copy manifests and test results into docs/evidence/
 make verify         # check every recorded SHA-256 against configs, evidence and data
 ```

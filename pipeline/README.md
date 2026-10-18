@@ -109,6 +109,24 @@ esda (PySAL); matplotlib for the map.
 - `build_basemap.sh` — extracts a bounding box from a Protomaps daily planet
   build into `basemap.pmtiles` (A11 -> C4) with the pmtiles CLI.
 
+## `handoff/` — 2.7 the Layer 2 -> Layer 3 handoff
+
+Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
+(`make handoff`, output in `data/processed/handoff/`):
+
+- `contract.py` — the contract in code: schema version, field lists, status
+  codes, caveat ids, rounding. Every builder and the validator import it.
+- `build_manifest.py` (B22) — provenance of the build; its SHA-256 is the
+  `build_id`, so it is written first.
+- `build_payload.py` (B20) — the attribute payload for all 339 area codes, packed
+  from B4 and B12-B15 with nothing recomputed.
+- `build_ui_metadata.py` (B21) — labels, classes, colours, area names, and the
+  status, caveat and source texts from `config/ui_text.json`.
+- `build_hotspots.py` (B27) — the exploratory cluster overlay for `adequacy_gap`.
+- `validate_handoff.py` — contract checks 3-8, independent of the builders: types
+  and rounding, B7 codes against B20, every value against its source row,
+  references into B21, one `build_id`, and `SHA256SUMS`.
+
 ## Verifying a build
 
 `make verify` (`tools/verify_hashes.py`) checks every SHA-256 the manifests

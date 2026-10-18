@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ROOT / "config" / "profiles.json"
 CLASSIFICATION = ROOT / "config" / "classification.json"
 OWNERSHIP = ROOT / "config" / "ownership.json"
+UI_TEXT = ROOT / "config" / "ui_text.json"
 BAH_INGEST = ROOT / "pipeline" / "ingest" / "ingest_bah_ascii.py"
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 SAFMR_BEDROOMS = range(0, 5)   # HUD publishes 0-4 bedroom SAFMRs
@@ -178,8 +179,9 @@ def main() -> None:
     profiles = load(PROFILES, errors)
     classification = load(CLASSIFICATION, errors)
     ownership = load(OWNERSHIP, errors)
+    ui_text = load(UI_TEXT, errors)
     for cfg, name in ((profiles, "profiles.json"), (classification, "classification.json"),
-                      (ownership, "ownership.json")):
+                      (ownership, "ownership.json"), (ui_text, "ui_text.json")):
         if cfg:
             check_values_only(cfg, name, errors)
             check_doc_pointer(cfg, name, errors)
@@ -197,6 +199,7 @@ def main() -> None:
     print(f"A13 classification OK: {', '.join(classification['metrics'])}; "
           f"{len(classification.get('clusters', {}).get('classes', {}))} cluster classes")
     print("B11 ownership.json OK: values only, documented in docs/configuration.md")
+    print("A13 ui_text.json OK: documented in docs/configuration.md (B21 checks it against the data contract)")
 
 
 if __name__ == "__main__":

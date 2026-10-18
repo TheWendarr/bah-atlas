@@ -274,12 +274,12 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
 | ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
-| 🟢 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11); completed 18 Oct |
+| 🟢 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11); D11 decided 18 Oct: insurance state fallback from FIO itself; completed 18 Oct |
 | 🟢 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax; completed 18 Oct |
 | ⚪ | **A10** | BEA Regional Price Parities | optional | — | Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
 | ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |
-| ⚫ | **A13** | Classification and color scheme config | required | — | completed 03 Oct |
+| ⚫ | **A13** | Classification and color scheme config | required | — | config/ui_text.json (map wording, read only by B21) added 18 Oct (D12); completed 03 Oct |
 
 ### Layer 2 — Data Processing
 
@@ -338,9 +338,9 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22 |
-| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6 |
-| 🟣 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last |
+| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22; code ready 18 Oct: pipeline/handoff/build_payload.py (make handoff) |
+| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12) |
+| 🟣 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py |
 | 🟢 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; completed 18 Oct |
 
@@ -352,7 +352,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟣 | **B24** | ACS context join | optional | A9, B1 | Reduced H2: population density per MHA from A9 (urbanicity) |
 | ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
-| 🟣 | **B27** | Hotspot overlay payload | optional | B18, B22 | Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C) |
+| 🟣 | **B27** | Hotspot overlay payload | optional | B18, B22 | Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C); code ready 18 Oct: build_hotspots.py; p-values to 5 decimals (ICD 1.0.2) |
 | 🟣 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline |
 
 ### Layer 3 — Front-End
