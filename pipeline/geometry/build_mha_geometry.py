@@ -20,8 +20,8 @@ Inputs you supply
                 Source: DTMO annual ZIP-to-MHA release / BAH Rate Lookup.
 
   --zcta        ZCTA polygon file (.shp / .gpkg / .geojson).
-                Source: Census cartographic boundary file, e.g.
-                cb_2023_us_zcta520_500k  (use the cartographic boundary, not
+                Source: Census cartographic boundary file
+                cb_2020_us_zcta520_500k (A2; use the cartographic boundary, not
                 full TIGER, for clean coastlines).
 
   --valid-mha   OPTIONAL text file, one MHA code per line, taken from the

@@ -7,6 +7,7 @@
 > | 📋 **[Work Breakdown Structure](docs/WBS.md)** | Milestones, due dates, every node's status, and the nodal map |
 > | 📝 **[Progress notes](docs/progress/)** | One note per week on a fixed five-part template, tied to a milestone, with linked evidence; the folder index shows each milestone's status and latest note |
 > | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
+> | 🧭 **[M6 plan](docs/plans/m6-plan.md)** | The Layer 2 → Layer 3 handoff: decisions taken, decisions open, and how each M6 node will be built |
 >
 > Status is kept in [`docs/wbs/nodes.csv`](docs/wbs/nodes.csv); `make wbs` regenerates the WBS page from it.
 
@@ -15,10 +16,12 @@ Housing (BAH)** stretches against real local housing costs — showing where the
 allowance meets its statutory coverage target and where it falls short, mapped
 across every Military Housing Area (MHA).
 
-BAH is designed to cover roughly 95% of local housing costs (a deliberate ~5%
-member cost-share). This project measures realized coverage against an
-independent housing-cost benchmark and characterizes where the gaps cluster in
-space.
+By statute (37 U.S.C. 403(b)(3)), BAH equals the local cost of adequate housing
+minus a member cost share of 5% of the *national* average cost for the pay grade.
+That share is the same dollars everywhere, so BAH pays roughly 95% of local cost
+on average, more than 95% in expensive areas and less in cheap ones. This project
+measures BAH against that design using an independent housing-cost benchmark and
+characterizes where the gaps cluster in space.
 
 ## Research question
 
@@ -48,7 +51,11 @@ Each layer is attributed to its source:
 - **Rent benchmark** — Zillow Observed Rent Index (ZORI)
 - **Home-value benchmark** — Zillow Home Value Index (ZHVI)
 - **Affordability reference** — HUD Fair Market Rents (FMR / SAFMR)
-- **Income / price context** — U.S. Census ACS, BEA Regional Price Parities (RPP)
+- **Rent/utilities split and member cost share** — DTMO BAH Rate Component Breakdown and out-of-pocket table
+- **Mortgage rate** — Freddie Mac Primary Mortgage Market Survey (PMMS)
+- **Planned:** property tax (U.S. Census ACS) and homeowners insurance (U.S. Treasury FIO, NAIC) by locality; income and price context (ACS, BEA Regional Price Parities) if hypothesis H2 goes ahead
+
+The full register, with licences and caveats, is [`docs/SOURCES.md`](docs/SOURCES.md).
 
 ## Repository layout
 
@@ -58,19 +65,24 @@ bah-atlas/
 │   ├── raw/         vendor artifacts as downloaded (gitignored)
 │   ├── interim/     tidy parsed outputs (gitignored)
 │   └── processed/   final web-ready geometry/tiles (gitignored)
-├── config/          authored config: profiles.json (A12), classification.json (A13)
+├── config/          authored config: profiles.json (A12), classification.json (A13), ownership.json (B11)
 ├── pipeline/
 │   ├── fetch/       Layer 1 source fetcher with provenance manifest
-│   ├── ingest/      endpoint translators: raw release -> tidy CSVs + manifest
-│   ├── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons
+│   ├── ingest/      endpoint translators: raw release -> tidy CSVs + manifest (B1-B5)
+│   ├── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons (B6)
+│   ├── benchmarks/  ZIP-level benchmarks rolled up to the MHA (B8-B11)
+│   ├── metrics/     coverage and adequacy metrics (B12-B15)
+│   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18)
 │   └── tiles/       PMTiles builders: MHA tiles (B7) and basemap cutout (A11)
-├── web/             MapLibre GL JS frontend (later)
+├── web/             MapLibre GL JS frontend (Layer 3, not started)
 ├── docs/            research framing, data dictionary, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
 │   ├── wbs/         nodes.csv + milestones.csv — project status source of truth
-│   └── progress/    weekly progress log
-├── tools/           project tooling (WBS renderer, GitHub milestone sync)
-└── tests/
+│   ├── progress/    progress notes on the five-part template, with index
+│   ├── plans/       milestone plans (M6: the Layer 2 -> Layer 3 handoff)
+│   └── evidence/    pipeline manifests and test results linked from the notes
+├── tools/           project tooling (WBS renderer, progress notes, evidence, GitHub sync)
+└── tests/           unit tests on synthetic fixtures
 ```
 
 ## Quickstart
@@ -84,10 +96,15 @@ make geometry       # BAH ASCII -> tidy CSVs (B1-B4) -> MHA polygons (B6)
 make components     # rent/utilities split per MHA (A6 -> B5)
 make tiles          # MHA PMTiles for MapLibre (B6 -> B7); needs tippecanoe
 make basemap        # basemap cutout from a Protomaps build (A11); needs the pmtiles CLI
+make benchmarks     # ZORI, ZHVI, SAFMR and ownership cost at the MHA (B8-B11)
+make metrics        # adequacy and coverage metrics (B12-B15)
+make spatial        # spatial weights, Moran's I, LISA, Gi* (B16-B18)
+make test           # unit tests on synthetic fixtures
+make evidence       # copy manifests and test results into docs/evidence/
 ```
 
-`make all` runs check-config, geometry, components, and tiles in order. Each
-script prints its own usage with `--help`.
+`make all` runs check-config, geometry, components, tiles, benchmarks, metrics,
+and spatial in order. Each script prints its own usage with `--help`.
 
 ## Status
 
@@ -100,9 +117,10 @@ updates.
 ```bash
 make start N="B8"          # mark nodes in progress
 make done N="A3-A6 B5"     # mark nodes complete today (ranges allowed)
+make scrap N="B26"         # mark nodes scrapped (id and history kept)
 make wbs-show              # print every node's status
-make wbs-week              # start this week's log entry in docs/progress/
-# write the narrative in docs/progress/<date>.md, then commit and push
+make wbs-week              # scaffold this week's progress note in docs/progress/
+# fill in the author parts of docs/progress/<date>.md, then commit and push
 make wbs-sync              # optional: mirror milestones and issues to GitHub (gh CLI)
 ```
 

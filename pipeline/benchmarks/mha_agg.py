@@ -8,7 +8,7 @@ of each MHA the value actually covers.
 
 Aggregation rule (documented once, used everywhere):
   * Only real MHAs (mha_class == "mha", 299 in 2026) are aggregated. County Cost
-    Groups (ZZ###) and the territory bucket (XX###) have no polygon and no B5
+    Groups (ZZ###) and the territory bucket (XX###) have no B6 polygon and no B5
     rent/utilities split, so they are counted in the manifest and left out.
   * The MHA value is the MEDIAN of its ZIP values (the mean is carried alongside).
     No housing-unit weights are applied: ZIP-level household counts would come

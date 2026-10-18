@@ -38,7 +38,8 @@ Output (written to --out)
 MHA classes
 ------------------------------------------------------------------------------
   mha      real Military Housing Area (ZIP-defined, geometry-eligible)
-  ccg      County Cost Group placeholder (code ZZ###); has rates, no ZIP polygon
+  ccg      County Cost Group (code ZZ###); has rates and ZIPs, but no DoD polygon
+           and no B5 rent/utilities split (B28 synthesizes its map polygon)
   unknown  territory / unresolved bucket (code XX###, e.g. Puerto Rico); no rate
 """
 

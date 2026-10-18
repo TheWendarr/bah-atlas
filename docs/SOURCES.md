@@ -35,7 +35,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Link:** https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip · landing: https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 - **Artifact:** `data/raw/cb_2020_us_zcta520_500k.zip` (`cb_2020_us_zcta520_500k.shp` inside; the geometry step reads the zip directly)
 - **Acquisition:** auto
-- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`.
+- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears.
 - **License:** U.S. Government work; not subject to domestic copyright.
 - **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA; quantify and disclose the join dropouts.
 - **Verified:** 2026-10-03 — URL live, serves a valid zip archive.
@@ -109,6 +109,25 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **License:** Open Database License (ODbL) Produced Work. **Attribution required on the map:** "© OpenStreetMap contributors" and Protomaps.
 - **Notes:** Daily builds are retained for about a week, so the provenance JSON records exactly which build was cut.
 - **Verified:** 2026-10-03 — build `20261002` available.
+
+### A8 · Property tax and homeowners insurance by locality  `[planned]`
+Started 18 Oct 2026; replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).
+
+**Property tax — U.S. Census ACS 5-year detailed tables**
+- **Provider:** U.S. Census Bureau
+- **Link:** API: https://api.census.gov/data/ · variable pages for [B25090](https://api.census.gov/data/2023/acs/acs5/groups/B25090.html) and [B25079](https://api.census.gov/data/2023/acs/acs5/groups/B25079.html)
+- **Acquisition:** api — ZCTA level, year pinned in the request.
+- **Role:** B25090_001E (aggregate real estate taxes paid) ÷ B25079_001E (aggregate value of owner-occupied units), summed over each MHA's ZCTAs, gives an effective tax rate per MHA for B11.
+- **License:** U.S. Government work; not subject to domestic copyright.
+- **Notes:** Self-reported taxes, top-coded at the high end, and lagging assessments; ZCTAs with no data fall back to the state rate, flagged per MHA. Shares the API client with A9 if A9 goes ahead.
+
+**Insurance — U.S. Treasury Federal Insurance Office (FIO), ZIP-level homeowners data, 2018–2022**
+- **Provider:** U.S. Department of the Treasury, Federal Insurance Office
+- **Link:** https://home.treasury.gov/news/press-releases/jy2791 (Jan 2025 release; the supporting workbook is linked there)
+- **Acquisition:** direct — one Excel workbook.
+- **Role:** Average homeowners premium per policy by ZIP, rolled up to the MHA median for B11.
+- **License:** U.S. Government work; not subject to domestic copyright.
+- **Notes:** Published only for ZIPs with at least ten insurers and fifty policies; MHAs with no published ZIP fall back to the NAIC state average (data year 2022). Data ends in 2022, so it understates 2026 premiums; the dollar year is an open decision (N2 in the M6 plan).
 
 ### A10 · BEA Regional Price Parities (RPP)  `[planned]`
 - **Provider:** U.S. Bureau of Economic Analysis (BEA)
@@ -211,7 +230,7 @@ packages). Licenses were read from each project's license file or package metada
 - **Provider:** U.S. Code, Title 37 (Pay and Allowances of the Uniformed Services), § 403 — https://www.law.cornell.edu/uscode/text/37/403
 - **Role:** Defines what BAH is meant to cover, and therefore the target the project tests. Section 403(b)(3) sets BAH = local cost of adequate housing − a percentage (5% since 2019) of the national average cost for the pay grade and dependency status. Since 17 Oct 2026 this is the basis of the primary test variable: adequacy ratio = (BAH + cost share) / benchmark, target 1.00 (B12–B15; see the A12 out-of-pocket entry for the dollar amounts).
 - **License:** U.S. law; public domain.
-- **Notes:** Replaces the flat "R ≈ 0.95" target in the original research proposal, which is kept as a sensitivity column (`flat95_gap`). Pending instructor approval; see the [17 Oct progress note](progress/2026-10-17.md).
+- **Notes:** Replaces the flat "R ≈ 0.95" target in the original research proposal, which is kept as a sensitivity column (`flat95_gap`). Approved as the primary test variable on 18 Oct 2026 (raised in the [17 Oct progress note](progress/2026-10-17.md)).
 
 ### DoD BAH housing standards by pay grade  `[incorporated]`
 - **Provider:** U.S. Department of Defense (BAH Primer); summarized at https://www.military.com/paycheck-chronicles/2014/12/04/much-house-rate
@@ -232,13 +251,13 @@ packages). Licenses were read from each project's license file or package metada
 
 ### National effective property tax rate (B11 placeholder)  `[incorporated]`
 - **Provider:** National Association of Home Builders (NAHB) analysis of the 2024 American Community Survey — https://eyeonhousing.org/2025/11/property-taxes-by-state-2024/
-- **Role:** Placeholder property tax in B11 until A8 lands: 0.89% of home value per year ($8.88 per $1,000).
+- **Role:** Placeholder property tax in B11 until A8 lands: 0.89% of home value per year ($8.88 per $1,000). A8 (started 18 Oct) replaces it with locality rates; this entry becomes `[reference]` when that rerun is committed.
 - **Notes:** State rates run from about 0.31% (Hawaii) to 1.79% (Illinois); a single national rate is a stated limitation.
 - **Verified:** 2026-10-08.
 
 ### National average homeowners insurance premium (B11 placeholder)  `[incorporated]`
 - **Provider:** NAIC homeowners insurance report, as summarised by the Insurance Information Institute — https://www.iii.org/fact-statistic/facts-statistics-homeowners-and-renters-insurance
-- **Role:** Placeholder insurance in B11 until A8 lands: $1,569 per year (HO-3 average, data year 2022).
+- **Role:** Placeholder insurance in B11 until A8 lands: $1,569 per year (HO-3 average, data year 2022). A8 (started 18 Oct) replaces it with ZIP-level premiums and NAIC state fallbacks.
 - **Notes:** The newest NAIC data year available; premiums have risen since, so this understates 2026 cost.
 - **Verified:** 2026-10-08.
 

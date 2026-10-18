@@ -226,3 +226,10 @@ contiguity with islands dropped), `lisa` (cluster counts, FDR cut-off and counts
 LISA cluster map of the primary test, in A13 cluster colours, with the global
 result in the title. `make evidence` copies it to `docs/evidence/` and credits it to
 B17 and B18.
+
+## Front-end payload (2.7, in progress)
+
+B20 (attribute payload), B21 (UI metadata), B22 (build manifest) and B28 (County
+Cost Group and territory polygons) are being built in M6. Their draft shapes and
+open decisions are in the [M6 plan](plans/m6-plan.md); each gets a section here
+when its schema is fixed.
