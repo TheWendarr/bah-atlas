@@ -211,7 +211,8 @@ def last_test_result() -> str | None:
 
 def required_in(m: dict, nodes: list[dict]) -> list[dict]:
     """Required nodes that gate milestone m; scrapped nodes never gate a milestone."""
-    return [n for n in nodes if n["sublayer"] in m["sublayer_list"]
+    milestones = wbs.load_milestones()
+    return [n for n in nodes if wbs.in_milestone(n, m, milestones)
             and n["required"] == "required" and n["status"] != "scrapped"]
 
 
@@ -316,7 +317,7 @@ def render_note(nodes: list[dict], milestones: list[dict], as_of: dt.date, miles
     nxt = next_milestone(m, milestones)
 
     week_start = as_of - dt.timedelta(days=6)
-    in_m = [n for n in nodes if n["sublayer"] in m["sublayer_list"]]
+    in_m = [n for n in nodes if wbs.in_milestone(n, m, milestones)]
     req = [n for n in in_m if n["required"] == "required" and n["status"] != "scrapped"]
     done_week = [n for n in nodes if n["completed_date"] and week_start <= n["completed_date"] <= as_of]
     remaining = [n for n in req if n["status"] != "complete"]

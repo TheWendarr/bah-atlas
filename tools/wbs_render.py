@@ -3,7 +3,9 @@
 
 Single source of truth:
     docs/wbs/nodes.csv       one row per tracked node (status lives here)
-    docs/wbs/milestones.csv  milestone titles, due dates, and the sub-layers each covers
+    docs/wbs/milestones.csv  milestone titles, due dates, the sub-layers each covers, and
+                             (optional `nodes` column) single nodes assigned to it from
+                             another sub-layer, e.g. A8 tracked under M6
 
 Outputs:
     docs/WBS.md              generated -- never edit by hand
@@ -126,9 +128,15 @@ def load_milestones() -> list[dict]:
     with MILESTONES_CSV.open(newline="", encoding="utf-8") as fh:
         rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh)]
     claimed: dict[str, str] = {}
+    claimed_nodes: dict[str, str] = {}
     for r in rows:
         r["due_date"] = parse_date(r["due"], f"milestones.csv ({r['id']})")
         r["sublayer_list"] = r["sublayers"].split(";")
+        r["node_list"] = r.get("nodes", "").split()
+        for nid in r["node_list"]:
+            if nid in claimed_nodes:
+                die(f"milestones.csv: node {nid} is assigned to both {claimed_nodes[nid]} and {r['id']}")
+            claimed_nodes[nid] = r["id"]
         for s in r["sublayer_list"]:
             if s not in SUBLAYERS:
                 die(f"milestones.csv ({r['id']}): unknown sublayer '{s}'")
@@ -154,10 +162,24 @@ def display_class(node: dict, as_of: dt.date) -> str:
 
 
 def milestone_for(sublayer: str, milestones: list[dict]) -> dict | None:
+    """The milestone that covers a sub-layer."""
     for m in milestones:
         if sublayer in m["sublayer_list"]:
             return m
     return None
+
+
+def node_milestone(node: dict, milestones: list[dict]) -> dict | None:
+    """The milestone a node counts toward: an explicit `nodes` assignment wins over its sub-layer."""
+    for m in milestones:
+        if node["id"] in m.get("node_list", []):
+            return m
+    return milestone_for(node["sublayer"], milestones)
+
+
+def in_milestone(node: dict, m: dict, milestones: list[dict]) -> bool:
+    hit = node_milestone(node, milestones)
+    return hit is not None and hit["id"] == m["id"]
 
 
 def progress_bar(done: int, total: int, width: int = 10) -> str:
@@ -285,7 +307,7 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     w("| Milestone | Due | Required complete | Progress | Status |")
     w("|---|---|---|---|---|")
     for m in milestones:
-        req = [n for n in nodes if n["sublayer"] in m["sublayer_list"]
+        req = [n for n in nodes if in_milestone(n, m, milestones)
                and n["required"] == "required" and n["status"] != "scrapped"]
         done = sum(1 for n in req if n["status"] == "complete")
         w(f"| **{m['id']}** {m['title']} | {m['due_date']:%a %d %b} | {done} / {len(req)} "
@@ -298,7 +320,7 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     w("")
     if active:
         for n in active:
-            m = milestone_for(n["sublayer"], milestones)
+            m = node_milestone(n, milestones)
             if n["required"] == "optional":
                 # Optional nodes do not gate their milestone, so its due date is not theirs.
                 due = " — optional"

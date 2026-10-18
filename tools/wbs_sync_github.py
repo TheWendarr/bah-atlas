@@ -151,7 +151,8 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
     for m in milestones:
         want_title = milestone_title(m)
         want_due = f"{m['due']}T23:59:59Z"
-        desc = f"Sub-layers {', '.join(m['sublayer_list'])}. Mirrored from docs/wbs/milestones.csv."
+        extra = f" Also tracks {', '.join(m['node_list'])}." if m["node_list"] else ""
+        desc = f"Sub-layers {', '.join(m['sublayer_list'])}.{extra} Mirrored from docs/wbs/milestones.csv."
         rm = by_id.get(m["id"])
         if rm is None:
             gh.write("api", "-X", "POST", f"repos/{gh.repo}/milestones",
@@ -174,7 +175,7 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
             by_node.setdefault(hit.group(1), ri)
 
     for n in nodes:
-        m = wbs.milestone_for(n["sublayer"], milestones)
+        m = wbs.node_milestone(n, milestones)
         m_title = milestone_title(m) if m else None
         ri = by_node.get(n["id"])
 
