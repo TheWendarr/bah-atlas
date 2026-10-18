@@ -5,10 +5,11 @@
     python tools/wbs.py done A3-A6 B5      # mark complete today (ranges allowed)
     python tools/wbs.py done B7 --on 2026-10-02
     python tools/wbs.py reset A8           # back to not started
+    python tools/wbs.py scrap B26          # dropped from the project (id and history kept)
     python tools/wbs.py show               # print every node's status
     python tools/wbs.py show A3-A6 B5      # print selected nodes
 
-Make shortcuts:  make start N="A3 A6"   make done N="A3-A6 B5"   make wbs-show
+Make shortcuts:  make start N="A3 A6"   make done N="A3-A6 B5"   make scrap N=B26   make wbs-show
 
 Edits docs/wbs/nodes.csv in place (same columns, same row order), so the change
 shows up as a one-line diff per node in your next commit.
@@ -26,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wbs_render as wbs  # noqa: E402
 
 RANGE = re.compile(r"^([A-Z])(\d+)-(?:\1)?(\d+)$")
-ACTIONS = {"start": "in_progress", "done": "complete", "reset": "not_started"}
+ACTIONS = {"start": "in_progress", "done": "complete", "reset": "not_started", "scrap": "scrapped"}
 
 
 def expand(tokens: list[str], known: list[str]) -> list[str]:

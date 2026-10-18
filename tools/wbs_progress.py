@@ -210,7 +210,9 @@ def last_test_result() -> str | None:
 # --------------------------------------------------------------------------- milestones
 
 def required_in(m: dict, nodes: list[dict]) -> list[dict]:
-    return [n for n in nodes if n["sublayer"] in m["sublayer_list"] and n["required"] == "required"]
+    """Required nodes that gate milestone m; scrapped nodes never gate a milestone."""
+    return [n for n in nodes if n["sublayer"] in m["sublayer_list"]
+            and n["required"] == "required" and n["status"] != "scrapped"]
 
 
 def milestone_status(m: dict, nodes: list[dict], as_of: dt.date) -> str:
@@ -315,11 +317,14 @@ def render_note(nodes: list[dict], milestones: list[dict], as_of: dt.date, miles
 
     week_start = as_of - dt.timedelta(days=6)
     in_m = [n for n in nodes if n["sublayer"] in m["sublayer_list"]]
-    req = [n for n in in_m if n["required"] == "required"]
+    req = [n for n in in_m if n["required"] == "required" and n["status"] != "scrapped"]
     done_week = [n for n in nodes if n["completed_date"] and week_start <= n["completed_date"] <= as_of]
     remaining = [n for n in req if n["status"] != "complete"]
-    optional_open = [n for n in in_m if n["required"] == "optional" and n["status"] != "complete"]
+    optional_open = [n for n in in_m if n["required"] == "optional"
+                     and n["status"] not in ("complete", "scrapped")]
     state = milestone_status(m, nodes, as_of)
+    opt_m = [n for n in in_m if n["required"] == "optional" and n["status"] != "scrapped"]
+    gone_m = [n for n in in_m if n["status"] == "scrapped"]
 
     previous = [d for d, _, _ in list_notes() if d < as_of]
     since = (previous[0] + dt.timedelta(days=1)) if previous else week_start
@@ -359,8 +364,8 @@ def render_note(nodes: list[dict], milestones: list[dict], as_of: dt.date, miles
     w(f"| **Due** | {m['due_date']:%a %d %b %Y} |")
     w(f"| **Status** | {status_phrase(m, nodes, as_of)} |")
     w(f"| **Nodes in milestone** | {', '.join(n['id'] for n in req) or '—'}"
-      + (f" (optional: {', '.join(n['id'] for n in in_m if n['required'] == 'optional')})"
-         if any(n["required"] == "optional" for n in in_m) else "") + " |")
+      + (f" (optional: {', '.join(n['id'] for n in opt_m)})" if opt_m else "")
+      + (f" (scrapped: {', '.join(n['id'] for n in gone_m)})" if gone_m else "") + " |")
     w("")
     w("**In brief** *(author)*:")
     w("")

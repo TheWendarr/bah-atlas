@@ -38,7 +38,7 @@ PROGRESS_DIR = ROOT / "docs" / "progress"
 
 REPO_URL = "https://github.com/TheWendarr/bah-atlas"
 
-STATUSES = ("complete", "in_progress", "not_started")
+STATUSES = ("complete", "in_progress", "not_started", "scrapped")
 
 # Display class -> (emoji, label, Mermaid fill, Mermaid text colour).
 # Mirrors the WAR colour key: black / green / purple / red.
@@ -47,6 +47,7 @@ CLASSES = {
     "week": ("🟢", "Completed this week", "#2e7d32", "#ffffff"),
     "prog": ("🟣", "In progress", "#7b1fa2", "#ffffff"),
     "todo": ("🔴", "Not started", "#c62828", "#ffffff"),
+    "gone": ("⚪", "Scrapped", "#e0e0e0", "#616161"),
 }
 
 LAYERS = {
@@ -140,6 +141,8 @@ def load_milestones() -> list[dict]:
 # --------------------------------------------------------------------------- logic
 
 def display_class(node: dict, as_of: dt.date) -> str:
+    if node["status"] == "scrapped":
+        return "gone"
     if node["status"] == "in_progress":
         return "prog"
     if node["status"] == "not_started":
@@ -277,12 +280,13 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     # ---- milestones
     w("## Milestones")
     w("")
-    w("Progress counts **required** nodes only; optional nodes are tracked but do not gate a milestone.")
+    w("Progress counts **required** nodes only; optional and scrapped nodes are tracked but do not gate a milestone.")
     w("")
     w("| Milestone | Due | Required complete | Progress | Status |")
     w("|---|---|---|---|---|")
     for m in milestones:
-        req = [n for n in nodes if n["sublayer"] in m["sublayer_list"] and n["required"] == "required"]
+        req = [n for n in nodes if n["sublayer"] in m["sublayer_list"]
+               and n["required"] == "required" and n["status"] != "scrapped"]
         done = sum(1 for n in req if n["status"] == "complete")
         w(f"| **{m['id']}** {m['title']} | {m['due_date']:%a %d %b} | {done} / {len(req)} "
           f"| `{progress_bar(done, len(req))}` | {milestone_state(m, done, len(req), as_of)} |")
@@ -295,7 +299,11 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     if active:
         for n in active:
             m = milestone_for(n["sublayer"], milestones)
-            due = f" — due {m['due_date']:%d %b} ({m['id']})" if m else ""
+            if n["required"] == "optional":
+                # Optional nodes do not gate their milestone, so its due date is not theirs.
+                due = " — optional"
+            else:
+                due = f" — due {m['due_date']:%d %b} ({m['id']})" if m else ""
             w(f"- 🟣 **{n['id']}** {n['name']}{due}")
     else:
         w("_Nothing marked in progress._")
@@ -305,7 +313,7 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     w("## Nodal map")
     w("")
     w("Colour key: " + "  ·  ".join(f"{e} {label}" for e, label, _, _ in CLASSES.values())
-      + "  ·  dashed border = optional node. Arrows point from an input to the node built from it.")
+      + "  ·  dashed border = optional node. Scrapped nodes stay listed so their ids and history are kept. Arrows point from an input to the node built from it.")
     w("")
     w(render_mermaid(nodes, as_of))
     w("")

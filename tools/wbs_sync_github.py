@@ -10,6 +10,7 @@ match it, so the repository's Milestones page shows live progress bars:
       complete     -> issue closed (completed)
       in_progress  -> issue open + "status: in-progress" label
       not_started  -> issue open
+      scrapped     -> issue closed (not planned)
 
 Each issue body links the progress notes that mention its node, so an issue
 leads back to the notes and the notes (via docs/wbs/issues.csv, written here)
@@ -54,6 +55,8 @@ LABELS = {
     "status: in-progress": ("7b1fa2", "Node is currently being worked"),
 }
 IN_PROGRESS = "status: in-progress"
+# Node status -> reason GitHub records when the issue is closed.
+CLOSE_REASON = {"complete": "completed", "scrapped": "not planned"}
 TITLE_RE = re.compile(r"^\[([A-Z]\d+)\]\s")
 
 
@@ -185,9 +188,9 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
             url = gh.write(*args).strip()
             if url.rsplit("/", 1)[-1].isdigit():
                 numbers[n["id"]] = url.rsplit("/", 1)[-1]
-            if n["status"] == "complete":
+            if n["status"] in CLOSE_REASON:
                 ref = url.rsplit("/", 1)[-1] if url else f"<new {n['id']} issue>"
-                gh.write("issue", "close", ref, "-R", gh.repo, "--reason", "completed")
+                gh.write("issue", "close", ref, "-R", gh.repo, "--reason", CLOSE_REASON[n["status"]])
             continue
 
         num = str(ri["number"])
@@ -213,9 +216,9 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
             gh.write("issue", "edit", num, "-R", gh.repo, *edit)
 
         is_open = ri["state"].upper() == "OPEN"
-        if n["status"] == "complete" and is_open:
-            gh.write("issue", "close", num, "-R", gh.repo, "--reason", "completed")
-        elif n["status"] != "complete" and not is_open:
+        if n["status"] in CLOSE_REASON and is_open:
+            gh.write("issue", "close", num, "-R", gh.repo, "--reason", CLOSE_REASON[n["status"]])
+        elif n["status"] not in CLOSE_REASON and not is_open:
             gh.write("issue", "reopen", num, "-R", gh.repo)
     return numbers
 

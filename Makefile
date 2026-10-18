@@ -90,7 +90,8 @@ ownership: zori zhvi
 		--zori $(BENCH)/mha_zori.csv --pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
 
 # --- 2.5 computed metrics (B12-B15) ------------------------------------------
-# Coverage ratio, gap vs the 95% target, and dollar surplus for every A12 profile
+# Adequacy ratio and gap vs the statutory design, coverage ratio, flat-95% sensitivity
+# gap, and dollar surplus for every A12 profile
 # x real MHA: rent (B8, with the B10 SAFMR cross-check) and buy (B11).
 # Needs `make benchmarks` first; stops if B8 and B9 cover different months.
 metrics:
@@ -127,15 +128,18 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done wbs-sync wbs-sync-dry evidence hooks
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence hooks
 
-# Mark nodes in progress / complete and regenerate docs/WBS.md in one step.
-#   make start N="A3 A6"     make done N="A3-A6 B5"     make wbs-show N=B7
+# Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
+#   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
 start:
 	$(PYTHON) tools/wbs.py start $(N)
 
 done:
 	$(PYTHON) tools/wbs.py done $(N)
+
+scrap:
+	$(PYTHON) tools/wbs.py scrap $(N)
 
 wbs-show:
 	$(PYTHON) tools/wbs.py show $(N)
