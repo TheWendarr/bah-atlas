@@ -91,7 +91,7 @@ Tests for all six run on synthetic fixtures with `make test`.
 Tests hypothesis H1 (adequacy gaps cluster in space) on the CONUS MHAs; AK, HI and
 territory codes are excluded. Run both with `make spatial` (after `make geometry`
 and `make metrics`); outputs go to `data/interim/spatial_YYYY/`. Needs libpysal and
-esda (PySAL); matplotlib for the map.
+esda (PySAL); matplotlib for the map; spreg for B19.
 
 - `build_weights.py` — B16 (`make weights`). k-nearest-neighbour weights (k = 6)
   between MHA representative points in EPSG:5070, ties broken on MHA code. Queen
@@ -103,6 +103,13 @@ esda (PySAL); matplotlib for the map.
   Benjamini-Hochberg FDR column, and Getis-Ord Gi* hot and cold spots. Fixed seed
   and permutation count, so a rerun gives the same result. Stops if B16 was built
   from a different B6 file. Draws the LISA cluster map of the primary test.
+- `regression.py` — B19 (`make regression`, after `make spatial` and
+  `make density`): hypothesis H2. Regresses the rent-mode `adequacy_gap` on log
+  rent, 5-year annualised ZORI growth (from the A3 history, matched calendar
+  months) and log population density (B24), on the B17 scope and weights. OLS
+  with LM diagnostics and VIF, the Anselin (2005) rule to choose OLS, spatial lag
+  or spatial error, and the chosen model by maximum likelihood (spreg). Stops if
+  B8 was built from another A3 file or B16 from another B6 file.
 
 ## `tiles/` — web tiles
 

@@ -317,6 +317,41 @@ LISA cluster map of the primary test, in A13 cluster colours, with the global
 result in the title. `make evidence` copies it to `docs/evidence/` and credits it to
 B17 and B18.
 
+### B19 spatial regression (`regression.py`, `make regression`)
+
+Hypothesis H2 (reduced chain, decision D8): the rent-mode `adequacy_gap` (B12) on
+`ln_rent` (ln of B8 `zori_median`), `rent_growth_pct` (annualised ZORI growth over
+the 5 years before the B8 window, percent per year, from the A3 history) and
+`ln_density` (ln of B24 `density_per_km2`). Same scope and weights as B17: CONUS
+MHAs with rent status `ok`, B16's KNN rebuilt on the modelled MHAs and
+row-standardized. OLS with the spatial diagnostics, then the Anselin (2005)
+decision rule picks OLS, a spatial lag or a spatial error model, fitted by maximum
+likelihood. The default profile is primary; the other profiles, and the primary
+profile with population-weighted density, are sensitivity runs.
+
+#### `mha_regression.csv` (long: one row per profile × CONUS MHA)
+| column              | type  | notes |
+|---------------------|-------|-------|
+| profile, mha        | str   | A12 profile id; MHA code |
+| status              | str   | `modelled`, or why not: `status_<B12 status>`, `no_geometry`, `no_rent`, `no_growth`, `no_density` |
+| adequacy_gap        | float | dependent variable, copied from B12 |
+| zori_median, ln_rent | float | B8 asking-rent level and its log |
+| rent_growth_pct     | float | median over the MHA's ZIPs of (end-window mean / start-window mean)^(1/5) − 1, × 100 |
+| growth_zips         | int   | ZIPs with ZORI in both windows (ZORI covers fewer ZIPs in earlier years) |
+| density_per_km2, ln_density | float | B24 crude density and its log (primary) |
+| pw_density_per_km2, ln_pw_density | float | B24 population-weighted density and its log (sensitivity) |
+| resid_ols, resid_model | float | residuals of the primary specification: OLS, and the chosen model (`u` for a lag model, spatially filtered for an error model) |
+
+#### `regression_manifest.json` (node B19)
+Input files and SHA-256 (A12, A3, B1, B6, B8, B12, B16, B24); the two growth
+windows and ZIP counts; the method and software versions; MHAs not modelled by
+reason; one entry per run with the OLS table (coefficients, standard errors,
+standardized betas, VIF), R², AIC, condition number, Jarque-Bera and
+Breusch-Pagan p-values, residual Moran's I, the five LM tests, the model choice
+and its reason, and, when a spatial model is chosen, its table (lag model: total
+impact = β / (1 − ρ)), ρ or λ, pseudo R², AIC and residual Moran's I; the
+headline H2 reading; output SHA-256; warnings (VIF above 5 among them).
+
 ## Front-end payload (2.7, in progress)
 
 The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI

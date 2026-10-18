@@ -22,7 +22,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -150,6 +150,18 @@ spatial: weights
 		--weights-manifest $(SPATIAL)/weights_manifest.json \
 		--rent-metrics $(METRICS)/mha_rent_metrics.csv --buy-metrics $(METRICS)/mha_buy_metrics.csv \
 		--permutations $(PERMUTATIONS) --seed $(SEED) --out $(SPATIAL)
+
+# B12 + B8 + A3 history + B24 + B16 -> B19: spatial regression for H2 (reduced chain,
+# decision D8). Rent growth is annualised over GROWTH_YEARS before the B8 window
+# (5, decided 18 Oct 2026). Needs `make spatial` (B16) first; runs `make density`.
+GROWTH_YEARS ?= 5
+regression: density
+	$(PYTHON) pipeline/spatial/regression.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
+		--weights-manifest $(SPATIAL)/weights_manifest.json \
+		--rent-metrics $(METRICS)/mha_rent_metrics.csv \
+		--zori $(BENCH)/mha_zori.csv --zori-manifest $(BENCH)/mha_zori_manifest.json --zori-csv $(ZORI_CSV) \
+		--crosswalk $(INTERIM)/zip_mha.csv --density $(CONTEXT)/mha_density.csv \
+		--growth-years $(GROWTH_YEARS) --seed $(SEED) --out $(SPATIAL)
 
 # --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27; docs/data-contract.md) ---
 # Writes the five delivered files and SHA256SUMS into $(HANDOFF), then validates them

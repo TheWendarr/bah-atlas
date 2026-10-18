@@ -16,5 +16,8 @@ libpysal>=4.10
 # 2.6 Moran's I, LISA, Getis-Ord Gi* -> B17, B18
 esda>=2.10       # first release with the `alternative` keyword the local tests pin
 
+# 2.6 B19 spatial regression (OLS diagnostics, ML spatial lag / error)
+spreg>=1.8
+
 # LISA cluster map for the progress notes (optional: spatial_stats.py skips the map without it)
 matplotlib>=3.7

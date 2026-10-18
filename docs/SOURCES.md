@@ -46,7 +46,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv · landing: https://www.zillow.com/research/data/ (Rentals → ZORI, all homes plus multifamily, smoothed → Geography: ZIP)
 - **Artifact:** `data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv` (vendor filename; current copy pulled 2026-09-07)
 - **Acquisition:** auto
-- **Role:** Independent rent benchmark; denominator for the rent-mode coverage ratio (via B8).
+- **Role:** Independent rent benchmark; denominator for the rent-mode coverage ratio (via B8). Its history also gives the rent-growth predictor in the B19 regression (H2): annualised change over the 5 years before the B8 window, same calendar months (decided 18 Oct 2026).
 - **License:** Free for public use; **attribution to Zillow required** (per Zillow terms of use).
 - **Notes:** Asking rent, **excludes utilities** (known downward bias vs. BAH's utilities-inclusive target; corrected with A6 → B5). No bedroom breakdown: one series applies to every profile. Wide layout — RegionID, SizeRank, RegionName (ZIP; may lose leading zeros), RegionType, StateName, State, City, Metro, CountyName, then one column per month. ZIP coverage is incomplete and thin in rural areas — treat sparsity as data relevant to the clustering question, not just a footnote. Zillow occasionally moves its CSV paths: the fetcher pins the current path, and if it moves the pull fails loudly (HTML and size checks) instead of saving a bad file. Each pull's SHA-256 and date in the fetch manifest is the dated snapshot.
 - **Verified:** 2026-10-03 — URL live, serves CSV text.

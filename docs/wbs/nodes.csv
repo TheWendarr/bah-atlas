@@ -30,7 +30,7 @@ B15,2.5,Buy surplus/gap,required,A12 B4 B11,complete,2026-10-17,
 B16,2.6,Spatial weights matrix,required,B6,complete,2026-10-18,
 B17,2.6,Global Moran's I,required,B12 B16,complete,2026-10-18,
 B18,2.6,LISA / Getis-Ord Gi* clusters,required,B12 B16,complete,2026-10-18,
-B19,2.6,Spatial regression,optional,B12 B16 B8 A3 B24,in_progress,,"Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24)"
+B19,2.6,Spatial regression,optional,B12 B16 B8 A3 B24,in_progress,,"Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error"
 B20,2.7,Attribute payload JSON (data contract),required,B12 B13 B14 B15 B3 B4 A12 B28 B22,in_progress,,"Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22; code ready 18 Oct: pipeline/handoff/build_payload.py (make handoff)"
 B21,2.7,UI metadata JSON,required,A12 A13 B1 B3 B28 B22,in_progress,,Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12)
 B22,2.7,Build manifest JSON,required,B7 B28,in_progress,,"Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py"
