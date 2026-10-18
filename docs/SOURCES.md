@@ -23,7 +23,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 
 ### A1 · DoD BAH rates & ZIP→MHA crosswalk (BAH ASCII 2026)  `[incorporated]`
 - **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
-- **Link:** https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/ · data collection method: https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Data-Collection/
+- **Link:** https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/ · rate-file download page (used by the fetcher registry): https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Rate-Files-Alt/ · data collection method: https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Data-Collection/
 - **Artifact:** `data/raw/BAH-ASCII-2026.zip` (paste the exact download URL you used into the raw manifest)
 - **Acquisition:** browser
 - **Role:** Primary source. The BAH rate numerator and the authoritative ZIP-to-MHA crosswalk. Ingested by `pipeline/ingest/ingest_bah_ascii.py` into B1–B4.
@@ -128,6 +128,56 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 
 ---
 
+## Software & tools
+
+Third-party software the pipeline and project tooling run. None of it is redistributed
+with the project; each is installed separately (`requirements.txt` for the Python
+packages). Licenses were read from each project's license file or package metadata on
+2026-10-17.
+
+### pandas  `[incorporated]`
+- **Provider:** pandas development team — https://pandas.pydata.org
+- **Role:** Tabular reads and joins in the ingest translators (B1–B4) and benchmark steps.
+- **License:** BSD-3-Clause.
+
+### GeoPandas (with Shapely, pyproj, GDAL)  `[incorporated]`
+- **Provider:** GeoPandas developers — https://geopandas.org
+- **Role:** Reads the ZCTA shapefile (A2) and dissolves ZCTA polygons to MHA polygons (B6) in `pipeline/geometry/build_mha_geometry.py`.
+- **License:** GeoPandas BSD-3-Clause; Shapely BSD-3-Clause; pyproj MIT; GDAL MIT (installed with the wheels).
+
+### pypdf  `[incorporated]`
+- **Provider:** pypdf contributors — https://pypi.org/project/pypdf/
+- **Role:** Extracts text from the DTMO rate component breakdown PDF (A6 → B5) in `pipeline/ingest/ingest_rate_components.py`.
+- **License:** BSD-3-Clause.
+- **Notes:** Poppler's `pdftotext -layout` is the fallback extractor when pypdf is not installed (GNU GPL; called as an external program). `pdftotext` was also used to read the E05 and O03 rows of the 2026 out-of-pocket table.
+
+### openpyxl  `[incorporated]`
+- **Provider:** openpyxl developers — https://pypi.org/project/openpyxl/
+- **Role:** Reads the HUD SAFMR workbook (A5 → B10) in `pipeline/benchmarks/safmr_to_mha.py`.
+- **License:** MIT.
+
+### tippecanoe  `[incorporated]`
+- **Provider:** Felt (maintained fork; originally Mapbox) — https://github.com/felt/tippecanoe
+- **Role:** Tiles the MHA polygons into a PMTiles archive (B6 → B7) in `pipeline/tiles/build_mha_pmtiles.py`; version 2.17 or later writes `.pmtiles` directly.
+- **License:** BSD-2-Clause (© Mapbox Inc., © Protomaps LLC).
+
+### pmtiles CLI (go-pmtiles)  `[incorporated]`
+- **Provider:** Protomaps LLC — https://github.com/protomaps/go-pmtiles
+- **Role:** Cuts the CONUS basemap extract from a Protomaps daily build (A11) in `pipeline/tiles/build_basemap.sh`.
+- **License:** BSD-3-Clause.
+
+### GitHub CLI (`gh`)  `[incorporated]`
+- **Provider:** GitHub, Inc. — https://cli.github.com
+- **Role:** Project tooling only: `make wbs-sync` mirrors the WBS milestones and node issues to GitHub (`tools/wbs_sync_github.py`). Not part of the data pipeline.
+- **License:** MIT.
+
+### MapLibre GL JS  `[planned]`
+- **Provider:** MapLibre contributors — https://github.com/maplibre/maplibre-gl-js
+- **Role:** Front-end map runtime for Layer 3 (C-nodes): renders the B7 MHA tiles and the A11 basemap, joining B20 attributes with feature-state.
+- **License:** BSD-3-Clause (includes the BSD-3-Clause notice for Mapbox GL JS v1.13 and earlier, from which it was forked).
+
+---
+
 ## Prior work & references
 
 ### "2019 BAH Rate by Location" — Tableau Public visualization  `[reference]`
@@ -139,6 +189,12 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 ---
 
 ## Concepts & methods
+
+### Statutory basis of BAH: 37 U.S.C. § 403  `[incorporated]`
+- **Provider:** U.S. Code, Title 37 (Pay and Allowances of the Uniformed Services), § 403 — https://www.law.cornell.edu/uscode/text/37/403
+- **Role:** Defines what BAH is meant to cover, and therefore the target the project tests. Section 403(b)(3) sets BAH = local cost of adequate housing − a percentage (5% since 2019) of the national average cost for the pay grade and dependency status. Since 17 Oct 2026 this is the basis of the primary test variable: adequacy ratio = (BAH + cost share) / benchmark, target 1.00 (B12–B15; see the A12 out-of-pocket entry for the dollar amounts).
+- **License:** U.S. law; public domain.
+- **Notes:** Replaces the flat "R ≈ 0.95" target in the original research proposal, which is kept as a sensitivity column (`flat95_gap`). Pending instructor approval; see the [17 Oct progress note](progress/2026-10-17.md).
 
 ### DoD BAH housing standards by pay grade  `[incorporated]`
 - **Provider:** U.S. Department of Defense (BAH Primer); summarized at https://www.military.com/paycheck-chronicles/2014/12/04/much-house-rate
@@ -169,6 +225,23 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Notes:** The newest NAIC data year available; premiums have risen since, so this understates 2026 cost.
 - **Verified:** 2026-10-08.
 
-*Still to add as they are adopted: the statutory/regulatory basis for the ~95% coverage
-target (37 U.S.C. § 403, DoD BAH Primer, DTMO methodology) and spatial-statistics method
-references for Moran's I / LISA / Getis-Ord Gi\*.*
+### Global Moran's I  `[planned]`
+- **Reference:** Moran, P. A. P. (1950). Notes on continuous stochastic phenomena. *Biometrika*, 37(1–2), 17–23. https://doi.org/10.1093/biomet/37.1-2.17
+- **Role:** Global test for spatial autocorrelation in the adequacy gap (B17; hypothesis H1).
+
+### Local Indicators of Spatial Association (LISA)  `[planned]`
+- **Reference:** Anselin, L. (1995). Local indicators of spatial association — LISA. *Geographical Analysis*, 27(2), 93–115. https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
+- **Role:** Local cluster and outlier classes for each MHA (B18), and the hotspot overlay classes in `config/classification.json` (A13, C16).
+
+### Getis-Ord G and Gi\* statistics  `[planned]`
+- **References:** Getis, A., & Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. *Geographical Analysis*, 24(3), 189–206. https://doi.org/10.1111/j.1538-4632.1992.tb00261.x · Ord, J. K., & Getis, A. (1995). Local spatial autocorrelation statistics: Distributional issues and an application. *Geographical Analysis*, 27(4), 286–306. https://doi.org/10.1111/j.1538-4632.1995.tb00912.x
+- **Role:** Hot-spot and cold-spot detection for the adequacy gap (B18), alongside LISA.
+- **Notes:** The 1992 paper introduces the G statistics; the 1995 paper gives the standardized Gi\* form usually reported in hotspot maps.
+
+### GIS 490 instructor guidance  `[reference]`
+- **Provider:** GIS 490 Geospatial Capstone instructor, Delta State University (course feedback; not public)
+- **Role:** Shaped the project's framing and reporting: the redirect from an implementation plan to a research question about geographic disparities between BAH and housing cost ([research framing](research-proposal.md)); the move from weekly Word reports to living documentation in this repository (3 Oct 2026); and the five-part progress-note template with stable task ids linking notes, issues, and commits (17 Oct 2026; [template](progress/TEMPLATE.md)).
+
+*Still to add as they are adopted: the DoD BAH Primer and DTMO's BAH methodology, cited
+directly rather than through summaries, and the spatial-weights method and software chosen
+for 2.6 (B16).*
