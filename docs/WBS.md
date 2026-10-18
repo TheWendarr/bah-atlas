@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 9  ·  🟣 In progress: 10  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
+**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 11  ·  🟣 In progress: 8  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,13 +18,11 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 2 / 8 | `██░░░░░░░░ 25%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 3 / 8 | `████░░░░░░ 38%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **A8** Property tax and insurance reference — due 30 Oct (M6)
-- 🟣 **A9** Census ACS context — optional
 - 🟣 **B19** Spatial regression — optional
 - 🟣 **B20** Attribute payload JSON (data contract) — due 30 Oct (M6)
 - 🟣 **B21** UI metadata JSON — due 30 Oct (M6)
@@ -252,8 +250,8 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
-    class B12,B13,B14,B15,B16,B17,B18,B28,W2 week
-    class A8,A9,B19,B20,B21,B22,B23,B24,B27,W1 prog
+    class A8,A9,B12,B13,B14,B15,B16,B17,B18,B28,W2 week
+    class B19,B20,B21,B22,B23,B24,B27,W1 prog
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A10,B25,B26 gone
     class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
@@ -276,8 +274,8 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
 | ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
-| 🟣 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11) |
-| 🟣 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax |
+| 🟢 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11); completed 18 Oct |
+| 🟢 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax; completed 18 Oct |
 | ⚪ | **A10** | BEA Regional Price Parities | optional | — | Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
 | ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |

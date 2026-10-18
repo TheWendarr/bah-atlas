@@ -6,8 +6,8 @@ A4,1,Zillow ZHVI (home value index) ZIP-level,required,,complete,2026-10-03,
 A5,1,HUD FMR / SAFMR FY2026,required,,complete,2026-10-03,
 A6,1,DoD BAH Rate Component Breakdown,required,,complete,2026-10-03,
 A7,1,Mortgage rate reference (Freddie Mac PMMS),required,,complete,,
-A8,1,Property tax and insurance reference,required,,in_progress,,"Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11)"
-A9,1,Census ACS context,optional,,in_progress,,"Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax"
+A8,1,Property tax and insurance reference,required,,complete,2026-10-18,"Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11)"
+A9,1,Census ACS context,optional,,complete,2026-10-18,"Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax"
 A10,1,BEA Regional Price Parities,optional,,scrapped,,"Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable"
 A11,1,Protomaps basemap source (OSM),required,,complete,2026-10-03,
 A12,1,Profile definitions config,required,,complete,2026-10-03,
