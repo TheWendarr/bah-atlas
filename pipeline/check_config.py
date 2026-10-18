@@ -7,8 +7,14 @@ Fails loudly (exit 1) on anything Layer 2 or Layer 3 would trip over later:
 unknown pay grades, bedroom counts outside the SAFMR range, a missing or
 uncited member cost share (cost_share_monthly), break lists that are
 not ascending, colour/label counts that do not match the class count, invalid
-hex colours, a neutral value outside the middle class, or the two files
-disagreeing on the coverage target.
+hex colours, a neutral value outside the middle class, the two files
+disagreeing on the coverage target, a metric without a role or with an unknown
+mode, or a cluster block without its legend title and FDR marker.
+
+The two files hold values only. Explanations live in docs/configuration.md,
+because pipeline stages record each config's SHA-256 and a wording edit inside
+the JSON would make that evidence stale. So this check also fails on prose
+fields (`_about`, `rationale`, `note`, `*_note`) and on a missing `_doc` pointer.
 """
 from __future__ import annotations
 
@@ -24,6 +30,31 @@ CLASSIFICATION = ROOT / "config" / "classification.json"
 BAH_INGEST = ROOT / "pipeline" / "ingest" / "ingest_bah_ascii.py"
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 SAFMR_BEDROOMS = range(0, 5)   # HUD publishes 0-4 bedroom SAFMRs
+CONFIG_DOC = ROOT / "docs" / "configuration.md"
+METRIC_ROLES = ("primary", "descriptive", "sensitivity")
+MODES = ("rent", "buy")
+CLUSTER_CODES = ("HH", "LL", "HL", "LH", "NS")
+
+
+def check_values_only(cfg: object, name: str, errors: list[str], path: str = "") -> None:
+    """Explanations belong in docs/configuration.md, not in the hashed config."""
+    if isinstance(cfg, dict):
+        for key, value in cfg.items():
+            where = f"{path}{key}"
+            if key in ("_about", "rationale", "note") or key.endswith("_note"):
+                errors.append(f"{name}: '{where}' is explanation; move it to docs/configuration.md")
+            check_values_only(value, name, errors, f"{where}.")
+    elif isinstance(cfg, list):
+        for i, value in enumerate(cfg):
+            check_values_only(value, name, errors, f"{path}{i}.")
+
+
+def check_doc_pointer(cfg: dict, name: str, errors: list[str]) -> None:
+    doc = cfg.get("_doc", "")
+    if "docs/configuration.md" not in doc:
+        errors.append(f"{name}: '_doc' must point to docs/configuration.md")
+    elif not CONFIG_DOC.exists():
+        errors.append(f"{name}: '_doc' points to docs/configuration.md, which is missing")
 
 
 def pay_grades() -> list[str]:
@@ -111,15 +142,42 @@ def check_classification(cfg: dict, target: float | None, errors: list[str]) -> 
             lo, hi = breaks[mid - 1], breaks[mid]
             if not lo <= neutral < hi:
                 errors.append(f"{where}: neutral {neutral} is outside the middle class [{lo}, {hi})")
-    for code, c in ((cfg.get("clusters") or {}).get("classes") or {}).items():
+        if m.get("role") not in METRIC_ROLES:
+            errors.append(f"{where}: role must be one of {METRIC_ROLES}, found {m.get('role')!r}")
+        modes = m.get("modes")
+        if not isinstance(modes, list) or not modes or any(x not in MODES for x in modes):
+            errors.append(f"{where}: modes must be a non-empty list drawn from {MODES}, found {modes!r}")
+    if cfg.get("default_metric") not in metrics:
+        errors.append(f"classification.json: default_metric '{cfg.get('default_metric')}' is not a metric")
+    clusters = cfg.get("clusters") or {}
+    classes = clusters.get("classes") or {}
+    missing = [c for c in CLUSTER_CODES if c not in classes]
+    if missing:
+        errors.append(f"classification.json [clusters]: classes lacks {missing}")
+    for code, c in classes.items():
         if not HEX.match(c.get("color", "")):
             errors.append(f"classification.json [clusters.{code}]: invalid colour {c.get('color')}")
+        if not c.get("label"):
+            errors.append(f"classification.json [clusters.{code}]: missing label")
+    if not clusters.get("legend_title"):
+        errors.append("classification.json [clusters]: legend_title is required (decision D2: label clusters exploratory)")
+    alpha = clusters.get("alpha")
+    if not isinstance(alpha, (int, float)) or not 0 < alpha < 1:
+        errors.append(f"classification.json [clusters]: alpha must be in (0, 1), found {alpha!r}")
+    marker = clusters.get("fdr_marker") or {}
+    if not marker.get("label") or not HEX.match(marker.get("outline_color", "")):
+        errors.append("classification.json [clusters.fdr_marker]: needs a label and a #RRGGBB outline_color "
+                      "(decision D2: mark FDR-significant MHAs)")
 
 
 def main() -> None:
     errors: list[str] = []
     profiles = load(PROFILES, errors)
     classification = load(CLASSIFICATION, errors)
+    for cfg, name in ((profiles, "profiles.json"), (classification, "classification.json")):
+        if cfg:
+            check_values_only(cfg, name, errors)
+            check_doc_pointer(cfg, name, errors)
     if profiles:
         check_profiles(profiles, pay_grades(), errors)
     if classification:

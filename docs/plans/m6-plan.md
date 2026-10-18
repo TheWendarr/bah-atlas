@@ -35,7 +35,7 @@ This page records the decisions taken on 18 Oct and how each node will be built 
 | 2.9 | H3 is removed from the project. | B26 scrapped. |
 | 2.10 | Front-end build choices (bundler, hosting, basemap) wait until this handoff exists. | No Layer 3 work in M6. |
 
-**Still open:** how the A12/A13 config text and the D2/D3 additions are committed without leaving the M4–M5 evidence out of step with the configs. The courses of action are being decided; the config changes land with the A8 rerun in either case.
+**Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
 
 ## 2. Draft data contract (B20)
 
@@ -204,7 +204,7 @@ Wendell writes this; the outline points to the evidence each part draws on.
 | Target | Work |
 |---|---|
 | Wed 21 Oct | B28 polygons |
-| Sat 24 Oct | A8 and A9 pulls; B24; config changes (course of action pending); rerun B11 → B18 with 99,999 permutations |
+| Sat 24 Oct | A8 and A9 pulls; B24; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations |
 | Wed 28 Oct | B20, B21, B27 |
 | Thu 29 Oct | B22, B23 |
 | Fri 30 Oct | W1; close M6 |

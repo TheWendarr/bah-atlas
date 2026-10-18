@@ -1,9 +1,8 @@
 {
-  "_about": "A12 - housing profile definitions. Each profile selects one BAH cell (pay grade x dependency status from B4), the bedroom count used to pick benchmark series (SAFMR, optional ZHVI bedroom files), and the member cost-share dollars DoD deducts for that cell. Read by Layer 2 (F10, B12-B15) and shipped to Layer 3 inside B21 UI metadata. Validate with `make check-config`.",
-  "version": 1,
+  "_doc": "A12. Field meanings, sources and the reasoning behind every value: docs/configuration.md#a12-profiles-configprofilesjson. Validate with `make check-config`.",
+  "version": 2,
   "bah_year": 2026,
   "coverage_target": 0.95,
-  "coverage_target_note": "Nominal only. 37 U.S.C. 403(b)(3) sets BAH = local cost of adequate housing minus 5% of the NATIONAL average cost for the grade, so BAH covers exactly 95% only where local cost equals the national mean (more in expensive MHAs, less in cheap ones). B12-B15 test adequacy_ratio = (BAH + cost_share_monthly) / benchmark against 1.00; coverage_target is kept for the flat-95% sensitivity column (flat95_gap).",
   "default_profile": "e5_dep",
   "profiles": [
     {
@@ -14,7 +13,6 @@
       "has_dependents": true,
       "anchor_dwelling": "2-bedroom townhouse",
       "anchor_bedrooms": 2,
-      "rationale": "Primary research profile. DoD's housing standard for E-5 is a 2-bedroom townhouse, so the anchor maps to a single bedroom count without interpolation.",
       "cost_share_monthly": 126
     },
     {
@@ -25,21 +23,15 @@
       "has_dependents": true,
       "anchor_dwelling": "3-bedroom single-family home",
       "anchor_bedrooms": 3,
-      "rationale": "Contrast profile. DoD's O-3 standard sits 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home, so it differs from the primary in grade band, bedroom count, and dwelling type at once.",
       "cost_share_monthly": 151
     }
   ],
   "benchmarks": {
     "rent_primary": "zori_utilities_adjusted",
     "rent_crosscheck": "safmr",
-    "zori_bedroom_note": "ZORI has no bedroom breakdown: one ZIP-level series applies to every profile, adjusted to utilities-inclusive with B5. Bedroom-specific comparison comes from the SAFMR cross-check.",
     "safmr_bedroom_field": "anchor_bedrooms"
   },
-  "sources": [
-    "DoD BAH housing standards by pay grade (BAH Primer; summarized at military.com/paycheck-chronicles/2014/12/04/much-house-rate)"
-  ],
   "cost_share": {
-    "_about": "Member out-of-pocket (absorption) dollars per profile, read from DTMO's annual out-of-pocket table. Same amount at every duty station.",
     "method": "5% of the national mean BAH rate for the pay grade and dependency status (DTMO); statutory basis 37 U.S.C. 403(b)(3)(A)(ii) and (B)",
     "year": 2026,
     "source": "Defense Travel Management Office, 2026 BAH Out-of-Pocket Amounts",

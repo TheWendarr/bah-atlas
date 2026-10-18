@@ -66,7 +66,7 @@ bah-atlas/
 │   ├── raw/         vendor artifacts as downloaded (gitignored)
 │   ├── interim/     tidy parsed outputs (gitignored)
 │   └── processed/   final web-ready geometry/tiles (gitignored)
-├── config/          authored config: profiles.json (A12), classification.json (A13), ownership.json (B11)
+├── config/          authored config, values only: profiles.json (A12), classification.json (A13), ownership.json (B11)
 ├── pipeline/
 │   ├── fetch/       Layer 1 source fetcher with provenance manifest
 │   ├── ingest/      endpoint translators: raw release -> tidy CSVs + manifest (B1-B5)
@@ -76,7 +76,7 @@ bah-atlas/
 │   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18)
 │   └── tiles/       PMTiles builders: MHA tiles (B7) and basemap cutout (A11)
 ├── web/             MapLibre GL JS frontend (Layer 3, not started)
-├── docs/            research framing, data dictionary, attribution
+├── docs/            research framing, data dictionary, configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
 │   ├── wbs/         nodes.csv + milestones.csv — project status source of truth
 │   ├── progress/    progress notes on the five-part template, with index
@@ -92,7 +92,7 @@ bah-atlas/
 pip install -r requirements.txt
 
 make fetch          # download Layer 1 sources into data/raw (A2-A7) with checksums
-make check-config   # validate config/profiles.json and config/classification.json
+make check-config   # validate config/profiles.json and config/classification.json (see docs/configuration.md)
 make geometry       # BAH ASCII -> tidy CSVs (B1-B4) -> MHA polygons (B6)
 make components     # rent/utilities split per MHA (A6 -> B5)
 make tiles          # MHA PMTiles for MapLibre (B6 -> B7); needs tippecanoe

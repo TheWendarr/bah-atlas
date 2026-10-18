@@ -235,12 +235,12 @@ packages). Licenses were read from each project's license file or package metada
 
 ### DoD BAH housing standards by pay grade  `[incorporated]`
 - **Provider:** U.S. Department of Defense (BAH Primer); summarized at https://www.military.com/paycheck-chronicles/2014/12/04/much-house-rate
-- **Role:** Basis for the anchor dwelling and bedroom count of each housing profile in `config/profiles.json` (A12): E-5 → 2-bedroom townhouse; O-3 → 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home.
+- **Role:** Basis for the anchor dwelling and bedroom count of each housing profile in `config/profiles.json` (A12): E-5 → 2-bedroom townhouse; O-3 → 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home. Reasoning in [`configuration.md`](configuration.md#a12-profiles-configprofilesjson).
 - **Notes:** Cite the DoD BAH Primer directly in the formal write-up.
 
 ### ColorBrewer colour schemes  `[incorporated]`
 - **Provider:** Cynthia A. Brewer, Pennsylvania State University — https://colorbrewer2.org
-- **Role:** RdBu 7-class diverging palette used for the coverage-ratio and surplus classes in `config/classification.json` (A13); chosen because it is colour-blind safe.
+- **Role:** RdBu 7-class diverging palette used for every metric's classes in `config/classification.json` (A13); chosen because it is colour-blind safe. The reasoning for the breaks is in [`configuration.md`](configuration.md#a13-classification-configclassificationjson).
 - **License:** Apache License 2.0; credit ColorBrewer.
 
 ### VA home loan funding fee  `[incorporated]`

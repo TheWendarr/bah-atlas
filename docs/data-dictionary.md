@@ -234,3 +234,9 @@ overlay) and B28 (County Cost Group and territory polygons) are being built in M
 The draft contract and the 18 Oct decisions behind it are in the
 [M6 plan](plans/m6-plan.md); each file gets a section here when its schema is
 fixed.
+
+## Configuration
+
+The authored configs (`config/profiles.json` A12, `config/classification.json`
+A13, `config/ownership.json` B11) are documented field by field in
+[`configuration.md`](configuration.md).

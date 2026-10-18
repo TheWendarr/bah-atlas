@@ -99,7 +99,10 @@ esda (PySAL); matplotlib for the map.
 
 Validates `config/profiles.json` (A12) and `config/classification.json` (A13):
 pay grades exist in the BAH release, bedroom counts fit SAFMR, class breaks,
-colours, and labels line up.
+colours, labels, metric roles and modes, and the cluster legend and FDR marker
+line up. It also keeps the two files to values only: explanations live in
+[`docs/configuration.md`](../docs/configuration.md), because stages record each
+config's SHA-256 and a wording edit would otherwise make the evidence stale.
 
 ## Convention for new scripts
 
