@@ -20,9 +20,9 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry components tiles basemap \
-	benchmarks zori zhvi safmr ownership metrics weights test clean
+	benchmarks zori zhvi safmr ownership metrics weights spatial test clean
 
-all: check-config geometry components tiles benchmarks metrics
+all: check-config geometry components tiles benchmarks metrics spatial
 
 # Stage 0: pull every auto-pullable Layer 1 source into data/raw (A2-A7).
 fetch:
@@ -104,6 +104,18 @@ metrics:
 weights:
 	$(PYTHON) pipeline/spatial/build_weights.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
 		--k $(KNN_K) --out $(SPATIAL)
+
+# B12/B14 + B16 -> B17, B18: global Moran's I, LISA and Getis-Ord Gi* for every A12
+# profile x rent/buy x adequacy_gap (primary) / flat95_gap (sensitivity), plus a LISA
+# cluster map of the primary test. Needs `make metrics` first. Reproducible: fixed
+# seed; override with e.g. `make spatial PERMUTATIONS=999` for a quick run.
+PERMUTATIONS ?= 9999
+SEED ?= 2026
+spatial: weights
+	$(PYTHON) pipeline/spatial/spatial_stats.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
+		--weights-manifest $(SPATIAL)/weights_manifest.json \
+		--rent-metrics $(METRICS)/mha_rent_metrics.csv --buy-metrics $(METRICS)/mha_buy_metrics.csv \
+		--permutations $(PERMUTATIONS) --seed $(SEED) --out $(SPATIAL)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:

@@ -12,3 +12,9 @@ openpyxl>=3.1
 
 # 2.6 spatial weights -> B16 (PySAL core; brings numpy and scipy)
 libpysal>=4.10
+
+# 2.6 Moran's I, LISA, Getis-Ord Gi* -> B17, B18
+esda>=2.10       # first release with the `alternative` keyword the local tests pin
+
+# LISA cluster map for the progress notes (optional: spatial_stats.py skips the map without it)
+matplotlib>=3.7
