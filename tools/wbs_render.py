@@ -7,15 +7,18 @@ Single source of truth:
 
 Outputs:
     docs/WBS.md              generated -- never edit by hand
-    docs/progress/<date>.md  (only with --new-entry) a pre-filled weekly log entry
+    docs/progress/README.md  generated progress index: milestone status + links to the latest notes
+    docs/progress/<date>.md  (only with --new-entry) a progress note scaffolded on the
+                             five-part template (see tools/wbs_progress.py)
 
 Usage:
     python tools/wbs_render.py                    # regenerate docs/WBS.md as of today
     python tools/wbs_render.py --as-of 2026-10-10
-    python tools/wbs_render.py --new-entry        # also scaffold this week's log entry
+    python tools/wbs_render.py --new-entry        # also scaffold this week's progress note
+    python tools/wbs_render.py --new-entry --milestone M5
 
-Weekly routine: edit `status` / `completed` in nodes.csv -> `make wbs-week` ->
-write the narrative in the new log entry -> commit -> push.
+Weekly routine: `make done N=...` -> `make evidence` -> `make wbs-week` ->
+fill in the *author* parts of the new note -> commit -> push.
 
 Stdlib only, matching the pipeline's supply-chain posture.
 """
@@ -236,6 +239,19 @@ def progress_entries() -> list[Path]:
     return sorted(entries, reverse=True)
 
 
+def milestone_tags(note: Path) -> str:
+    """Milestone ids from a progress note's front matter, e.g. 'M1, M2'."""
+    text = note.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return ""
+    head = text[4:text.find("\n---\n", 4)]
+    for line in head.splitlines():
+        key, _, val = line.partition(":")
+        if key.strip() in ("milestone", "milestones"):
+            return val.strip().strip("[]")
+    return ""
+
+
 def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str:
     counts = {k: 0 for k in CLASSES}
     for n in nodes:
@@ -327,11 +343,14 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     # ---- weekly log index
     w("## Weekly progress log")
     w("")
+    w("The [progress index](progress/README.md) shows each milestone's status beside its latest note.")
+    w("")
     entries = progress_entries()
     if entries:
         for p in entries:
             d = dt.date.fromisoformat(p.stem)
-            w(f"- [Week of {d:%d %B %Y}](progress/{p.name})")
+            tags = milestone_tags(p)
+            w(f"- [{d:%d %B %Y}](progress/{p.name})" + (f" — {tags}" if tags else ""))
     else:
         w("_No entries yet._")
     w("")
@@ -350,68 +369,6 @@ def render_wbs(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str
     return "\n".join(out)
 
 
-def render_entry(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str:
-    week_start = as_of - dt.timedelta(days=6)
-    finished = [n for n in nodes if display_class(n, as_of) == "week"]
-    active = [n for n in nodes if n["status"] == "in_progress"]
-    upcoming = [m for m in milestones if m["due_date"] >= as_of][:2]
-    overdue = []
-    for m in milestones:
-        if m["due_date"] < as_of:
-            open_req = [n for n in nodes if n["sublayer"] in m["sublayer_list"]
-                        and n["required"] == "required" and n["status"] != "complete"]
-            if open_req:
-                overdue.append((m, open_req))
-
-    def bullets(items: list[dict]) -> list[str]:
-        return [f"- **{n['id']}** {n['name']}" for n in items] or ["- _None._"]
-
-    out = [
-        f"# Week of {as_of:%d %B %Y}",
-        "",
-        f"_Covers {week_start:%d %b} – {as_of:%d %b %Y}. Status lists below were generated from "
-        "[`nodes.csv`](../wbs/nodes.csv); the narrative sections are written by hand._",
-        "",
-        "## Summary",
-        "",
-        "<!-- TODO: two to four sentences on what this week was about. -->",
-        "",
-        "## Completed this week",
-        "",
-        *bullets(finished),
-        "",
-        "## In progress",
-        "",
-        *bullets(active),
-        "",
-        "## Next",
-        "",
-    ]
-    for m in upcoming:
-        open_nodes = [n for n in nodes if n["sublayer"] in m["sublayer_list"] and n["status"] != "complete"]
-        out.append(f"- **{m['id']} {m['title']}** — due {m['due_date']:%d %b}: "
-                   + (", ".join(n["id"] for n in open_nodes) or "all nodes complete"))
-    out += [
-        "",
-        "<!-- TODO: add the specific tasks planned for next week. -->",
-        "",
-        "## Shortfalls, setbacks, and changes",
-        "",
-    ]
-    if overdue:
-        for m, open_req in overdue:
-            out.append(f"- {m['id']} ({m['title']}, due {m['due_date']:%d %b}) is past due with "
-                       f"{len(open_req)} required node(s) open: {', '.join(n['id'] for n in open_req)}.")
-    else:
-        out.append("- No milestones past due.")
-    out += [
-        "",
-        "<!-- TODO: explain any slip above, plus scope or design changes made this week. -->",
-        "",
-    ]
-    return "\n".join(out)
-
-
 # --------------------------------------------------------------------------- main
 
 def main() -> None:
@@ -419,8 +376,11 @@ def main() -> None:
     ap.add_argument("--as-of", help="status date YYYY-MM-DD (default: today)")
     ap.add_argument("--new-entry", action="store_true",
                     help="also create docs/progress/<as-of>.md if it does not exist")
+    ap.add_argument("--milestone", help="milestone the new note reports against (default: chosen by date)")
     args = ap.parse_args()
     as_of = parse_date(args.as_of, "--as-of") if args.as_of else dt.date.today()
+
+    import wbs_progress  # noqa: PLC0415  (imports this module; loaded late to avoid a cycle)
 
     nodes = load_nodes()
     milestones = load_milestones()
@@ -431,11 +391,15 @@ def main() -> None:
         if entry.exists():
             print(f"kept existing {entry.relative_to(ROOT)}")
         else:
-            entry.write_text(render_entry(nodes, milestones, as_of), encoding="utf-8")
+            entry.write_text(wbs_progress.render_note(nodes, milestones, as_of, args.milestone),
+                             encoding="utf-8")
             print(f"wrote {entry.relative_to(ROOT)}")
 
     WBS_MD.write_text(render_wbs(nodes, milestones, as_of), encoding="utf-8")
     print(f"wrote {WBS_MD.relative_to(ROOT)} ({len(nodes)} nodes, as of {as_of})")
+    PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
+    wbs_progress.INDEX_MD.write_text(wbs_progress.render_index(nodes, milestones, as_of), encoding="utf-8")
+    print(f"wrote {wbs_progress.INDEX_MD.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

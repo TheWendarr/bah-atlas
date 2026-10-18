@@ -11,6 +11,10 @@ match it, so the repository's Milestones page shows live progress bars:
       in_progress  -> issue open + "status: in-progress" label
       not_started  -> issue open
 
+Each issue body links the progress notes that mention its node, so an issue
+leads back to the notes and the notes (via docs/wbs/issues.csv, written here)
+link forward to the issue.
+
 Safe to re-run: it only creates what is missing and changes what differs.
 It never deletes anything, and it ignores issues whose titles do not start
 with a node id in brackets, so ordinary issues are left alone.
@@ -36,6 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wbs_render as wbs  # noqa: E402  (shares CSV loading + validation)
+import wbs_progress as notes  # noqa: E402  (progress notes per node; issues.csv path)
 
 GH = os.environ.get("GH_BIN", "gh")
 PAUSE = float(os.environ.get("WBS_SYNC_PAUSE", "1.0"))  # GitHub asks ~1 write/sec
@@ -86,7 +91,7 @@ def issue_title(n: dict) -> str:
     return f"[{n['id']}] {n['name']}"
 
 
-def issue_body(n: dict, m: dict | None) -> str:
+def issue_body(n: dict, m: dict | None, known: set[str]) -> str:
     sub = n["sublayer"]
     sub_name = wbs.SUBLAYERS[sub] if sub == "1" else f"{sub} {wbs.SUBLAYERS[sub]}"
     lines = [
@@ -100,6 +105,10 @@ def issue_body(n: dict, m: dict | None) -> str:
         lines.append(f"**Milestone:** {milestone_title(m)} (due {m['due']})")
     if n["notes"]:
         lines.append(f"**Notes:** {n['notes']}")
+    mentions = notes.notes_mentioning(n["id"], known)
+    if mentions:
+        lines += ["", "**Progress notes:**"]
+        lines += [f"- [{d:%d %b %Y}]({wbs.REPO_URL}/blob/main/docs/progress/{p.name})" for d, p in mentions]
     lines += [
         "",
         f"Status is managed in [`docs/wbs/nodes.csv`]({wbs.REPO_URL}/blob/main/docs/wbs/nodes.csv) and "
@@ -116,7 +125,10 @@ def node_labels(n: dict) -> list[str]:
     return labels
 
 
-def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> None:
+def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str]:
+    """Make GitHub match the CSVs. Returns {node id: issue number} for docs/wbs/issues.csv."""
+    known = {n["id"] for n in nodes}
+    numbers: dict[str, str] = {}
     # ---- labels
     print("Labels")
     existing_labels = {l["name"] for l in json.loads(
@@ -151,7 +163,7 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> None:
     print("Issues")
     remote_issues = json.loads(gh.read(
         "issue", "list", "-R", gh.repo, "--state", "all", "--limit", "1000",
-        "--json", "number,title,state,labels,milestone") or "[]")
+        "--json", "number,title,state,labels,milestone,body") or "[]")
     by_node = {}
     for ri in remote_issues:
         hit = TITLE_RE.match(ri["title"])
@@ -165,22 +177,28 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> None:
 
         if ri is None:
             args = ["issue", "create", "-R", gh.repo, "--title", issue_title(n),
-                    "--body", issue_body(n, m)]
+                    "--body", issue_body(n, m, known)]
             for label in node_labels(n) + ([IN_PROGRESS] if n["status"] == "in_progress" else []):
                 args += ["--label", label]
             if m_title:
                 args += ["--milestone", m_title]
             url = gh.write(*args).strip()
+            if url.rsplit("/", 1)[-1].isdigit():
+                numbers[n["id"]] = url.rsplit("/", 1)[-1]
             if n["status"] == "complete":
                 ref = url.rsplit("/", 1)[-1] if url else f"<new {n['id']} issue>"
                 gh.write("issue", "close", ref, "-R", gh.repo, "--reason", "completed")
             continue
 
         num = str(ri["number"])
+        numbers[n["id"]] = num
         have_labels = {l["name"] for l in ri.get("labels", [])}
         edit: list[str] = []
         if ri["title"] != issue_title(n):
             edit += ["--title", issue_title(n)]
+        want_body = issue_body(n, m, known)
+        if (ri.get("body") or "").strip() != want_body.strip():
+            edit += ["--body", want_body]
         have_ms = (ri.get("milestone") or {}).get("title")
         if m_title and have_ms != m_title:
             edit += ["--milestone", m_title]
@@ -199,6 +217,16 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> None:
             gh.write("issue", "close", num, "-R", gh.repo, "--reason", "completed")
         elif n["status"] != "complete" and not is_open:
             gh.write("issue", "reopen", num, "-R", gh.repo)
+    return numbers
+
+
+def write_issue_map(nodes: list[dict], numbers: dict[str, str]) -> None:
+    """docs/wbs/issues.csv: node id -> issue number, in nodes.csv order."""
+    with notes.ISSUES_CSV.open("w", newline="", encoding="utf-8") as fh:
+        fh.write("id,issue\n")
+        for n in nodes:
+            fh.write(f"{n['id']},{numbers.get(n['id'], '')}\n")
+    print(f"wrote {notes.ISSUES_CSV.relative_to(wbs.ROOT)} ({len(numbers)} issue numbers)")
 
 
 def main() -> None:
@@ -219,7 +247,9 @@ def main() -> None:
     gh = GitHub(repo, args.dry_run)
     print(f"Syncing {len(nodes)} nodes and {len(milestones)} milestones to {repo}"
           + (" (dry run)" if args.dry_run else ""))
-    sync(gh, nodes, milestones)
+    numbers = sync(gh, nodes, milestones)
+    if not args.dry_run:
+        write_issue_map(nodes, numbers)
     verb = "would make" if args.dry_run else "made"
     print(f"Done: {verb} {gh.changes} change(s).")
 

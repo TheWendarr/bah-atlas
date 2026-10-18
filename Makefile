@@ -105,7 +105,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done wbs-sync wbs-sync-dry
+.PHONY: wbs wbs-week wbs-show start done wbs-sync wbs-sync-dry evidence hooks
 
 # Mark nodes in progress / complete and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make wbs-show N=B7
@@ -118,13 +118,25 @@ done:
 wbs-show:
 	$(PYTHON) tools/wbs.py show $(N)
 
-# Regenerate docs/WBS.md from the CSVs.
+# Regenerate docs/WBS.md and the progress index from the CSVs.
 wbs:
 	$(PYTHON) tools/wbs_render.py
 
-# Regenerate docs/WBS.md and scaffold this week's docs/progress/<date>.md entry.
+# Regenerate docs/WBS.md and docs/progress/README.md, and scaffold this week's
+# progress note on the five-part template. The milestone is chosen by date;
+# override with e.g. `make wbs-week M=M5`.
 wbs-week:
-	$(PYTHON) tools/wbs_render.py --new-entry
+	$(PYTHON) tools/wbs_render.py --new-entry $(if $(M),--milestone $(M),)
+
+# Copy pipeline manifests and the unit-test result into docs/evidence/ so
+# progress notes can link to results. Run after the pipeline, before wbs-week.
+evidence:
+	$(PYTHON) tools/collect_evidence.py
+
+# Turn on the commit-message check (subject must name a node or milestone id).
+hooks:
+	git config core.hooksPath .githooks
+	@echo "commit-msg hook enabled (.githooks/commit-msg)"
 
 # Mirror milestones and node issues to GitHub (requires an authenticated gh CLI).
 wbs-sync:

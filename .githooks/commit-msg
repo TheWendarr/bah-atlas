@@ -1,0 +1,33 @@
+#!/bin/sh
+# BAH Atlas commit convention: the subject line names the task it advances.
+#
+#   B16: queen contiguity weights for 299 MHAs        (node id, the usual case)
+#   B12-B15: test BAH against its statutory design     (a range of nodes)
+#   Close M5: spatial statistics; progress note 24 Oct (milestone status commits)
+#   meta: fix typo in README                           (housekeeping with no node)
+#
+# Put "Refs #N" or "Closes #N" in the body to link the node's GitHub issue
+# (the number is in docs/wbs/issues.csv or `make wbs-show N=B16`).
+#
+# Enable once per clone with `make hooks`. Bypass a single commit with --no-verify.
+
+subject=$(grep -v '^#' "$1" | sed -n '/[^[:space:]]/{p;q;}')
+
+case "$subject" in
+  Merge*|Revert*|fixup!*|squash!*|amend!*) exit 0 ;;
+  meta:*) exit 0 ;;
+esac
+
+if printf '%s\n' "$subject" | grep -Eq '(^|[^A-Za-z0-9])([ABCW][0-9]{1,2}|M[0-9]{1,2})([^0-9]|$)'; then
+  exit 0
+fi
+
+cat >&2 <<MSG
+commit-msg: the subject line should name the node (or milestone) it advances.
+  got:      $subject
+  examples: B16: build queen contiguity weights
+            Close M5: spatial statistics; progress note 24 Oct
+            meta: housekeeping with no node
+Node ids are in docs/wbs/nodes.csv (make wbs-show). Use --no-verify to skip once.
+MSG
+exit 1

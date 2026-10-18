@@ -61,10 +61,13 @@ def main() -> None:
 
     if args.action == "show":
         pick = set(expand(args.nodes, known)) if args.nodes else set(known)
+        import wbs_progress  # noqa: PLC0415
+        issues = wbs_progress.load_issue_map()
         for r in rows:
             if r["id"] in pick:
                 when = f"  ({r['completed']})" if r["completed"] else ""
-                print(f"{r['id']:4} {r['status']:12} {r['name']}{when}")
+                ref = f"  #{issues[r['id']]}" if r["id"] in issues else ""
+                print(f"{r['id']:4} {r['status']:12} {r['name']}{when}{ref}")
         return
 
     if not args.nodes:
