@@ -75,7 +75,7 @@ bah-atlas/
 │   ├── benchmarks/  ZIP-level benchmarks rolled up to the MHA (B8-B11)
 │   ├── metrics/     coverage and adequacy metrics (B12-B15)
 │   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18)
-│   └── tiles/       PMTiles builders: MHA tiles (B7) and basemap cutout (A11)
+│   └── tiles/       PMTiles builders: area tiles (B7) and basemap cutout (A11)
 ├── web/             MapLibre GL JS frontend (Layer 3, not started)
 ├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
@@ -96,7 +96,8 @@ make fetch          # download Layer 1 sources into data/raw (A2-A7) with checks
 make check-config   # validate config/profiles.json and config/classification.json (see docs/configuration.md)
 make geometry       # BAH ASCII -> tidy CSVs (B1-B4) -> MHA polygons (B6)
 make components     # rent/utilities split per MHA (A6 -> B5)
-make tiles          # MHA PMTiles for MapLibre (B6 -> B7); needs tippecanoe
+make non-mha        # County Cost Group and territory polygons (B1 -> B28), non-authoritative
+make tiles          # one area PMTiles layer for MapLibre (B6 + B28 -> B7); needs tippecanoe
 make basemap        # basemap cutout from a Protomaps build (A11); needs the pmtiles CLI
 make benchmarks     # ZORI, ZHVI, SAFMR and ownership cost at the MHA (B8-B11)
 make metrics        # adequacy and coverage metrics (B12-B15)
@@ -106,7 +107,7 @@ make evidence       # copy manifests and test results into docs/evidence/
 make verify         # check every recorded SHA-256 against configs, evidence and data
 ```
 
-`make all` runs check-config, geometry, components, tiles, benchmarks, metrics,
+`make all` runs check-config, geometry, non-mha, components, tiles, benchmarks, metrics,
 and spatial in order. Each script prints its own usage with `--help`.
 
 ## Status

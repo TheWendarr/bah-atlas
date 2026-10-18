@@ -19,10 +19,10 @@ PMMS_CSV ?= data/raw/PMMS_history.csv
 WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
-.PHONY: all fetch check-config ingest geometry components tiles basemap \
+.PHONY: all fetch check-config ingest geometry non-mha components tiles basemap \
 	benchmarks zori zhvi safmr ownership metrics weights spatial test clean
 
-all: check-config geometry components tiles benchmarks metrics spatial
+all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
 # Stage 0: pull every auto-pullable Layer 1 source into data/raw (A2-A7).
 fetch:
@@ -43,6 +43,15 @@ geometry: ingest
 		--zcta $(ZCTA_SHP) \
 		--out $(PROCESSED)/mha_$(YEAR).gpkg
 
+# County Cost Group and territory-bucket polygons by the same dissolve as B6
+# (A2 + B1 -> B28). DoD publishes none, so they are marked non-authoritative and
+# kept out of the spatial statistics. Reads B1, so run `make ingest` first.
+non-mha:
+	$(PYTHON) pipeline/geometry/build_mha_geometry.py --classes ccg,unknown \
+		--crosswalk $(INTERIM)/zip_mha.csv \
+		--zcta $(ZCTA_SHP) \
+		--out $(PROCESSED)/non_mha_$(YEAR).gpkg
+
 # Rent/utilities split per MHA from the DTMO component breakdown PDF (A6 -> B5).
 # Cross-checks codes against B3, so run `make ingest` first.
 components:
@@ -51,11 +60,16 @@ components:
 		--out $(INTERIM) \
 		--mha-names $(INTERIM)/mha_names.csv
 
-# Tile the MHA polygons for MapLibre (B6 -> B7). Needs tippecanoe >= 2.17.
+# Tile every area for MapLibre as one layer `areas` keyed on `code` (B6 + B28 -> B7,
+# decision D9; docs/data-contract.md section 4). Needs tippecanoe >= 2.17.
+# The MHA-only archive this replaced (mha_YYYY.pmtiles) and its manifest are
+# removed first, so `make evidence` does not copy a retired B7 manifest.
 tiles:
+	rm -f $(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json
 	$(PYTHON) pipeline/tiles/build_mha_pmtiles.py \
 		--geojson $(PROCESSED)/mha_$(YEAR).geojson \
-		--out $(PROCESSED)/mha_$(YEAR).pmtiles
+		--non-mha $(PROCESSED)/non_mha_$(YEAR).geojson \
+		--out $(PROCESSED)/areas_$(YEAR).pmtiles
 
 # Self-hosted basemap cut from a Protomaps daily build (A11). Needs the pmtiles CLI.
 # Override with e.g. `MAXZOOM=6 make basemap`; see the script header.
@@ -125,7 +139,10 @@ test:
 clean:
 	rm -rf $(SPATIAL) $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
 		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json \
-		$(PROCESSED)/mha_$(YEAR)_geometry_manifest.json
+		$(PROCESSED)/mha_$(YEAR)_geometry_manifest.json \
+		$(PROCESSED)/non_mha_$(YEAR).gpkg $(PROCESSED)/non_mha_$(YEAR).geojson \
+		$(PROCESSED)/non_mha_$(YEAR)_geometry_manifest.json \
+		$(PROCESSED)/areas_$(YEAR).pmtiles $(PROCESSED)/areas_$(YEAR)_manifest.json
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.

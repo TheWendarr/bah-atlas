@@ -178,7 +178,7 @@ packages). Licenses were read from each project's license file or package metada
 
 ### tippecanoe  `[incorporated]`
 - **Provider:** Felt (maintained fork; originally Mapbox) — https://github.com/felt/tippecanoe
-- **Role:** Tiles the MHA polygons into a PMTiles archive (B6 → B7) in `pipeline/tiles/build_mha_pmtiles.py`; version 2.17 or later writes `.pmtiles` directly.
+- **Role:** Tiles the MHA, County Cost Group and territory polygons into one PMTiles layer (B6 + B28 → B7) in `pipeline/tiles/build_mha_pmtiles.py`, in a single run with shared-border detection; version 2.17 or later writes `.pmtiles` directly.
 - **License:** BSD-2-Clause (© Mapbox Inc., © Protomaps LLC).
 
 ### pmtiles CLI (go-pmtiles)  `[incorporated]`
@@ -210,7 +210,7 @@ packages). Licenses were read from each project's license file or package metada
 
 ### MapLibre GL JS  `[planned]`
 - **Provider:** MapLibre contributors — https://github.com/maplibre/maplibre-gl-js
-- **Role:** Front-end map runtime for Layer 3 (C-nodes): renders the B7 MHA tiles and the A11 basemap, joining B20 attributes with feature-state.
+- **Role:** Front-end map runtime for Layer 3 (C-nodes): renders the B7 area tiles and the A11 basemap, joining B20 attributes with feature-state.
 - **License:** BSD-3-Clause (includes the BSD-3-Clause notice for Mapbox GL JS v1.13 and earlier, from which it was forked).
 
 ---

@@ -33,6 +33,12 @@ Turns tabular keys into map geometry.
 - `build_mha_geometry.py` — dissolves Census ZCTA polygons up to the MHA level
   using the ZIP-to-MHA crosswalk (B6). Emits a GeoPackage + GeoJSON, a coverage
   report, and `mha_YYYY_geometry_manifest.json` with input and output SHA-256.
+  With `--classes ccg,unknown` (`make non-mha`) the same dissolve builds the
+  County Cost Group and territory-bucket polygons (B28) from the B1 crosswalk
+  into `non_mha_YYYY.gpkg` / `.geojson`, each feature marked non-authoritative.
+  It stops if any ZCTA would belong to two areas, and its manifest lists area
+  codes left without a polygon and the territory bucket's ZIP3 prefixes. B6 and
+  B28 are separate runs, so B6 and the spatial statistics never change with B28.
 
 ## `benchmarks/` — 2.3 MHA benchmarks and 2.4 ownership metrics
 
@@ -89,9 +95,11 @@ esda (PySAL); matplotlib for the map.
 
 ## `tiles/` — web tiles
 
-- `build_mha_pmtiles.py` — tiles the MHA polygons into `mha_YYYY.pmtiles`
-  (B7) with tippecanoe. One layer, `mha`, whose only property is the MHA code;
-  the frontend joins metrics with `promoteId: "mha"` + feature-state.
+- `build_mha_pmtiles.py` — tiles the B6 and B28 polygons together into
+  `areas_YYYY.pmtiles` (B7) with tippecanoe, in one run so shared borders match.
+  One layer, `areas`, with two properties: `code` (the join key) and `class`
+  (`mha`, `ccg`, `unknown`); the frontend joins metrics with
+  `promoteId: "code"` + feature-state (decision D9, data contract section 4).
 - `build_basemap.sh` — extracts a bounding box from a Protomaps daily planet
   build into `basemap.pmtiles` (A11 -> C4) with the pmtiles CLI.
 

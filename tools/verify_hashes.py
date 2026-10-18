@@ -69,11 +69,11 @@ def claims_in(manifest: object, label: str) -> list[Claim]:
     """Every (file, sha256) statement in one manifest, whatever its layout.
 
     Layouts in use:
-      inputs {node: file} + input_sha256 {node: sha}      (B11, B12-B15, B16-B18)
-      input_file + input_sha256                            (B5, B7-B10)
+      inputs {node: file} + input_sha256 {node: sha}      (B6, B7, B11, B12-B18, B28)
+      input_file + input_sha256                            (B5, B8-B10)
       config + config_sha256                               (B11)
       output_file + output_sha256                          (B7)
-      outputs [files] + output_sha256 {file: sha}          (B1-B4, B6)
+      outputs [files] + output_sha256 {file: sha}          (B1-B4, B6, B28)
       {"filename": ..., "sha256": ...} anywhere            (fetch manifest entries)
       {"artifact": path, "sha256": ...} anywhere           (A12 cost-share PDF)
     """

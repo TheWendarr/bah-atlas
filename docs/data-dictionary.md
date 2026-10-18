@@ -37,6 +37,38 @@ fetched release and to every stage that reads them.
 One row per real MHA: `mha`, geometry (EPSG:4326). Dissolved from Census ZCTAs
 through `zip_mha_geo.csv`; no DoD MHA polygon layer exists.
 
+### `non_mha_YYYY.gpkg` / `non_mha_YYYY.geojson` (B28)
+One row per County Cost Group and territory-bucket code with at least one ZIP
+matching a ZCTA (`make non-mha`). Same dissolve as B6, from the B1 crosswalk.
+
+| column          | type | notes |
+|-----------------|------|-------|
+| mha             | str  | area code (`ZZ###` or `XX###`) |
+| class           | str  | `ccg` or `unknown`, from B1 `mha_class` |
+| geometry_source | str  | "ZCTA dissolve of DTMO ZIP assignments (non-authoritative)" |
+| geometry        |      | EPSG:4326 |
+
+### `non_mha_YYYY_geometry_manifest.json` (B28)
+`inputs` / `input_sha256` (A2 ZCTA file, B1 crosswalk); `counts` (areas and
+codes by class, multipolygon areas, ZIPs by class, ZIPs with no ZCTA match by
+class, ZCTAs claimed by more than one area: always 0, since the build stops
+otherwise); `codes_without_polygon`; `unknown_zip3_prefixes` (the territory
+bucket's ZIP3 prefixes and counts, to confirm which territory it covers);
+`outputs` / `output_sha256`; `warnings`.
+
+### `areas_YYYY.pmtiles` (B7)
+The B6 and B28 polygons in one vector layer, `areas`, tiled in a single
+tippecanoe run (z2–z10) with shared-border detection. Each feature has only
+`code` and `class`; the map promotes `code` as the feature id. Specified in
+[data contract section 4](data-contract.md#4-b7--area-polygons-areas_2026pmtiles)
+(decision D9). Replaces the MHA-only `mha_YYYY.pmtiles`, which `make tiles`
+removes.
+
+### `areas_YYYY_manifest.json` (B7)
+`inputs` / `input_sha256` (B6 and B28 GeoJSON), features in total and by class,
+layer and property names, the MapLibre source declaration, zoom range,
+tippecanoe version, `output_file` / `output_sha256` / `output_bytes`.
+
 ### `mha_YYYY_geometry_manifest.json` (B6)
 `inputs` / `input_sha256` (A2 ZCTA file, B2 crosswalk), `counts` (MHAs written,
 multipolygon MHAs, ZIPs dropped as non-MHA, ZIPs with no ZCTA match),
