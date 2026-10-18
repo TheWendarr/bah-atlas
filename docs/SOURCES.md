@@ -8,7 +8,8 @@ not later. Each data source that lands in `data/raw/` should also carry its retr
 URL, retrieval date, and SHA-256 in the raw provenance manifest
 (`data/raw/fetch_manifest.json`, written by `make fetch`); this file is the
 human-readable companion to that manifest. Status is one of `[incorporated]`,
-`[planned]`, or `[reference]`.
+`[planned]`, `[reference]`, or `[not used]` (considered, then dropped; kept with
+the reason so the decision stays visible).
 
 Fields per entry: **Provider · Link · Artifact · Acquisition · Role · License · Notes · Verified**
 
@@ -35,7 +36,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Link:** https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip · landing: https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
 - **Artifact:** `data/raw/cb_2020_us_zcta520_500k.zip` (`cb_2020_us_zcta520_500k.shp` inside; the geometry step reads the zip directly)
 - **Acquisition:** auto
-- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears.
+- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears. County Cost Groups are mapped with their BAH rates only, without adequacy metrics (decided 18 Oct 2026).
 - **License:** U.S. Government work; not subject to domestic copyright.
 - **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA; quantify and disclose the join dropouts.
 - **Verified:** 2026-10-03 — URL live, serves a valid zip archive.
@@ -111,7 +112,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Verified:** 2026-10-03 — build `20261002` available.
 
 ### A8 · Property tax and homeowners insurance by locality  `[planned]`
-Started 18 Oct 2026; replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).
+Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B18 are rebuilt on it before the front-end payload. Replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).
 
 **Property tax — U.S. Census ACS 5-year detailed tables**
 - **Provider:** U.S. Census Bureau
@@ -127,23 +128,23 @@ Started 18 Oct 2026; replaces the two national B11 placeholders listed under *Co
 - **Acquisition:** direct — one Excel workbook.
 - **Role:** Average homeowners premium per policy by ZIP, rolled up to the MHA median for B11.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Published only for ZIPs with at least ten insurers and fifty policies; MHAs with no published ZIP fall back to the NAIC state average (data year 2022). Data ends in 2022, so it understates 2026 premiums; the dollar year is an open decision (N2 in the M6 plan).
+- **Notes:** Published only for ZIPs with at least ten insurers and fifty policies; MHAs with no published ZIP fall back to the NAIC state average (data year 2022). **Decided 18 Oct 2026: used as published, not scaled to 2026.** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance; this is a stated limitation in B23 and the write-up.
 
-### A10 · BEA Regional Price Parities (RPP)  `[planned]`
+### A10 · BEA Regional Price Parities (RPP)  `[not used]`
 - **Provider:** U.S. Bureau of Economic Analysis (BEA)
 - **Link:** https://www.bea.gov/data/prices-inflation/regional-price-parities-state-and-metro-area · API: https://apps.bea.gov/api/
 - **Acquisition:** api — pull the Regional dataset (RPP table) through the BEA API with pinned year and table parameters (free API key).
 - **Role:** Price/cost-of-living context layer (secondary; optional node).
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Not blocking anything now. Interactive-table deep links are less stable than API pulls — do not save an iTable URL as the source.
+- **Notes:** **Dropped 18 Oct 2026** when hypothesis H2 was reduced (node scrapped, with B25). RPP is published only for states and metro areas, coarser than MHAs, and its rent component is built from ACS rents, so it would largely repeat the rent-level variable already in the regression. Interactive-table deep links are less stable than API pulls — do not save an iTable URL as the source.
 
 ### A9 · U.S. Census American Community Survey (ACS)  `[planned]`
 - **Provider:** U.S. Census Bureau
 - **Link:** https://www.census.gov/programs-surveys/acs/data.html · API: https://api.census.gov/data/
 - **Acquisition:** api — query the Census Data API with a pinned year and variable list.
-- **Role:** Income and demographic context layer (secondary; optional node).
+- **Role:** Urbanicity for hypothesis H2: population and land area per ZCTA give population density per MHA (B24), one of three explanatory variables in the B19 spatial regression (reduced H2, decided 18 Oct 2026). Optional node, started 18 Oct.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Not blocking anything now. Confirm exact variables/vintage at ingest time; do not save a data.census.gov table URL as the source.
+- **Notes:** Shares the Census API client, ZCTA geography and pinned year with the A8 property-tax pull. Confirm exact variables at ingest time; do not save a data.census.gov table URL as the source.
 
 ---
 
@@ -230,7 +231,7 @@ packages). Licenses were read from each project's license file or package metada
 - **Provider:** U.S. Code, Title 37 (Pay and Allowances of the Uniformed Services), § 403 — https://www.law.cornell.edu/uscode/text/37/403
 - **Role:** Defines what BAH is meant to cover, and therefore the target the project tests. Section 403(b)(3) sets BAH = local cost of adequate housing − a percentage (5% since 2019) of the national average cost for the pay grade and dependency status. Since 17 Oct 2026 this is the basis of the primary test variable: adequacy ratio = (BAH + cost share) / benchmark, target 1.00 (B12–B15; see the A12 out-of-pocket entry for the dollar amounts).
 - **License:** U.S. law; public domain.
-- **Notes:** Replaces the flat "R ≈ 0.95" target in the original research proposal, which is kept as a sensitivity column (`flat95_gap`). Approved as the primary test variable on 18 Oct 2026 (raised in the [17 Oct progress note](progress/2026-10-17.md)).
+- **Notes:** Replaces the flat "R ≈ 0.95" target in the original research proposal, which is kept as a sensitivity column (`flat95_gap`). Adopted as the project's primary test variable on 18 Oct 2026 (raised in the [17 Oct progress note](progress/2026-10-17.md)).
 
 ### DoD BAH housing standards by pay grade  `[incorporated]`
 - **Provider:** U.S. Department of Defense (BAH Primer); summarized at https://www.military.com/paycheck-chronicles/2014/12/04/much-house-rate

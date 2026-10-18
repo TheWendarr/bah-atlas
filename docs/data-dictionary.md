@@ -229,7 +229,8 @@ B17 and B18.
 
 ## Front-end payload (2.7, in progress)
 
-B20 (attribute payload), B21 (UI metadata), B22 (build manifest) and B28 (County
-Cost Group and territory polygons) are being built in M6. Their draft shapes and
-open decisions are in the [M6 plan](plans/m6-plan.md); each gets a section here
-when its schema is fixed.
+B20 (attribute payload), B21 (UI metadata), B22 (build manifest), B27 (hotspot
+overlay) and B28 (County Cost Group and territory polygons) are being built in M6.
+The draft contract and the 18 Oct decisions behind it are in the
+[M6 plan](plans/m6-plan.md); each file gets a section here when its schema is
+fixed.

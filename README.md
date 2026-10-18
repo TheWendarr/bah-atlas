@@ -25,10 +25,11 @@ characterizes where the gaps cluster in space.
 
 ## Research question
 
-> To what degree do BAH rates achieve their statutory coverage target relative
-> to an independent housing-cost benchmark, and are the resulting adequacy gaps
-> spatially clustered across U.S. Military Housing Areas rather than randomly
-> distributed?
+> To what degree do 2026 BAH rates meet their statutory design (the local cost
+> of adequate housing less a member cost share fixed at 5% of the national
+> average cost) when measured against an independent housing-cost benchmark, and
+> are the resulting adequacy gaps spatially clustered across U.S. Military
+> Housing Areas rather than randomly distributed?
 
 See `docs/research-proposal.md` for the full framing, method, and scope.
 
@@ -53,7 +54,7 @@ Each layer is attributed to its source:
 - **Affordability reference** — HUD Fair Market Rents (FMR / SAFMR)
 - **Rent/utilities split and member cost share** — DTMO BAH Rate Component Breakdown and out-of-pocket table
 - **Mortgage rate** — Freddie Mac Primary Mortgage Market Survey (PMMS)
-- **Planned:** property tax (U.S. Census ACS) and homeowners insurance (U.S. Treasury FIO, NAIC) by locality; income and price context (ACS, BEA Regional Price Parities) if hypothesis H2 goes ahead
+- **Planned:** property tax (U.S. Census ACS) and homeowners insurance (U.S. Treasury FIO, NAIC) by locality; population density (ACS) for hypothesis H2
 
 The full register, with licences and caveats, is [`docs/SOURCES.md`](docs/SOURCES.md).
 
