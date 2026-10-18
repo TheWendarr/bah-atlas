@@ -8,6 +8,9 @@ INTERIM  ?= data/interim/bah_$(YEAR)
 PROCESSED?= data/processed
 BENCH    ?= data/interim/benchmarks_$(YEAR)
 METRICS  ?= data/interim/metrics_$(YEAR)
+SPATIAL  ?= data/interim/spatial_$(YEAR)
+# Neighbours per MHA in the B16 k-nearest-neighbour weights.
+KNN_K    ?= 6
 ZORI_CSV ?= data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv
 ZHVI_CSV ?= data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
 SAFMR_XLSX ?= data/raw/fy2026_safmrs_revised.xlsx
@@ -17,7 +20,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry components tiles basemap \
-	benchmarks zori zhvi safmr ownership metrics test clean
+	benchmarks zori zhvi safmr ownership metrics weights test clean
 
 all: check-config geometry components tiles benchmarks metrics
 
@@ -95,12 +98,19 @@ metrics:
 		--zori $(BENCH)/mha_zori.csv --safmr $(BENCH)/mha_safmr.csv \
 		--ownership $(BENCH)/mha_ownership.csv --out $(METRICS)
 
+# --- 2.6 spatial statistics (B16-B18) ----------------------------------------
+# B6 -> B16: k-nearest-neighbour weights for the CONUS MHAs (AK, HI excluded), with
+# queen contiguity built alongside as a diagnostic. Needs `make geometry` first.
+weights:
+	$(PYTHON) pipeline/spatial/build_weights.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
+		--k $(KNN_K) --out $(SPATIAL)
+
 # Unit tests against synthetic fixtures (no downloads needed).
 test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 clean:
-	rm -rf $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
+	rm -rf $(SPATIAL) $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
 		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json
 
 # --- Project tracking (living WBS) -------------------------------------------

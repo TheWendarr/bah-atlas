@@ -9,3 +9,6 @@ pypdf>=4.0
 
 # HUD SAFMR workbook (.xlsx) -> B10
 openpyxl>=3.1
+
+# 2.6 spatial weights -> B16 (PySAL core; brings numpy and scipy)
+libpysal>=4.10
