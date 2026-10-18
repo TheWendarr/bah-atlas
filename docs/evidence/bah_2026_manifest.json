@@ -1,0 +1,55 @@
+{
+  "source": "U.S. DoD Defense Travel Management Office (DTMO), BAH ASCII release",
+  "source_artifact": "BAH-ASCII-2026.zip",
+  "source_year": 2026,
+  "ingested_at_utc": "2026-10-09T04:10:13+00:00",
+  "pay_grade_schema": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "O1E",
+    "O2E",
+    "O3E",
+    "O1",
+    "O2",
+    "O3",
+    "O4",
+    "O5",
+    "O6",
+    "O7",
+    "O8",
+    "O9",
+    "O10"
+  ],
+  "counts": {
+    "crosswalk_zips": 40959,
+    "distinct_mha_codes": 339,
+    "real_mhas": 299,
+    "ccg_codes": 39,
+    "unknown_codes": 1,
+    "zips_by_class": {
+      "ccg": 20465,
+      "mha": 20280,
+      "unknown": 214
+    },
+    "rate_rows": 18252
+  },
+  "outputs": [
+    "zip_mha.csv",
+    "zip_mha_geo.csv",
+    "mha_names.csv",
+    "bah_rates.csv"
+  ],
+  "warnings": []
+}

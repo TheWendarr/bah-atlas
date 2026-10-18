@@ -1,0 +1,88 @@
+{
+  "A1": {
+    "acquisition": "browser",
+    "bytes": 302657,
+    "filename": "BAH-ASCII-2026.zip",
+    "license": "U.S. Government work (public domain)",
+    "name": "DTMO BAH ASCII 2026",
+    "node_id": "A1",
+    "retrieved_at": "2026-09-03T03:22:50+00:00",
+    "sha256": "5446fed831e125c23cc6a407dcde4cae541f108e90ac852aaadeec0aa11e515f",
+    "source_url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Rate-Files-Alt/"
+  },
+  "A12": {
+    "acquisition": "browser",
+    "bytes": 266626,
+    "filename": "2026-BAH_OOP_Amounts.pdf",
+    "license": "U.S. Government work (public domain)",
+    "name": "DTMO 2026 BAH Out-of-Pocket Amounts (A12 cost_share_monthly)",
+    "node_id": "A12",
+    "retrieved_at": "2026-10-17T22:21:01+00:00",
+    "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
+    "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf"
+  },
+  "A2": {
+    "bytes": 66655314,
+    "filename": "cb_2020_us_zcta520_500k.zip",
+    "license": "U.S. Government work (public domain)",
+    "name": "Census 2020 ZCTA cartographic boundary (1:500k)",
+    "node_id": "A2",
+    "retrieved_at": "2026-09-07T20:59:17+00:00",
+    "retrieved_at_basis": "file mtime",
+    "sha256": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+    "source_url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip"
+  },
+  "A3": {
+    "bytes": 9916175,
+    "filename": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZORI, ZIP-level (smoothed, all homes + multifamily)",
+    "node_id": "A3",
+    "retrieved_at": "2026-09-07T20:59:48+00:00",
+    "retrieved_at_basis": "file mtime",
+    "sha256": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv"
+  },
+  "A4": {
+    "bytes": 123065811,
+    "filename": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level (all homes, mid-tier, smoothed, SA)",
+    "node_id": "A4",
+    "retrieved_at": "2026-09-07T21:01:45+00:00",
+    "retrieved_at_basis": "file mtime",
+    "sha256": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A5": {
+    "bytes": 4382259,
+    "filename": "fy2026_safmrs_revised.xlsx",
+    "license": "U.S. Government work (public domain)",
+    "name": "HUD Small Area FMRs FY2026 (revised)",
+    "node_id": "A5",
+    "retrieved_at": "2026-10-03T19:38:42+00:00",
+    "sha256": "35e26f33181adcfd2b5b457f7824fe2880e65be18aec2805766e39b5eaf3e28f",
+    "source_url": "https://www.huduser.gov/portal/datasets/fmr/fmr2026/fy2026_safmrs_revised.xlsx"
+  },
+  "A6": {
+    "acquisition": "browser",
+    "bytes": 208266,
+    "filename": "dod_bah_rate_components_2026.pdf",
+    "license": "U.S. Government work (public domain)",
+    "name": "DoD BAH Rate Component Breakdown 2026",
+    "node_id": "A6",
+    "retrieved_at": "2026-10-03T19:28:11+00:00",
+    "sha256": "a0cbf7f4dad787ffbb3605c151f69c61ee4e2dd7bb39e1bcff3646bed8b69800",
+    "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH-Rate-Component-Breakdown/2026-BAH-Rate-Component-Breakdown.pdf"
+  },
+  "A7": {
+    "bytes": 97483,
+    "filename": "PMMS_history.csv",
+    "license": "Freddie Mac; attribution required (Freddie Mac Primary Mortgage Market Survey)",
+    "name": "Freddie Mac PMMS weekly history (30-yr and 15-yr fixed)",
+    "node_id": "A7",
+    "retrieved_at": "2026-10-03T19:38:42+00:00",
+    "sha256": "d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f",
+    "source_url": "https://www.freddiemac.com/pmms/docs/PMMS_history.csv"
+  }
+}

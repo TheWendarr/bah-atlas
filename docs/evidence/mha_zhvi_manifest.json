@@ -1,0 +1,55 @@
+{
+  "node": "B9",
+  "source_node": "A4",
+  "source": "Zillow Home Value Index (ZHVI), SFR+condo, mid tier (33rd-67th pct), smoothed and seasonally adjusted, ZIP level",
+  "unit": "USD (typical home value)",
+  "input_file": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+  "input_sha256": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
+  "generated_at": "2026-10-17T22:04:53+00:00",
+  "window_requested": "2026-01:2026-12",
+  "window_months_used": [
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07"
+  ],
+  "min_months_per_zip": 3,
+  "aggregation": "median of ZIP window-means across the MHA's ZIPs (unweighted); real MHAs only",
+  "utilities_adjustment": null,
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "source_zips": 26269,
+    "source_zips_in_real_mhas": 12626,
+    "source_zips_outside_real_mhas": 13643,
+    "mhas_with_data": 299,
+    "mhas_without_data": [],
+    "median_zip_coverage": 0.6502
+  },
+  "mha_median_summary": {
+    "min": 112299.89,
+    "median": 352243.56,
+    "max": 3103285.3
+  },
+  "plausible_range": {
+    "min": 1000.0,
+    "max": 50000000.0,
+    "warn_above": null
+  },
+  "extreme_zips": {},
+  "warnings": [],
+  "outputs": [
+    "zip_zhvi.csv",
+    "mha_zhvi.csv"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "node": "B8",
+  "source_node": "A3",
+  "source": "Zillow Observed Rent Index (ZORI), all homes plus multifamily, smoothed, ZIP level",
+  "unit": "USD per month (asking rent, excludes utilities)",
+  "input_file": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
+  "input_sha256": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
+  "generated_at": "2026-10-17T22:04:52+00:00",
+  "window_requested": "2026-01:2026-12",
+  "window_months_used": [
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07"
+  ],
+  "min_months_per_zip": 3,
+  "aggregation": "median of ZIP window-means across the MHA's ZIPs (unweighted); real MHAs only",
+  "utilities_adjustment": "zori_utilities_adjusted = zori_median / rent_share (B5, DTMO component split). Uses DTMO's cost structure, not the BAH dollar amount. Shares rounded to 1% at source.",
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "source_zips": 7681,
+    "source_zips_in_real_mhas": 6659,
+    "source_zips_outside_real_mhas": 1022,
+    "mhas_with_data": 289,
+    "mhas_without_data": [
+      "AK400",
+      "AK401",
+      "AK403",
+      "HI414",
+      "MA119",
+      "MA151",
+      "MI145",
+      "NC176",
+      "NJ198",
+      "WV323"
+    ],
+    "median_zip_coverage": 0.2667
+  },
+  "mha_median_summary": {
+    "min": 945.28,
+    "median": 1671.34,
+    "max": 3798.71
+  },
+  "plausible_range": {
+    "min": 100.0,
+    "max": 200000.0,
+    "warn_above": 25000.0
+  },
+  "extreme_zips": {
+    "11930": 52564.51,
+    "11937": 35439.6,
+    "11963": 55972.22,
+    "11968": 41575.38,
+    "11976": 101166.67,
+    "81611": 27158.65
+  },
+  "warnings": [
+    "862 ZIP(s) had fewer than 3 months in the window and were left out",
+    "6 ZIP(s) above 25,000 in the window, kept (seasonal luxury markets; the MHA median limits their pull): 11930 (NY218, peak 52,565), 11937 (NY218, peak 35,440), 11963 (NY218, peak 55,972), 11968 (NY218, peak 41,575), 11976 (NY218, peak 101,167), 81611 (not in a real MHA, peak 27,159)"
+  ],
+  "outputs": [
+    "zip_zori.csv",
+    "mha_zori.csv"
+  ]
+}

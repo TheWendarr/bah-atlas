@@ -1,0 +1,52 @@
+{
+  "node": "B10",
+  "source_node": "A5",
+  "source": "U.S. Department of Housing and Urban Development (HUD) PD&R, Small Area Fair Market Rents FY2026 (revised, effective 21 May 2026)",
+  "unit": "USD per month (gross rent: rent plus tenant-paid utilities)",
+  "input_file": "fy2026_safmrs_revised.xlsx",
+  "input_sha256": "35e26f33181adcfd2b5b457f7824fe2880e65be18aec2805766e39b5eaf3e28f",
+  "generated_at": "2026-10-17T22:04:56+00:00",
+  "header_map": {
+    "sheet": "SAFMRs",
+    "header_row": "1",
+    "zip": "ZIP Code",
+    "br0": "SAFMR 0BR",
+    "br1": "SAFMR 1BR",
+    "br2": "SAFMR 2BR",
+    "br3": "SAFMR 3BR",
+    "br4": "SAFMR 4BR"
+  },
+  "hud_zip_rows": 51895,
+  "hud_unique_zips": 38601,
+  "aggregation": "per bedroom count: median of ZIP SAFMRs across the MHA's ZIPs (unweighted); real MHAs only",
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "source_zips": 38601,
+    "source_zips_in_real_mhas": 18455,
+    "source_zips_outside_real_mhas": 20146,
+    "mhas_with_data": 299,
+    "mhas_without_data": [],
+    "median_zip_coverage": 0.9494
+  },
+  "coverage_note": "Coverage is identical for every bedroom count because HUD publishes all five per ZIP; br2 shown.",
+  "mha_2br_median_summary": {
+    "min": 840.0,
+    "median": 1440.0,
+    "max": 3525.0
+  },
+  "warnings": [
+    "10106 ZIP(s) appear under more than one HUD area; their rows were averaged"
+  ],
+  "outputs": [
+    "zip_safmr.csv",
+    "mha_safmr.csv"
+  ]
+}

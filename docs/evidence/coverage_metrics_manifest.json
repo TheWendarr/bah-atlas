@@ -1,0 +1,391 @@
+{
+  "nodes": [
+    "B12",
+    "B13",
+    "B14",
+    "B15"
+  ],
+  "generated_at": "2026-10-17T22:33:29+00:00",
+  "inputs": {
+    "A12": "profiles.json",
+    "A13": "classification.json",
+    "B4": "bah_rates.csv",
+    "B8": "mha_zori.csv",
+    "B10": "mha_safmr.csv",
+    "B11": "mha_ownership.csv"
+  },
+  "input_sha256": {
+    "A12": "4a57c205016b89305c6a44863e6df240b9173b9e9173b90b5a472a46c73371e7",
+    "A13": "fa6c0bea9c2afd6ee621178b178926d81657f7c26c6c6b8ba682eaa3cd73b9c9",
+    "B4": "f1912660e5752189f2d8642c956a24615f5c7f710b0e256fe6626b2e1e6ffbf3",
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B10": "66df87450290c8306e19db85bc460ec2fa862d0500ce3a9ea4016a457bee345c",
+    "B11": "7a7f4abdffce1d08604444f37c567b7a7a70ad5f33df3cf3d28036b59aeb7bad"
+  },
+  "statutory_basis": "37 U.S.C. 403(b)(3): BAH = local cost of adequate housing - 5% of the national average cost for the pay grade and dependency status",
+  "cost_share": {
+    "method": "5% of the national mean BAH rate for the pay grade and dependency status (DTMO); statutory basis 37 U.S.C. 403(b)(3)(A)(ii) and (B)",
+    "year": 2026,
+    "source": "Defense Travel Management Office, 2026 BAH Out-of-Pocket Amounts",
+    "url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
+    "artifact": "data/raw/2026-BAH_OOP_Amounts.pdf",
+    "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
+    "values_read": "E05 with dependents $126 (without $110); O03 with dependents $151 (without $138)",
+    "verified": "2026-10-17",
+    "per_profile": {
+      "e5_dep": 126,
+      "o3_dep": 151
+    }
+  },
+  "flat_95_sensitivity_target": 0.95,
+  "definitions": {
+    "coverage_ratio": "BAH / cost_monthly",
+    "design_coverage": "1 - cost_share_monthly / cost_monthly",
+    "adequacy_ratio": "(BAH + cost_share_monthly) / cost_monthly; target 1.00",
+    "adequacy_gap": "adequacy_ratio - 1 (= coverage_ratio - design_coverage); the 2.6 test variable",
+    "surplus_usd": "BAH - cost_monthly",
+    "design_gap_usd": "BAH + cost_share_monthly - cost_monthly",
+    "flat95_gap": "coverage_ratio - flat_95_sensitivity_target",
+    "rent_cost": "B8 zori_utilities_adjusted (ZORI grossed up to utilities-inclusive with B5)",
+    "rent_crosscheck_cost": "B10 safmr_median at the profile's anchor_bedrooms (gross rent, HUD 40th pct)",
+    "buy_cost": "B11 own_total_monthly (PITI + B8 utilities)"
+  },
+  "windows": {
+    "B8": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "B9": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "B11_rate": "2026-01:2026-07",
+    "B10": "HUD FY2026 SAFMR (fixed vintage, no monthly window)"
+  },
+  "mhas": 299,
+  "profiles": {
+    "e5_dep": {
+      "pay_grade": "E5",
+      "has_dependents": true,
+      "anchor_bedrooms": 2,
+      "cost_share_monthly": 126,
+      "rent": {
+        "mhas": 299,
+        "mhas_with_value": 289,
+        "adequacy_ratio": {
+          "min": 0.6783,
+          "median": 1.1357,
+          "max": 1.6792
+        },
+        "coverage_ratio": {
+          "min": 0.6222,
+          "median": 1.0721,
+          "max": 1.6215
+        },
+        "design_coverage_median": 0.9355,
+        "design_gap_usd_median": 268.3,
+        "mhas_below_design": 44,
+        "mhas_at_or_above_full_cost": 208,
+        "flat95_vs_design": {
+          "mhas_below_flat_95": 52,
+          "short_under_flat_95_only": [
+            "AR012",
+            "ID084",
+            "KS101",
+            "MS168",
+            "NC177",
+            "TX283",
+            "WA313",
+            "WV454"
+          ],
+          "short_under_design_only": []
+        },
+        "adequacy_ratio_classes": {
+          "Below 85%: far below the statutory design": 11,
+          "85-92%: well below design": 9,
+          "92-97%: below design": 13,
+          "97-103%: at the statutory design point": 24,
+          "103-108%: above design": 35,
+          "108-115%: well above design": 66,
+          "115% and above: far above design": 131
+        },
+        "design_gap_usd_classes": {
+          "Short of design by over $500": 6,
+          "Short by $250-500": 6,
+          "Short by $50-250": 24,
+          "Within $50 of design": 21,
+          "Over by $50-250": 84,
+          "Over by $250-500": 74,
+          "Over by more than $500": 74
+        },
+        "coverage_ratio_classes": {
+          "Below 85%: severe shortfall": 19,
+          "85-90%: shortfall": 15,
+          "90-94%: below target": 13,
+          "94-96%: at the 95% target": 8,
+          "96-100%: above target": 26,
+          "100-105%: full coverage": 43,
+          "105% and above: surplus": 165
+        },
+        "surplus_usd_classes": {
+          "Gap over $500": 8,
+          "Gap $250-500": 18,
+          "Gap $50-250": 38,
+          "Within $50 of full cost": 45,
+          "Surplus $50-250": 79,
+          "Surplus $250-500": 46,
+          "Surplus over $500": 55
+        },
+        "status_counts": {
+          "ok": 289,
+          "no_zori": 10
+        }
+      },
+      "rent_safmr_crosscheck": {
+        "mhas_with_value": 299,
+        "adequacy_ratio": {
+          "min": 0.9489,
+          "median": 1.5057,
+          "max": 2.5266
+        },
+        "mhas_below_design": 1,
+        "median_adequacy_diff_zori_minus_safmr": -0.3679
+      },
+      "buy": {
+        "mhas": 299,
+        "mhas_with_value": 289,
+        "adequacy_ratio": {
+          "min": 0.3835,
+          "median": 0.7793,
+          "max": 1.3477
+        },
+        "coverage_ratio": {
+          "min": 0.3734,
+          "median": 0.7349,
+          "max": 1.2772
+        },
+        "design_coverage_median": 0.9565,
+        "design_gap_usd_median": -629.73,
+        "mhas_below_design": 267,
+        "mhas_at_or_above_full_cost": 11,
+        "flat95_vs_design": {
+          "mhas_below_flat_95": 269,
+          "short_under_flat_95_only": [
+            "AL002",
+            "IL089",
+            "TX279"
+          ],
+          "short_under_design_only": [
+            "AK404"
+          ]
+        },
+        "adequacy_ratio_classes": {
+          "Below 85%: far below the statutory design": 193,
+          "85-92%: well below design": 35,
+          "92-97%: below design": 24,
+          "97-103%: at the statutory design point": 23,
+          "103-108%: above design": 3,
+          "108-115%: well above design": 4,
+          "115% and above: far above design": 7
+        },
+        "design_gap_usd_classes": {
+          "Short of design by over $500": 166,
+          "Short by $250-500": 51,
+          "Short by $50-250": 38,
+          "Within $50 of design": 18,
+          "Over by $50-250": 9,
+          "Over by $250-500": 5,
+          "Over by more than $500": 2
+        },
+        "coverage_ratio_classes": {
+          "Below 85%: severe shortfall": 226,
+          "85-90%: shortfall": 19,
+          "90-94%: below target": 19,
+          "94-96%: at the 95% target": 6,
+          "96-100%: above target": 8,
+          "100-105%: full coverage": 3,
+          "105% and above: surplus": 8
+        },
+        "surplus_usd_classes": {
+          "Gap over $500": 191,
+          "Gap $250-500": 48,
+          "Gap $50-250": 36,
+          "Within $50 of full cost": 3,
+          "Surplus $50-250": 9,
+          "Surplus $250-500": 1,
+          "Surplus over $500": 1
+        },
+        "status_counts": {
+          "ok": 289,
+          "no_home_value": 0,
+          "no_utilities": 10
+        }
+      }
+    },
+    "o3_dep": {
+      "pay_grade": "O3",
+      "has_dependents": true,
+      "anchor_bedrooms": 3,
+      "cost_share_monthly": 151,
+      "rent": {
+        "mhas": 299,
+        "mhas_with_value": 289,
+        "adequacy_ratio": {
+          "min": 0.9997,
+          "median": 1.4311,
+          "max": 2.0218
+        },
+        "coverage_ratio": {
+          "min": 0.9312,
+          "median": 1.3526,
+          "max": 1.8971
+        },
+        "design_coverage_median": 0.9227,
+        "design_gap_usd_median": 830.1,
+        "mhas_below_design": 1,
+        "mhas_at_or_above_full_cost": 285,
+        "flat95_vs_design": {
+          "mhas_below_flat_95": 1,
+          "short_under_flat_95_only": [],
+          "short_under_design_only": []
+        },
+        "adequacy_ratio_classes": {
+          "Below 85%: far below the statutory design": 0,
+          "85-92%: well below design": 0,
+          "92-97%: below design": 0,
+          "97-103%: at the statutory design point": 1,
+          "103-108%: above design": 6,
+          "108-115%: well above design": 4,
+          "115% and above: far above design": 278
+        },
+        "design_gap_usd_classes": {
+          "Short of design by over $500": 0,
+          "Short by $250-500": 0,
+          "Short by $50-250": 0,
+          "Within $50 of design": 1,
+          "Over by $50-250": 9,
+          "Over by $250-500": 24,
+          "Over by more than $500": 255
+        },
+        "coverage_ratio_classes": {
+          "Below 85%: severe shortfall": 0,
+          "85-90%: shortfall": 0,
+          "90-94%: below target": 1,
+          "94-96%: at the 95% target": 0,
+          "96-100%: above target": 3,
+          "100-105%: full coverage": 6,
+          "105% and above: surplus": 279
+        },
+        "surplus_usd_classes": {
+          "Gap over $500": 0,
+          "Gap $250-500": 0,
+          "Gap $50-250": 3,
+          "Within $50 of full cost": 5,
+          "Surplus $50-250": 8,
+          "Surplus $250-500": 71,
+          "Surplus over $500": 202
+        },
+        "status_counts": {
+          "ok": 289,
+          "no_zori": 10
+        }
+      },
+      "rent_safmr_crosscheck": {
+        "mhas_with_value": 299,
+        "adequacy_ratio": {
+          "min": 0.9525,
+          "median": 1.478,
+          "max": 2.311
+        },
+        "mhas_below_design": 2,
+        "median_adequacy_diff_zori_minus_safmr": -0.0158
+      },
+      "buy": {
+        "mhas": 299,
+        "mhas_with_value": 289,
+        "adequacy_ratio": {
+          "min": 0.4288,
+          "median": 0.985,
+          "max": 1.6554
+        },
+        "coverage_ratio": {
+          "min": 0.4167,
+          "median": 0.9318,
+          "max": 1.5294
+        },
+        "design_coverage_median": 0.9479,
+        "design_gap_usd_median": -39.46,
+        "mhas_below_design": 159,
+        "mhas_at_or_above_full_cost": 102,
+        "flat95_vs_design": {
+          "mhas_below_flat_95": 156,
+          "short_under_flat_95_only": [
+            "OH233"
+          ],
+          "short_under_design_only": [
+            "DE054",
+            "MD134",
+            "NY217",
+            "RI257"
+          ]
+        },
+        "adequacy_ratio_classes": {
+          "Below 85%: far below the statutory design": 75,
+          "85-92%: well below design": 26,
+          "92-97%: below design": 28,
+          "97-103%: at the statutory design point": 45,
+          "103-108%: above design": 28,
+          "108-115%: well above design": 22,
+          "115% and above: far above design": 65
+        },
+        "design_gap_usd_classes": {
+          "Short of design by over $500": 75,
+          "Short by $250-500": 29,
+          "Short by $50-250": 36,
+          "Within $50 of design": 24,
+          "Over by $50-250": 47,
+          "Over by $250-500": 45,
+          "Over by more than $500": 33
+        },
+        "coverage_ratio_classes": {
+          "Below 85%: severe shortfall": 93,
+          "85-90%: shortfall": 23,
+          "90-94%: below target": 32,
+          "94-96%: at the 95% target": 16,
+          "96-100%: above target": 23,
+          "100-105%: full coverage": 25,
+          "105% and above: surplus": 77
+        },
+        "surplus_usd_classes": {
+          "Gap over $500": 91,
+          "Gap $250-500": 34,
+          "Gap $50-250": 51,
+          "Within $50 of full cost": 24,
+          "Surplus $50-250": 37,
+          "Surplus $250-500": 37,
+          "Surplus over $500": 15
+        },
+        "status_counts": {
+          "ok": 289,
+          "no_home_value": 0,
+          "no_utilities": 10
+        }
+      }
+    }
+  },
+  "warnings": [],
+  "outputs": [
+    "mha_rent_metrics.csv",
+    "mha_buy_metrics.csv"
+  ]
+}

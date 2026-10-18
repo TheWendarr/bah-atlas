@@ -25,7 +25,7 @@ Every task has a **stable node id** (`A1`–`A13`, `B1`–`B27`, `C1`–`C24`, `
 | Where | How the id appears | Example |
 |---|---|---|
 | [`nodes.csv`](../wbs/nodes.csv) → [WBS](../WBS.md) | row id; status and completion date live here | `B16`, not_started |
-| GitHub issue | title starts with the id in brackets; one issue per node | [B16 issue](https://github.com/TheWendarr/bah-atlas/issues?q=is%3Aissue%20in%3Atitle%20%22%5BB16%5D%22) `[B16] Spatial weights matrix` |
+| GitHub issue | title starts with the id in brackets; one issue per node | [#29](https://github.com/TheWendarr/bah-atlas/issues/29) `[B16] Spatial weights matrix` |
 | Commit | subject starts with the id; body says `Refs #N` or `Closes #N` | `B16: queen contiguity weights for 299 MHAs` |
 | Progress note | tables list the id with links to its issue, commits, tests, and results | sections 2 and 5 of each note |
 | Evidence | pipeline manifests copied to [`docs/evidence/`](../evidence/) record which node produced them | `coverage_metrics_manifest.json` → B12–B15 |
