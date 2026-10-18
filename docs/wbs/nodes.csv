@@ -34,7 +34,7 @@ B19,2.6,Spatial regression,optional,B12 B16 B8 A3 B24,in_progress,,"Reduced H2 (
 B20,2.7,Attribute payload JSON (data contract),required,B12 B13 B14 B15 B3 B4 A12 B28 B22,in_progress,,"Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22"
 B21,2.7,UI metadata JSON,required,A12 A13 B1 B3 B28 B22,in_progress,,Spec: ICD section 6
 B22,2.7,Build manifest JSON,required,B7 B28,in_progress,,"Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last"
-B28,2.7,"CCG and territory polygons (ZCTA dissolve, non-authoritative)",required,A2 B1,in_progress,,"DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`"
+B28,2.7,"CCG and territory polygons (ZCTA dissolve, non-authoritative)",required,A2 B1,complete,2026-10-18,"DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`"
 B23,2.8,QA / validation report,required,B20 B22,in_progress,,Samples intermediate stages (B5-B18)
 B24,2.8,ACS context join,optional,A9 B1,in_progress,,Reduced H2: population density per MHA from A9 (urbanicity)
 B25,2.8,BEA RPP context join,optional,A10 B1,scrapped,,Scrapped 18 Oct 2026 with A10 (reduced H2)

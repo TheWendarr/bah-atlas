@@ -1,0 +1,60 @@
+{
+  "node": "B28",
+  "generated_at": "2026-10-18T21:33:17+00:00",
+  "method": "ZCTA polygons dissolved to County Cost Group and territory-bucket codes through the DTMO ZIP-to-area crosswalk (direct zip == zcta match unless --zip-to-zcta is given); the same dissolve as B6",
+  "authority": "DoD publishes no polygons for County Cost Groups or the territory bucket; these are non-authoritative and are kept out of the spatial statistics (B16-B18)",
+  "geometry_source": "ZCTA dissolve of DTMO ZIP assignments (non-authoritative)",
+  "classes": [
+    "ccg",
+    "unknown"
+  ],
+  "inputs": {
+    "A2": "cb_2020_us_zcta520_500k.zip",
+    "B1": "zip_mha.csv"
+  },
+  "input_sha256": {
+    "A2": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b"
+  },
+  "crs": "EPSG:4326",
+  "counts": {
+    "areas": 40,
+    "areas_by_class": {
+      "ccg": 39,
+      "unknown": 1
+    },
+    "codes_in_crosswalk_by_class": {
+      "ccg": 39,
+      "unknown": 1
+    },
+    "multipolygon_areas": 40,
+    "zips_by_class": {
+      "ccg": 20465,
+      "unknown": 214
+    },
+    "zips_without_zcta": 1568,
+    "zips_without_zcta_by_class": {
+      "ccg": 1502,
+      "unknown": 66
+    },
+    "zctas_in_more_than_one_area": 0
+  },
+  "codes_without_polygon": [],
+  "unknown_zip3_prefixes": {
+    "006": 50,
+    "007": 56,
+    "008": 16,
+    "009": 68,
+    "967": 1,
+    "969": 23
+  },
+  "outputs": [
+    "non_mha_2026.gpkg",
+    "non_mha_2026.geojson"
+  ],
+  "output_sha256": {
+    "non_mha_2026.gpkg": "7f905965a177d5d668543842f802ff59c3ef7fc0bb003eb5e6262d50708a1901",
+    "non_mha_2026.geojson": "858b393f4874344aa1307a860e27c24d2f4a5f524bf08f18f9ecdfb3873cba58"
+  },
+  "warnings": []
+}

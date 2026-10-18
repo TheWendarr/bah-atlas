@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 8  ·  🟣 In progress: 11  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
+**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 9  ·  🟣 In progress: 10  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,7 +18,7 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 1 / 8 | `█░░░░░░░░░ 12%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 2 / 8 | `██░░░░░░░░ 25%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
@@ -29,7 +29,6 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 - 🟣 **B20** Attribute payload JSON (data contract) — due 30 Oct (M6)
 - 🟣 **B21** UI metadata JSON — due 30 Oct (M6)
 - 🟣 **B22** Build manifest JSON — due 30 Oct (M6)
-- 🟣 **B28** CCG and territory polygons (ZCTA dissolve, non-authoritative) — due 30 Oct (M6)
 - 🟣 **B23** QA / validation report — due 30 Oct (M6)
 - 🟣 **B24** ACS context join — optional
 - 🟣 **B27** Hotspot overlay payload — optional
@@ -253,8 +252,8 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
-    class B12,B13,B14,B15,B16,B17,B18,W2 week
-    class A8,A9,B19,B20,B21,B22,B28,B23,B24,B27,W1 prog
+    class B12,B13,B14,B15,B16,B17,B18,B28,W2 week
+    class A8,A9,B19,B20,B21,B22,B23,B24,B27,W1 prog
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A10,B25,B26 gone
     class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
@@ -344,7 +343,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22 |
 | 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6 |
 | 🟣 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last |
-| 🟣 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles` |
+| 🟢 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)

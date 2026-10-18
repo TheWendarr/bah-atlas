@@ -1,0 +1,37 @@
+{
+  "node": "B7",
+  "source_nodes": [
+    "B6",
+    "B28"
+  ],
+  "inputs": {
+    "B6": "mha_2026.geojson",
+    "B28": "non_mha_2026.geojson"
+  },
+  "input_sha256": {
+    "B6": "557543b4924954a19763bb3a367de842da1e8186d65c145b6bcfafb87ba7ec1d",
+    "B28": "858b393f4874344aa1307a860e27c24d2f4a5f524bf08f18f9ecdfb3873cba58"
+  },
+  "features": 339,
+  "features_by_class": {
+    "mha": 299,
+    "ccg": 39,
+    "unknown": 1
+  },
+  "layer": "areas",
+  "id_property": "code",
+  "class_property": "class",
+  "maplibre_source_hint": {
+    "type": "vector",
+    "url": "pmtiles://areas_2026.pmtiles",
+    "promoteId": "code"
+  },
+  "contract": "docs/data-contract.md section 4 (decision D9)",
+  "minzoom": 2,
+  "maxzoom": 10,
+  "tippecanoe": "tippecanoe v2.82.0",
+  "output_file": "areas_2026.pmtiles",
+  "output_sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
+  "output_bytes": 17584031,
+  "generated_at": "2026-10-18T21:33:23+00:00"
+}
