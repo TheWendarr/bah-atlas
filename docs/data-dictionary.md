@@ -141,6 +141,25 @@ the config hash, the ACS vintage and period, ZCTAs usable or skipped (missing
 estimate, zero value), the FIO sheet, years and ZIP counts, the MHAs on a state
 fallback and the state values used, rate and premium summaries, and warnings.
 
+### `mha_density.csv` (B24 population density; `make density`, written to `data/interim/context_YYYY/`)
+One row per real MHA, from `density_to_mha.py`: urbanicity for the B19 regression (reduced H2, D8).
+
+| column             | type  | notes |
+|--------------------|-------|-------|
+| mha                | str   | MHA code |
+| n_zips             | int   | ZIPs in the MHA (B1) |
+| n_zctas_with_data  | int   | of those, ZCTAs (zip == zcta) with an ACS population and a positive ALAND20 |
+| population         | int   | sum of B01003_001E over those ZCTAs (A9) |
+| land_km2           | float | sum of ALAND20 over those ZCTAs, in km² (A2 attribute, not the generalized polygon) |
+| density_per_km2    | float | population / land_km2: people per km² of the MHA's land. B19 primary predictor |
+| pw_density_per_km2 | float | population-weighted density, sum(pop_i × density_i) / sum(pop_i): the density the average resident lives at. B19 sensitivity |
+
+Blank values mean no usable ZCTA (the MHA is listed in the manifest's
+`mhas_without_data` and left out of B19). `mha_density_manifest.json` records the
+A9, A2 and B1 files and SHA-256, the ACS vintage, ZCTA counts (with population,
+with land area, zero land), summaries of both densities, the output SHA-256, and
+warnings.
+
 ### ZIP-level companions
 `zip_zori.csv`, `zip_zhvi.csv` (`zip, mha, value, months_used`) and `zip_safmr.csv`
 (`zip, mha, br0..br4, hud_rows`) keep the pre-aggregation values for the B23 QA report.

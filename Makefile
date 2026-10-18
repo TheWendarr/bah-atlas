@@ -22,7 +22,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -113,6 +113,14 @@ ownership: zori zhvi taxins
 		--zori $(BENCH)/mha_zori.csv --tax-insurance $(BENCH)/mha_tax_insurance.csv \
 		--pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
 
+# --- 2.8 context joins (B24) ------------------------------------------------
+# A9 population + A2 ZCTA land area -> B24: population density per MHA, the
+# urbanicity predictor for B19 (reduced H2, decision D8). Reads B1 (`make ingest`).
+CONTEXT  ?= data/interim/context_$(YEAR)
+density:
+	$(PYTHON) pipeline/benchmarks/density_to_mha.py --acs $(ACS_JSON) --zcta $(ZCTA_SHP) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(CONTEXT)
+
 # --- 2.5 computed metrics (B12-B15) ------------------------------------------
 # Adequacy ratio and gap vs the statutory design, coverage ratio, flat-95% sensitivity
 # gap, and dollar surplus for every A12 profile
@@ -177,7 +185,7 @@ test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 clean:
-	rm -rf $(SPATIAL) $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
+	rm -rf $(CONTEXT) $(SPATIAL) $(METRICS) $(BENCH) $(INTERIM) $(PROCESSED)/mha_$(YEAR).gpkg $(PROCESSED)/mha_$(YEAR).geojson \
 		$(PROCESSED)/mha_$(YEAR).pmtiles $(PROCESSED)/mha_$(YEAR)_manifest.json \
 		$(PROCESSED)/mha_$(YEAR)_geometry_manifest.json \
 		$(PROCESSED)/non_mha_$(YEAR).gpkg $(PROCESSED)/non_mha_$(YEAR).geojson \

@@ -377,5 +377,63 @@ class TestTaxInsurance(Fixture):
         self.assertIn("BB001: no ACS tax data in the MHA or its state BB", p.stderr)
 
 
+class TestDensity(Fixture):
+    """B24 population density. ACS population (TestTaxInsurance.make_acs) and ZCTA land area:
+
+        ZCTA   pop    land km2   density
+        00501   900      2         450      AA001: 1700 / 10 = 170.000
+        00502   800      8         100             pw (900*450 + 800*100) / 1700 = 285.294
+        10001  1500      1        1500      AA002: 1900 / 5 = 380.000
+        10002   400      4         100             pw (1500*1500 + 400*100) / 1900 = 1205.263
+        10003    10      0          -       (zero land: skipped)
+        20001     -      5          -       AA003: no population -> blank, warned
+    """
+
+    def make_zcta(self, land_column: str = "ALAND20") -> Path:
+        import geopandas as gpd
+        from shapely.geometry import box
+        land = {"00501": 2e6, "00502": 8e6, "10001": 1e6, "10002": 4e6, "10003": 0, "20001": 5e6, "30001": 9e6}
+        gdf = gpd.GeoDataFrame({"ZCTA5CE20": list(land), land_column: [int(v) for v in land.values()]},
+                               geometry=[box(i, 0, i + 1, 1) for i in range(len(land))], crs="EPSG:4326")
+        path = self.d / "zcta.geojson"
+        gdf.to_file(path, driver="GeoJSON")
+        return path
+
+    def run_density(self, acs: Path, zcta: Path) -> subprocess.CompletedProcess:
+        return run("density_to_mha.py", "--acs", str(acs), "--zcta", str(zcta),
+                   "--crosswalk", str(self.crosswalk), "--out", str(self.out))
+
+    def test_b24(self) -> None:
+        p = self.run_density(TestTaxInsurance.make_acs(self), self.make_zcta())
+        self.assertEqual(p.returncode, 0, p.stderr)
+        rows = {r["mha"]: r for r in read(self.out / "mha_density.csv")}
+        self.assertEqual(sorted(rows), ["AA001", "AA002", "AA003"])          # CCG excluded
+        a, b, c = rows["AA001"], rows["AA002"], rows["AA003"]
+        self.assertEqual((a["n_zctas_with_data"], a["population"], a["land_km2"], a["density_per_km2"],
+                          a["pw_density_per_km2"]), ("2", "1700", "10.000", "170.000", "285.294"))
+        self.assertEqual((b["n_zctas_with_data"], b["density_per_km2"], b["pw_density_per_km2"]),
+                         ("2", "380.000", "1205.263"))
+        self.assertEqual((c["n_zctas_with_data"], c["density_per_km2"]), ("0", ""))
+        man = json.loads((self.out / "mha_density_manifest.json").read_text())
+        self.assertEqual(man["nodes"], ["B24"])
+        self.assertEqual(sorted(man["inputs"]), ["A2", "A9", "B1"])
+        self.assertEqual((man["acs_vintage"], man["zctas_zero_land"], man["mhas_without_data"]),
+                         (2024, 1, ["AA003"]))
+        self.assertIn("mha_density.csv", man["output_sha256"])
+        self.assertEqual(len(man["warnings"]), 1)
+
+    def test_zcta_file_without_land_area_stops(self) -> None:
+        p = self.run_density(TestTaxInsurance.make_acs(self), self.make_zcta(land_column="AREA"))
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("ALAND20", p.stderr)
+
+    def test_acs_without_population_stops(self) -> None:
+        acs = TestTaxInsurance.make_acs(self, header=["B25090_001E", "B25079_001E", "B01003_00XE",
+                                                      "zip code tabulation area"])
+        p = self.run_density(acs, self.make_zcta())
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("B01003_001E", p.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

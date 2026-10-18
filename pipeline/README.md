@@ -67,7 +67,12 @@ go to `data/interim/benchmarks_YYYY/`.
   Parameters are in `config/ownership.json`, explained in
   `docs/configuration.md`.
 
-Tests for all five run on synthetic fixtures with `make test`.
+- `density_to_mha.py` — B24: population density per MHA (urbanicity for the
+  B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,
+  as sum(population) / sum(land) and population-weighted (`make density`, output in
+  `data/interim/context_YYYY/`). Reads the ZCTA file's attribute table only.
+
+Tests for all six run on synthetic fixtures with `make test`.
 
 ## `metrics/` — 2.5 computed metrics
 
