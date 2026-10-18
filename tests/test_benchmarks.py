@@ -226,8 +226,14 @@ class TestOwnership(Fixture):
             ["12/26/2025", "9.00", " ", " "],
             ["1/1/2026", "6.40", " ", " "], ["1/8/2026", "6.60", " ", " "],
             ["2/5/2026", "6.40", " ", " "], ["3/5/2026", "6.60", " ", " "]])
+        # The national 2025 placeholder values, now per MHA, keep the hand-worked numbers below.
+        taxins = write(self.d / "mha_tax_insurance.csv", [
+            ["mha", "effective_tax_rate", "tax_source", "insurance_annual_usd", "insurance_source"],
+            ["AA001", "0.008900", "locality", "1569.00", "locality"],
+            ["AA002", "0.012000", "locality", "2000.00", "state_fallback"],
+            ["AA003", "0.010000", "state_fallback", "1800.00", "locality"]])
         p = run("ownership_cost.py", "--zhvi", str(zhvi), "--zori", str(zori), "--pmms", str(pmms),
-                "--out", str(self.out), "--window", "2026-01:2026-12")
+                "--tax-insurance", str(taxins), "--out", str(self.out), "--window", "2026-01:2026-12")
         self.assertEqual(p.returncode, 0, p.stderr)
         rows = {r["mha"]: r for r in read(self.out / "mha_ownership.csv")}
         a = rows["AA001"]
@@ -237,23 +243,138 @@ class TestOwnership(Fixture):
         self.assertAlmostEqual(float(a["pi_monthly"]), 1936.97, delta=0.02)
         self.assertEqual(a["tax_monthly"], "222.50")                        # 300k x 0.89% / 12
         self.assertEqual(a["insurance_monthly"], "130.75")                  # 1569 / 12
+        self.assertEqual((a["tax_source"], a["insurance_source"]), ("locality", "locality"))
+        self.assertEqual(rows["AA003"]["tax_monthly"], "166.67")            # 200k x 1.0% / 12
+        self.assertEqual(rows["AA003"]["tax_source"], "state_fallback")
         self.assertAlmostEqual(float(a["own_housing_monthly"]), 1936.97 + 222.50 + 130.75, delta=0.03)
         self.assertAlmostEqual(float(a["own_total_monthly"]), float(a["own_housing_monthly"]) + 387.50, delta=0.01)
         self.assertEqual(rows["AA002"].get("own_housing_monthly", ""), "")  # no home value
         self.assertEqual(rows["AA003"]["own_total_monthly"], "")            # no utilities estimate
         man = json.loads((self.out / "mha_ownership_manifest.json").read_text())
         self.assertEqual(man["rate"]["weeks"], 4)
-        self.assertTrue(any("placeholder" in w for w in man["warnings"]))
+        self.assertFalse(any("placeholder" in w for w in man["warnings"]))
+        self.assertEqual(man["input_sha256"]["A8"], __import__("hashlib").sha256(taxins.read_bytes()).hexdigest())
+        self.assertEqual(man["tax_insurance_sources"]["tax_source"], {"locality": 1, "state_fallback": 1})
+        self.assertTrue(any("not scaled" in x for x in man["limitations"]))
 
     def test_bad_config_fails(self) -> None:
         cfg = json.loads((ROOT / "config" / "ownership.json").read_text())
-        cfg["property_tax"]["annual_share"] = 0.89                          # percent typed as share
+        cfg["loan"]["funding_fee_share"] = 2.15                            # percent typed as share
+        cfg["insurance"]["scaled_to_bah_year"] = True                       # decision N2 says as published
         bad = self.d / "ownership.json"
         bad.write_text(json.dumps(cfg))
         p = run("ownership_cost.py", "--zhvi", str(self.d / "x.csv"), "--pmms", str(self.d / "y.csv"),
-                "--out", str(self.out), "--config", str(bad))
+                "--tax-insurance", str(self.d / "z.csv"), "--out", str(self.out), "--config", str(bad))
         self.assertNotEqual(p.returncode, 0)
-        self.assertIn("property_tax.annual_share", p.stderr)
+        self.assertIn("loan.funding_fee_share", p.stderr)
+        self.assertIn("scaled_to_bah_year", p.stderr)
+
+    def test_bad_tax_rate_fails(self) -> None:
+        zhvi = write(self.d / "mha_zhvi.csv", [["mha", "zhvi_median"], ["AA001", "300000.00"]])
+        taxins = write(self.d / "mha_tax_insurance.csv", [
+            ["mha", "effective_tax_rate", "tax_source", "insurance_annual_usd", "insurance_source"],
+            ["AA001", "0.89", "locality", "1569.00", "locality"]])        # percent typed as share
+        p = run("ownership_cost.py", "--zhvi", str(zhvi), "--pmms", str(self.d / "y.csv"),
+                "--tax-insurance", str(taxins), "--out", str(self.out))
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("effective_tax_rate", p.stderr)
+
+
+class TestTaxInsurance(Fixture):
+    """A8 rollup. ACS and FIO values per ZIP; every real MHA is in state "AA".
+
+    ACS (taxes, value): 00501 (3000, 300000), 00502 (1000, 200000)  -> AA001 4000/500000 = 0.008
+                        10001 (6000, 400000), 10002 tax is an annotation code (-666666666),
+                        10003 value 0                                -> AA002 6000/400000 = 0.015
+                        20001 absent                                 -> AA003 state (10000/900000 = 0.011111)
+                        30001 (CCG)                                  -> ignored
+    FIO 2022 premiums:  00501 1200, 00502 1400                       -> AA001 median 1300
+                        10001 2000, 10002 2600, 10003 3000           -> AA002 median 2600
+                        20001 absent                                 -> AA003 state median of the five = 2000
+    """
+
+    def make_acs(self, header: list[str] | None = None, vintage: int = 2024) -> Path:
+        raw = self.d / "raw"
+        raw.mkdir(exist_ok=True)
+        header = header or ["B25090_001E", "B25079_001E", "B01003_001E", "zip code tabulation area"]
+        table = [header,
+                 ["3000", "300000", "900", "00501"], ["1000", "200000", "800", "00502"],
+                 ["6000", "400000", "1500", "10001"], ["-666666666", "250000", "400", "10002"],
+                 ["0", "0", "10", "10003"], ["9000", "500000", "2000", "30001"]]
+        acs = raw / "acs5_2024_zcta.json"
+        acs.write_text(json.dumps(table))
+        (raw / "fetch_manifest.json").write_text(json.dumps({"A9": {
+            "filename": acs.name, "source_url": f"https://api.census.gov/data/{vintage}/acs/acs5?get=x",
+            "sha256": "0" * 64}}))
+        return acs
+
+    def make_fio(self, year: int = 2022) -> Path:
+        import openpyxl
+        wb = openpyxl.Workbook()
+        wb.active.title = "Disclaimer & Background"
+        ws = wb.create_sheet("Supporting Underlying Metrics")
+        ws.append(["ZIP Code", "Year", "Policy Decile Grouping", "Claim Frequency", "Claim Severity",
+                   "Loss Ratio", "Premiums Per Policy", "Nonrenewal Rate", "Nonpayment Cancellation Rate",
+                   "Other than Nonpayment Cancellation Rate"])
+        for z, prem in ((501, 1200), (502, 1400), (10001, 2000), (10002, 2600), (10003, 3000)):
+            ws.append([z, year, 5, 0.03, 10000, 0.4, prem, 0.01, 0.02, 0.01])
+        ws.append([501, year - 1, 5, 0.03, 10000, 0.4, 999, 0.01, 0.02, 0.01])   # other year: ignored
+        ws.append([None] * 10)                                                    # trailing blank row
+        path = self.d / "fio.xlsx"
+        wb.save(path)
+        return path
+
+    def run_taxins(self, acs: Path, fio: Path) -> subprocess.CompletedProcess:
+        return run("tax_insurance_to_mha.py", "--acs", str(acs), "--fio", str(fio),
+                   "--crosswalk", str(self.crosswalk), "--out", str(self.out))
+
+    def test_rates_premiums_and_fallbacks(self) -> None:
+        p = self.run_taxins(self.make_acs(), self.make_fio())
+        self.assertEqual(p.returncode, 0, p.stderr)
+        rows = {r["mha"]: r for r in read(self.out / "mha_tax_insurance.csv")}
+        self.assertEqual(sorted(rows), ["AA001", "AA002", "AA003"])          # CCG excluded
+        a, b, c = rows["AA001"], rows["AA002"], rows["AA003"]
+        self.assertEqual((a["effective_tax_rate"], a["tax_zips_with_data"], a["tax_source"]),
+                         ("0.008000", "2", "locality"))
+        self.assertEqual((b["effective_tax_rate"], b["tax_zips_with_data"]), ("0.015000", "1"))
+        self.assertEqual((c["effective_tax_rate"], c["tax_source"]), ("0.011111", "state_fallback"))
+        self.assertEqual((a["insurance_annual_usd"], a["insurance_source"]), ("1300.00", "locality"))
+        self.assertEqual(b["insurance_annual_usd"], "2600.00")
+        self.assertEqual((c["insurance_annual_usd"], c["insurance_source"]), ("2000.00", "state_fallback"))
+        man = json.loads((self.out / "mha_tax_insurance_manifest.json").read_text())
+        self.assertEqual(man["nodes"], ["A8"])
+        self.assertEqual(sorted(man["inputs"]), ["A8", "A9", "B1"])
+        pt, ins = man["property_tax"], man["insurance"]
+        self.assertEqual((pt["acs_vintage"], pt["acs_period"]), (2024, "2020-2024"))
+        self.assertEqual((pt["zctas_in_file"], pt["zctas_usable"], pt["zctas_missing_estimate"],
+                          pt["zctas_zero_value"]), (6, 4, 1, 1))
+        self.assertEqual((pt["mhas_state_fallback"], ins["mhas_state_fallback"]), (["AA003"], ["AA003"]))
+        self.assertEqual((ins["zips_published_for_year"], ins["zips_in_real_mhas"]), (5, 5))
+        self.assertEqual(man["state_values_used"]["AA"], {"tax_rate": 0.011111, "premium": 2000.0})
+        self.assertEqual(len(man["warnings"]), 2)                           # one per fallback kind
+
+    def test_vintage_mismatch_stops(self) -> None:
+        p = self.run_taxins(self.make_acs(vintage=2023), self.make_fio())
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("2023", p.stderr)
+
+    def test_acs_without_tax_variable_stops(self) -> None:
+        acs = self.make_acs(header=["B25079_001E", "B25090_00XE", "B01003_001E", "zip code tabulation area"])
+        p = self.run_taxins(acs, self.make_fio())
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("B25090_001E", p.stderr)
+
+    def test_fio_without_the_year_stops(self) -> None:
+        p = self.run_taxins(self.make_acs(), self.make_fio(year=2021))
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("no 2022 rows", p.stderr)
+
+    def test_state_without_any_data_stops(self) -> None:
+        write(self.crosswalk, [["zip", "mha", "mha_class"], ["00501", "AA001", "mha"],
+                               ["40001", "BB001", "mha"]])
+        p = self.run_taxins(self.make_acs(), self.make_fio())
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("BB001: no ACS tax data in the MHA or its state BB", p.stderr)
 
 
 if __name__ == "__main__":

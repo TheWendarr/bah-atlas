@@ -7,7 +7,7 @@ The project's authored configuration lives in `config/`. This page explains ever
 Pipeline stages record the SHA-256 of each config they read:
 
 - B12–B15 and B16–B18 record A12 and A13
-- B11 records `ownership.json`
+- B11 and the A8 tax/insurance rollup record `ownership.json`
 
 `make verify` then checks that those hashes match the configs in the repository. If explanations sat inside the JSON, correcting a sentence would change the file's hash. The M4–M5 evidence would then go stale even though no number had changed.
 
@@ -19,7 +19,7 @@ Keeping prose here means a wording fix touches only this page. `make check-confi
 2. Run `make check-config`.
 3. Rerun every stage that records the file:
    - A12 or A13: `make metrics spatial`
-   - `ownership.json`: `make benchmarks metrics spatial`
+   - `ownership.json`: `make benchmarks metrics spatial` (the A8 rollup `make taxins` runs within `benchmarks`)
 4. Run `make evidence` and then `make verify`, which should report that all recorded hashes agree.
 5. Commit the config, this page and `docs/evidence/` together.
 
@@ -117,7 +117,37 @@ MHAs that survive the Benjamini–Hochberg false-discovery-rate correction get t
 
 ## `config/ownership.json` (B11)
 
-This file still carries its explanations inline: `_about`, `rationale`, `notes` and `sources`. A8 replaces its property-tax and insurance sections with locality data in M6. The explanations move here in that same change, so B11 and everything after it are rerun once rather than twice.
+How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `ownership_cost.py` reads and validates every field; `tax_insurance_to_mha.py` reads the property-tax and insurance years. Version 2 (18 Oct 2026, A8) replaced the national tax and insurance placeholders with per-MHA values and moved the explanations here, so B11 and everything after it are rerun once.
+
+| Field | Meaning |
+|---|---|
+| `_doc` | Pointer to this page. |
+| `version` | Schema version of this file. Version 2: locality tax and insurance, values only. |
+| `loan.program` | The financing modelled: a VA purchase loan, first use. |
+| `loan.term_years` | 30. |
+| `loan.down_payment_share` | 0: no down payment, the common VA case. |
+| `loan.funding_fee_share` | 0.0215: the VA funding fee for a first-use purchase with less than 5% down. |
+| `loan.funding_fee_financed` | `true`: the fee is added to the loan, as is common. |
+| `loan.mortgage_insurance_annual_share` | 0: VA loans carry no mortgage insurance. |
+| `loan.rate_series` | `pmms30`: the Freddie Mac 30-year fixed rate (A7), averaged over the same months as the B9 home values. |
+| `property_tax.method` | `locality_effective_rate`: each MHA's own rate, from `mha_tax_insurance.csv`. |
+| `property_tax.source_node`, `acs_vintage` | A9, the ACS 5-year release (2024 = 2020–2024) the rate comes from. `tax_insurance_to_mha.py` stops if the fetched file is a different vintage. |
+| `property_tax.fallback` | `state`: an MHA with no usable ZCTA takes its state's rate. |
+| `insurance.method` | `locality_average_premium`: each MHA's own premium, from `mha_tax_insurance.csv`. |
+| `insurance.source_node`, `data_year` | A8, the Treasury FIO year used (2022, the latest published). |
+| `insurance.fallback` | `state`: an MHA with no published ZIP takes its state's median. |
+| `insurance.scaled_to_bah_year` | `false`: used as published (decision N2). |
+| `utilities.method` | `from_B8`: the owner cost adds the same utilities dollars B8 derives for renters in the MHA. |
+
+**Why a VA loan.** Buy mode models the financing a service member most often uses: a VA-guaranteed loan, no down payment, no mortgage insurance, with the funding fee financed. Members with a service-connected disability rating are exempt from the fee, and subsequent-use VA loans pay 3.3% with less than 5% down; both are one-parameter sensitivity checks. Sources: VA funding fee table (rates effective 7 Apr 2023) and the Freddie Mac PMMS (A7), in [SOURCES.md](SOURCES.md).
+
+**Why locality tax and insurance.** State effective property-tax rates run from about 0.31% (Hawaii) to 1.79% (Illinois), and premiums vary with state and hazard, so national figures misstate cost in both directions (decision 2.7).
+
+- **Property tax:** the ACS aggregate real estate taxes paid (B25090_001E) divided by the aggregate value (B25079_001E), both for owner-occupied units, summed over the MHA's ZCTAs. Summing the aggregates weights each ZCTA by its housing stock and avoids a ratio of medians. ACS taxes are self-reported and assessments lag market value, so the rate is a typical effective rate, not a statutory one.
+- **Insurance:** FIO "Premiums Per Policy" (written premium ÷ policies in force at year end), the median over the MHA's published ZIPs. Flat dollars rather than a share of value, because premiums track replacement cost and hazard more than market value.
+- **State fallback:** the same ratio (tax) or median (insurance) over every real-MHA ZIP in the MHA's state, the state being the MHA code's two letters. Each MHA's row carries `tax_source` and `insurance_source` (`locality` or `state_fallback`), which become the payload caveats `tax_state_fallback` and `insurance_state_fallback`.
+
+**Why not scaled to 2026 (decision N2).** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance. Scaling would need an inflator the project would have to choose and defend; using the published year keeps the number traceable. B11 records the limitation in its manifest, and B23 and the write-up state it.
 
 ---
 

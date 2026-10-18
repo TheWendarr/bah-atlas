@@ -276,8 +276,8 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
 | ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
-| 🟣 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented |
-| 🟣 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8 |
+| 🟣 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented; code ready 18 Oct: FIO workbook (direct) + `make taxins`; state fallback from FIO itself proposed (D11) |
+| 🟣 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax |
 | ⚪ | **A10** | BEA Regional Price Parities | optional | — | Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
 | ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |

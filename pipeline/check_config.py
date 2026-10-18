@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate the project-authored config nodes A12 and A13 (stdlib only).
+"""Validate the project-authored config nodes A12 and A13, and the B11 config (stdlib only).
 
-    python pipeline/check_config.py            # checks config/profiles.json + config/classification.json
+    python pipeline/check_config.py            # checks config/profiles.json, config/classification.json
+                                               # and config/ownership.json
 
 Fails loudly (exit 1) on anything Layer 2 or Layer 3 would trip over later:
 unknown pay grades, bedroom counts outside the SAFMR range, a missing or
@@ -11,7 +12,8 @@ hex colours, a neutral value outside the middle class, the two files
 disagreeing on the coverage target, a metric without a role or with an unknown
 mode, or a cluster block without its legend title and FDR marker.
 
-The two files hold values only. Explanations live in docs/configuration.md,
+All three files hold values only (ownership.json's values themselves are
+validated by ownership_cost.py, which reads it). Explanations live in docs/configuration.md,
 because pipeline stages record each config's SHA-256 and a wording edit inside
 the JSON would make that evidence stale. So this check also fails on prose
 fields (`_about`, `rationale`, `note`, `*_note`) and on a missing `_doc` pointer.
@@ -27,6 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ROOT / "config" / "profiles.json"
 CLASSIFICATION = ROOT / "config" / "classification.json"
+OWNERSHIP = ROOT / "config" / "ownership.json"
 BAH_INGEST = ROOT / "pipeline" / "ingest" / "ingest_bah_ascii.py"
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 SAFMR_BEDROOMS = range(0, 5)   # HUD publishes 0-4 bedroom SAFMRs
@@ -174,7 +177,9 @@ def main() -> None:
     errors: list[str] = []
     profiles = load(PROFILES, errors)
     classification = load(CLASSIFICATION, errors)
-    for cfg, name in ((profiles, "profiles.json"), (classification, "classification.json")):
+    ownership = load(OWNERSHIP, errors)
+    for cfg, name in ((profiles, "profiles.json"), (classification, "classification.json"),
+                      (ownership, "ownership.json")):
         if cfg:
             check_values_only(cfg, name, errors)
             check_doc_pointer(cfg, name, errors)
@@ -191,6 +196,7 @@ def main() -> None:
     print(f"A12 profiles OK: {names}")
     print(f"A13 classification OK: {', '.join(classification['metrics'])}; "
           f"{len(classification.get('clusters', {}).get('classes', {}))} cluster classes")
+    print("B11 ownership.json OK: values only, documented in docs/configuration.md")
 
 
 if __name__ == "__main__":

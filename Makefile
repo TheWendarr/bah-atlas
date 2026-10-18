@@ -15,12 +15,14 @@ ZORI_CSV ?= data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv
 ZHVI_CSV ?= data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
 SAFMR_XLSX ?= data/raw/fy2026_safmrs_revised.xlsx
 PMMS_CSV ?= data/raw/PMMS_history.csv
+ACS_JSON ?= data/raw/acs5_2024_zcta.json
+FIO_XLSX ?= data/raw/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx
 # Benchmark time window; empty = the BAH calendar year from config/profiles.json.
 WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap \
-	benchmarks zori zhvi safmr ownership metrics weights spatial test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -80,7 +82,7 @@ basemap:
 # Each reads a ZIP-level Layer 1 source and rolls it up to the MHA through the B1
 # crosswalk. Needs `make ingest` and `make components` first (B1, B5).
 # Override the window with e.g. `make benchmarks WINDOW=2026-01:2026-06`.
-benchmarks: zori zhvi safmr ownership
+benchmarks: zori zhvi safmr taxins ownership
 
 # A3 + B5 -> B8: ZORI at MHA, grossed up to utilities-inclusive.
 zori:
@@ -98,10 +100,18 @@ safmr:
 	$(PYTHON) pipeline/benchmarks/safmr_to_mha.py --xlsx $(SAFMR_XLSX) \
 		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
 
-# A7 + B9 (+ B8 utilities) -> B11: monthly ownership cost; parameters in config/ownership.json.
-ownership: zori zhvi
+# A9 ACS + A8 FIO -> per-MHA property tax rate and homeowners premium for B11
+# (decision 2.7). The ACS pull needs CENSUS_API_KEY at `make fetch` time.
+taxins:
+	$(PYTHON) pipeline/benchmarks/tax_insurance_to_mha.py --acs $(ACS_JSON) --fio $(FIO_XLSX) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
+
+# A7 + B9 + A8 tax/insurance (+ B8 utilities) -> B11: monthly ownership cost;
+# parameters in config/ownership.json.
+ownership: zori zhvi taxins
 	$(PYTHON) pipeline/benchmarks/ownership_cost.py --zhvi $(BENCH)/mha_zhvi.csv \
-		--zori $(BENCH)/mha_zori.csv --pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
+		--zori $(BENCH)/mha_zori.csv --tax-insurance $(BENCH)/mha_tax_insurance.csv \
+		--pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
 
 # --- 2.5 computed metrics (B12-B15) ------------------------------------------
 # Adequacy ratio and gap vs the statutory design, coverage ratio, flat-95% sensitivity

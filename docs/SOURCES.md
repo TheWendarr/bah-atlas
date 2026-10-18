@@ -116,19 +116,22 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 
 **Property tax — U.S. Census ACS 5-year detailed tables**
 - **Provider:** U.S. Census Bureau
-- **Link:** API: https://api.census.gov/data/ · variable pages for [B25090](https://api.census.gov/data/2023/acs/acs5/groups/B25090.html) and [B25079](https://api.census.gov/data/2023/acs/acs5/groups/B25079.html)
-- **Acquisition:** api — ZCTA level, year pinned in the request.
+- **Link:** API: https://api.census.gov/data/2024/acs/acs5 · variable pages for [B25090](https://api.census.gov/data/2024/acs/acs5/groups/B25090.html) and [B25079](https://api.census.gov/data/2024/acs/acs5/groups/B25079.html) (universe for both: owner-occupied housing units)
+- **Artifact:** `data/raw/acs5_2024_zcta.json`, the A9 pull below (one query serves A8 tax and A9 population).
+- **Acquisition:** api — ZCTA level, 2020–2024 5-year (vintage 2024, released 29 Jan 2026), pinned in the query URL.
 - **Role:** B25090_001E (aggregate real estate taxes paid) ÷ B25079_001E (aggregate value of owner-occupied units), summed over each MHA's ZCTAs, gives an effective tax rate per MHA for B11.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Self-reported taxes, top-coded at the high end, and lagging assessments; ZCTAs with no data fall back to the state rate, flagged per MHA. Shares the API client with A9 if A9 goes ahead.
+- **Notes:** Self-reported taxes, top-coded at the high end, and lagging assessments; MHAs with no usable ZCTA fall back to the state rate (all real-MHA ZCTAs in the state), flagged per MHA. Rolled up by `pipeline/benchmarks/tax_insurance_to_mha.py` (`make taxins`).
 
 **Insurance — U.S. Treasury Federal Insurance Office (FIO), ZIP-level homeowners data, 2018–2022**
 - **Provider:** U.S. Department of the Treasury, Federal Insurance Office
-- **Link:** https://home.treasury.gov/news/press-releases/jy2791 (Jan 2025 release; the supporting workbook is linked there)
-- **Acquisition:** direct — one Excel workbook.
-- **Role:** Average homeowners premium per policy by ZIP, rolled up to the MHA median for B11.
+- **Link:** https://home.treasury.gov/system/files/311/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx · release: https://home.treasury.gov/news/press-releases/jy2791
+- **Artifact:** `data/raw/` under the vendor file name; 14.9 MB; SHA-256 `99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e` (copy downloaded 18 Oct 2026).
+- **Acquisition:** direct — one Excel workbook. If home.treasury.gov refuses the script, save it from a browser under the same name and the fetcher checksums it.
+- **Layout:** sheet `Supporting Underlying Metrics`, one row per ZIP and year 2018–2022 (25,593 ZIPs each year); columns ZIP Code (stored as a number, leading zeros lost), Year, Policy Decile Grouping, Claim Frequency, Claim Severity, Loss Ratio, Premiums Per Policy, Nonrenewal Rate, Nonpayment Cancellation Rate, Other than Nonpayment Cancellation Rate. Two documentation sheets precede it.
+- **Role:** Premiums Per Policy (written premium ÷ policies in force at year end) for 2022, rolled up to the MHA median for B11; read by `pipeline/benchmarks/fio_insurance.py`. 2022 ZIP values run from $565 to $40,719 a year, median $1,551; 94 ZIPs exceed $10,000.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Published only for ZIPs with at least ten insurers and fifty policies; MHAs with no published ZIP fall back to the NAIC state average (data year 2022). **Decided 18 Oct 2026: used as published, not scaled to 2026.** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance; this is a stated limitation in B23 and the write-up.
+- **Notes:** Published only for ZIPs with at least ten insurers and fifty policies; FIO states it did not validate each ZIP's values and that anomalies remain, which the MHA median damps. The data call excludes residual-market, E&S, flood and reinsurance. The workbook has no state column, so MHAs with no published ZIP fall back to the median over the published ZIPs of every real MHA in the same state (proposed 18 Oct in place of the NAIC state average; see the M6 plan, D11). **Decided 18 Oct 2026: used as published, not scaled to 2026.** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance; this is a stated limitation in B23 and the write-up.
 
 ### A10 · BEA Regional Price Parities (RPP)  `[not used]`
 - **Provider:** U.S. Bureau of Economic Analysis (BEA)
@@ -140,11 +143,13 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 
 ### A9 · U.S. Census American Community Survey (ACS)  `[planned]`
 - **Provider:** U.S. Census Bureau
-- **Link:** https://www.census.gov/programs-surveys/acs/data.html · API: https://api.census.gov/data/
-- **Acquisition:** api — query the Census Data API with a pinned year and variable list.
+- **Link:** https://www.census.gov/data/developers/data-sets/acs-5year.html · query: `https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E&for=zip%20code%20tabulation%20area:*`
+- **Artifact:** `data/raw/acs5_2024_zcta.json` (Census API JSON: a header row, then one row per ZCTA).
+- **Acquisition:** api — `make fetch` sends the pinned query above. **The API requires a key** (free, https://api.census.gov/data/key_signup.html): set `CENSUS_API_KEY` in the environment. The fetcher adds it to the request only; the manifest records the URL without it.
 - **Role:** Urbanicity for hypothesis H2: population and land area per ZCTA give population density per MHA (B24), one of three explanatory variables in the B19 spatial regression (reduced H2, decided 18 Oct 2026). Optional node, started 18 Oct.
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Shares the Census API client, ZCTA geography and pinned year with the A8 property-tax pull. Confirm exact variables at ingest time; do not save a data.census.gov table URL as the source.
+- **Notes:** One query serves both nodes: B25090_001E and B25079_001E for A8 property tax, B01003_001E (total population) for A9. Land area for density comes from the A2 ZCTA file (ALAND20), so A9 needs no second query. Do not save a data.census.gov table URL as the source.
+- **Verified:** 2026-10-18 — 2020–2024 5-year at ZCTA level on the API; both A8 variables share the universe "Owner-occupied housing units"; requests without a key are refused.
 
 ---
 

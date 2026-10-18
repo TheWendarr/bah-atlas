@@ -28,7 +28,11 @@ Acquisition classes:
             it once in a web browser and save it under `filename` in data/raw;
             the fetcher then validates it and records its sha256 like any pull.
   manual  — a human retrieval or a modeling decision; cannot be auto-pulled.
-  api     — obtained through a query API, not a file copy; out of scope here.
+  api     — a query API answering one pinned query (year and variables fixed in
+            the URL). Auto-pulled like 'direct' when it has a URL; the result is
+            saved under `filename` and checksummed. If the API needs a key, it
+            is read from the environment variable named in `api_key_env`, added
+            to the request only, and never written to the manifest or printed.
   build   — produced by a local build step (e.g. tiling), not a download.
 
 URL verification log (2026-10-03):
@@ -41,6 +45,13 @@ URL verification log (2026-10-03):
           script does) return the xlsx normally.
   A7      Switched from FRED to Freddie Mac's own PMMS_history.csv: FRED silently
           drops scripted requests (curl and urllib both time out with 0 bytes).
+
+URL verification log (2026-10-18):
+  A8      Treasury FIO ZIP-level homeowners insurance metrics, 2018-2022 (released
+          Jan 2025), linked from Treasury's release bulletin; vendor file name kept.
+  A9      Census Data API, ACS 5-year 2020-2024 (vintage 2024, released 29 Jan
+          2026), ZCTA geography. The API now refuses requests without a key
+          ("A valid key must be included with each data API request").
 
 Filenames follow the vendor's own name where one exists, so files downloaded by
 hand earlier are recognised and checksummed instead of downloaded a second time.
@@ -59,10 +70,12 @@ import argparse
 import gzip
 import hashlib
 import json
+import os
 import socket
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -96,6 +109,7 @@ class Source:
     min_bytes: int = 1024            # loud floor to catch error/empty pages
     expected_sha256: str | None = None
     notes: str = ""
+    api_key_env: str | None = None   # env var holding an API key (api sources only)
 
 
 SOURCES: list[Source] = [
@@ -204,21 +218,37 @@ SOURCES: list[Source] = [
     ),
     Source(
         node_id="A8",
-        name="Property tax + insurance",
-        filename="(n/a)",
-        acquisition="manual",
-        landing_url="https://data.census.gov",
-        notes="Modeling decision, not a file. Property tax: ACS table B25103/DP04 (via A9). "
-              "Insurance: NAIC report or a documented flat assumption. [optional] node.",
+        name="Treasury FIO homeowners insurance metrics by ZIP, 2018-2022",
+        filename="Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+        acquisition="direct",
+        url="https://home.treasury.gov/system/files/311/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+        landing_url="https://home.treasury.gov/news/press-releases/jy2791",
+        license="U.S. Government work (public domain)",
+        min_bytes=100_000,
+        notes="Federal Insurance Office, Analyses of U.S. Homeowners Insurance Markets, "
+              "2018-2022 (Jan 2025): ZIP-level metrics from the NAIC/state/FIO data call. "
+              "Published only for ZIPs with at least 10 insurers and 50 policies. Used as "
+              "published, not scaled to 2026 (decision N2). If home.treasury.gov refuses the "
+              "script, save the file from a browser under this name; the fetcher then "
+              "validates and checksums it. Property tax (the other half of A8) comes from "
+              "the A9 ACS pull.",
     ),
     Source(
         node_id="A9",
-        name="Census ACS",
-        filename="(n/a)",
+        name="Census ACS 5-year 2020-2024, ZCTA: real estate taxes, home value, population",
+        filename="acs5_2024_zcta.json",
         acquisition="api",
-        landing_url="https://api.census.gov/data/",
-        notes="Query the Census Data API (e.g. .../{year}/acs/acs5) with a pinned "
-              "year + variable list; do not save a data.census.gov table URL. [optional]",
+        url="https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E"
+            "&for=zip%20code%20tabulation%20area:*",
+        landing_url="https://www.census.gov/data/developers/data-sets/acs-5year.html",
+        license="U.S. Government work (public domain)",
+        min_bytes=200_000,
+        api_key_env="CENSUS_API_KEY",
+        notes="Vintage and variables are pinned in the URL. B25090_001E aggregate real estate "
+              "taxes paid and B25079_001E aggregate value, both for owner-occupied housing "
+              "units (A8 property tax: effective rate = taxes / value); B01003_001E total "
+              "population (A9 urbanicity, B24). Free key: api.census.gov/data/key_signup.html; "
+              "export CENSUS_API_KEY=... before `make fetch`.",
     ),
     Source(
         node_id="A10",
@@ -271,6 +301,22 @@ def looks_like_html(head: bytes) -> bool:
     return sniff.startswith(b"<!doctype html") or sniff.startswith(b"<html") or b"<head" in sniff[:200]
 
 
+def redact(text: str, source: Source) -> str:
+    """Remove an API key from anything that may be printed or recorded."""
+    key = os.environ.get(source.api_key_env or "", "")
+    return text.replace(key, "REDACTED") if key else text
+
+
+def request_url(source: Source) -> str:
+    """The URL actually requested: the registry URL plus the API key, if one is needed."""
+    if not source.api_key_env:
+        return source.url
+    key = os.environ.get(source.api_key_env, "").strip()
+    if not key:
+        raise RuntimeError(f"needs an API key: set {source.api_key_env} (see the A9 notes)")
+    return f"{source.url}&key={urllib.parse.quote(key)}"
+
+
 def validate_file(path: Path, source: Source) -> tuple[bool, str]:
     size = path.stat().st_size
     if size < source.min_bytes:
@@ -279,7 +325,9 @@ def validate_file(path: Path, source: Source) -> tuple[bool, str]:
         head = f.read(1024)
     if looks_like_html(head):
         return False, "content is HTML, not the expected file — URL is stale or blocked"
-    ext = path.suffix.lower()
+    # The file type comes from the registry name: a fresh download is checked while it
+    # is still the .part temp file, whose own suffix says nothing about its content.
+    ext = Path(source.filename).suffix.lower()
     if ext in (".zip", ".xlsx"):
         if not zipfile.is_zipfile(path):
             return False, "not a valid zip/xlsx container"
@@ -290,6 +338,14 @@ def validate_file(path: Path, source: Source) -> tuple[bool, str]:
         first_line = head.split(b"\n", 1)[0]
         if b"," not in first_line:
             return False, "first line has no commas — not a CSV"
+    elif ext == ".json":
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return False, "not valid JSON — the API answered with an error page"
+        if source.acquisition == "api" and not (
+                isinstance(data, list) and len(data) > 1 and isinstance(data[0], list) and data[0]):
+            return False, "not a Census-style table (a header row followed by data rows)"
     return True, "ok"
 
 
@@ -337,15 +393,17 @@ def download_direct(source: Source, dest_dir: Path, *, force: bool,
             "retrieved_at_basis": "file mtime", "license": source.license,
         }
 
+    url = request_url(source)
     last_err: Exception | None = None
     for attempt in range(1, retries + 1):
         try:
-            _stream_to(source.url, tmp, timeout)
+            _stream_to(url, tmp, timeout)
             break
         except urllib.error.HTTPError as e:
             if 400 <= e.code < 500:
                 tmp.unlink(missing_ok=True)
-                raise RuntimeError(f"HTTP {e.code} {e.reason} — check the URL") from e
+                raise RuntimeError(redact(f"HTTP {e.code} {e.reason} — check the URL"
+                                          f"{' and the API key' if source.api_key_env else ''}", source)) from None
             last_err = e
         except (urllib.error.URLError, socket.timeout, TimeoutError) as e:
             last_err = e
@@ -353,7 +411,7 @@ def download_direct(source: Source, dest_dir: Path, *, force: bool,
             time.sleep(2 ** (attempt - 1))
     else:
         tmp.unlink(missing_ok=True)
-        raise RuntimeError(f"network error after {retries} attempts: {last_err}")
+        raise RuntimeError(redact(f"network error after {retries} attempts: {last_err}", source))
 
     ok, reason = validate_file(tmp, source)
     if not ok:
@@ -414,7 +472,7 @@ def print_registry() -> None:
     print(f"{'NODE':4}  {'ACQ':7}  {'FILE':34}  SOURCE")
     for s in SOURCES:
         where = s.url or (s.landing_url or "")
-        auto = "auto" if (s.acquisition == "direct" and s.url) else s.acquisition
+        auto = "auto" if (s.acquisition in ("direct", "api") and s.url) else s.acquisition
         print(f"{s.node_id:4}  {auto:7}  {s.filename:34}  {where}")
 
 
@@ -462,15 +520,16 @@ def main(argv: list[str] | None = None) -> int:
             cached.append(s)
             print(f"  local {s.node_id}  {s.name}  {human(rec['bytes'])}  sha {rec['sha256'][:12]}…  (browser download, verified)")
             continue
-        if s.acquisition != "direct" or not s.url:
+        if s.acquisition not in ("direct", "api") or not s.url:
             action.append(s)
             continue
         try:
             rec = download_direct(s, args.dest, force=args.force,
                                   timeout=args.timeout, retries=args.retries)
         except Exception as e:  # noqa: BLE001 — report per-node, keep going
-            failed.append((s, str(e)))
-            print(f"  FAIL  {s.node_id}  {s.name}: {e}")
+            msg = redact(str(e), s)
+            failed.append((s, msg))
+            print(f"  FAIL  {s.node_id}  {s.name}: {msg}")
             continue
         prior = manifest.get(s.node_id)
         if rec["status"] == "cached" and prior and prior.get("sha256") == rec["sha256"] \
@@ -498,7 +557,7 @@ def main(argv: list[str] | None = None) -> int:
             elif s.acquisition == "manual":
                 reason = "manual retrieval / modeling decision"
             elif s.acquisition == "api":
-                reason = "obtain via API, not a file download"
+                reason = f"query URL not yet pinned — see {s.landing_url}"
             else:
                 reason = "produced by a local build step"
             print(f"  {s.node_id}  {s.name}: {reason}")

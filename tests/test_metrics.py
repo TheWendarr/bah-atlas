@@ -45,7 +45,7 @@ class Fixture(unittest.TestCase):
     AA001: has ZORI, SAFMR, full ownership cost. Below 95% of cost, but exactly at
            the statutory design point (BAH + cost share = benchmark)
     AA002: has ZORI and SAFMR; no ZHVI            -> buy status no_home_value
-    AA003: no ZORI; has SAFMR and a home value     -> rent no_zori, buy no_utilities
+    AA003: no ZORI; has SAFMR and a home value     -> rent no_zori, buy piti_only_no_zori
     ZZ001: County Cost Group, present only in B4   -> ignored
     """
 
@@ -153,8 +153,9 @@ class TestMetrics(Fixture):
                          ("0.7440", "0.7840", "-540.00"))
         self.assertEqual(rows[("e5_dep", "AA002")]["status"], "no_home_value")
         c = rows[("e5_dep", "AA003")]
-        self.assertEqual((c["status"], c["adequacy_ratio"], c["own_housing_monthly"]),
-                         ("no_utilities", "", "1100.00"))
+        # Decision 2.4: no utilities estimate, so the cost is PITI alone: (1500 + 100) / 1100 = 1.4545
+        self.assertEqual((c["status"], c["cost_monthly"], c["adequacy_ratio"], c["coverage_ratio"]),
+                         ("piti_only_no_zori", "1100.00", "1.4545", "1.3636"))
 
     def test_manifest_summary(self) -> None:
         p = self.run_metrics()
@@ -178,8 +179,10 @@ class TestMetrics(Fixture):
         self.assertAlmostEqual(
             man["profiles"]["e5_dep"]["rent_safmr_crosscheck"]["median_adequacy_diff_zori_minus_safmr"],
             -0.1278, places=3)
-        self.assertEqual(man["profiles"]["e5_dep"]["buy"]["status_counts"],
-                         {"ok": 1, "no_home_value": 1, "no_utilities": 1})
+        buy = man["profiles"]["e5_dep"]["buy"]
+        self.assertEqual(buy["status_counts"], {"ok": 1, "piti_only_no_zori": 1, "no_home_value": 1})
+        # Summaries compare like with like: the PITI-only row is mapped but not summarized.
+        self.assertEqual((buy["mhas"], buy["mhas_with_value"]), (3, 1))
         self.assertEqual(man["warnings"], [])
 
     def test_rent_only_mode(self) -> None:

@@ -92,14 +92,15 @@ bah-atlas/
 ```bash
 pip install -r requirements.txt
 
-make fetch          # download Layer 1 sources into data/raw (A2-A7) with checksums
+make fetch          # download Layer 1 sources into data/raw (A2-A9) with checksums;
+                    # the A9 Census query needs CENSUS_API_KEY set (free key, see docs/SOURCES.md)
 make check-config   # validate config/profiles.json and config/classification.json (see docs/configuration.md)
 make geometry       # BAH ASCII -> tidy CSVs (B1-B4) -> MHA polygons (B6)
 make components     # rent/utilities split per MHA (A6 -> B5)
 make non-mha        # County Cost Group and territory polygons (B1 -> B28), non-authoritative
 make tiles          # one area PMTiles layer for MapLibre (B6 + B28 -> B7); needs tippecanoe
 make basemap        # basemap cutout from a Protomaps build (A11); needs the pmtiles CLI
-make benchmarks     # ZORI, ZHVI, SAFMR and ownership cost at the MHA (B8-B11)
+make benchmarks     # ZORI, ZHVI, SAFMR, A8 tax and insurance, ownership cost at the MHA (B8-B11)
 make metrics        # adequacy and coverage metrics (B12-B15)
 make spatial        # spatial weights, Moran's I, LISA, Gi* (B16-B18)
 make test           # unit tests on synthetic fixtures

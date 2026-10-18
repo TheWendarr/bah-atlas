@@ -36,6 +36,7 @@ The exact shape of every one of these files is fixed in the **[data contract (La
 | 2.10 | Front-end build choices (bundler, hosting, basemap) wait until this handoff exists. | No Layer 3 work in M6. |
 | D9 | **One tile layer for every area.** B7 becomes a single vector layer `areas` holding the 299 MHAs, 39 CCGs and the territory bucket, keyed on `code` with a `class` property, tiled in one tippecanoe run. (Option B, a second `non_mha` layer beside B7's `mha` layer, was rejected: separate runs simplify each side of an MHA-to-CCG border independently and leave slivers, the id field `mha` would hold CCG codes, and every front-end join would have to be routed between two layers.) | B7 is rebuilt in M6 with B28 as an input; B6 and B16–B18 are unchanged. The ICD (W2) specifies the layer. C1 reads B7 only. |
 | D10 | **Processed outputs stay off the repository until Layers 1 and 2 are complete.** They are then added in one commit with the author's write-up of every action and decision, and Layer 3 starts after that commit. | ICD section 12. No release or `web/data/` copy during M6. |
+| D11 | **Proposed 18 Oct, for the author: insurance state fallback from FIO itself.** The FIO workbook has no state column. The fallback premium is the median over the published ZIPs of every real MHA in the same state, instead of the NAIC state average named in the 18 Oct plan. | One source and one data year for every premium; no second (NAIC) source to fetch and cite. The NAIC figure covers HO-3 policies statewide, not ZIPs near installations. To be confirmed; if not, A8 adds the NAIC table as a third input. |
 
 **Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
 
@@ -110,14 +111,20 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - An MHA whose ZCTAs have no data falls back to its state rate, and is flagged.
 - **Insurance (N2):** Treasury FIO average homeowners premium by ZIP, 2018–2022, as published.
   - The file covers only ZIPs with at least ten insurers and fifty policies.
-  - Value per MHA = the median of its ZIPs, as B8–B10 do. MHAs with no published ZIP use the NAIC state average.
+  - Value per MHA = the median of its ZIPs, as B8–B10 do. ~~MHAs with no published ZIP use the NAIC state average.~~ Proposed instead (D11, below): the median over the published ZIPs of every real MHA in the same state.
   - The year used and the understatement of 2026 premiums are recorded in the manifest and in SOURCES.
 - **Pipeline:**
   - Change A8 in `fetch_sources.py` from `manual` to `api` (ACS) plus `direct` (FIO workbook).
   - Add `benchmarks/tax_insurance_to_mha.py`, which writes `mha_tax_insurance.csv` with a source flag per MHA (`locality` or `state_fallback`).
   - Point `config/ownership.json` at it. The ACS client is shared with A9.
-- **Rerun chain:** B11 → B14/B15 → B17/B18 buy-mode tests. Rent results do not change.
-- **PITI-only rows (decision 2.4) are computed in B14/B15, not B20.** `coverage_metrics.py` gives the 10 home-value-but-no-ZORI MHAs their metrics against PITI (`own_housing_monthly`) with status `piti_only_no_zori`, replacing `no_utilities`. `spatial_stats.py` then tests only buy rows with status `ok`, so these MHAs stay out of the buy-mode statistics exactly as they are today (6 of them are in CONUS). The M5 buy-mode Moran's I values (E-5 0.397, O-3 0.482) are replaced, and the progress note reports old against new.
+- **Rerun chain:** B11 → B14/B15 → B17/B18 buy-mode tests. Rent results do not change. The M5 buy-mode Moran's I values (E-5 0.397, O-3 0.482) are replaced, and the progress note reports old against new.
+- **PITI-only rows (decision 2.4) are computed in B14/B15, not B20.** `coverage_metrics.py` gives the 10 home-value-but-no-ZORI MHAs their metrics against PITI (`own_housing_monthly`) with status `piti_only_no_zori`, replacing `no_utilities`. `spatial_stats.py` then tests only buy rows with status `ok`, so these MHAs stay out of the buy-mode statistics exactly as they are today (6 of them are in CONUS).
+- **Built (code, 18 Oct):**
+  - `fetch_sources.py`: A9 is a pinned Census API query (`acs5_2024_zcta.json`: B25090_001E, B25079_001E, B01003_001E for every ZCTA), with the key read from `CENSUS_API_KEY` and kept out of the manifest; A8 is the FIO workbook, `direct`. One ACS query serves A8 tax and A9 population, and A2's ALAND20 gives land area, so B24 needs no second pull.
+  - `benchmarks/tax_insurance_to_mha.py` + `fio_insurance.py` (`make taxins`) write `mha_tax_insurance.csv` and its manifest; the workbook layout was checked against the published file (sheet `Supporting Underlying Metrics`, one row per ZIP and year, 25,593 ZIPs a year).
+  - `config/ownership.json` version 2 holds values only (`locality_effective_rate`, `locality_average_premium`, ACS vintage 2024, FIO year 2022); its explanations moved to `docs/configuration.md`, and `make check-config` now covers it.
+  - `ownership_cost.py` reads the per-MHA rate and premium and carries the source flags into `mha_ownership.csv`; `coverage_metrics.py` and `spatial_stats.py` implement the PITI-only rule above.
+  - 12 new tests (73 in all) pass.
 - **Done when:** B11 has no placeholder warnings, every MHA has a sourced rate with its source flag, and the change in buy-mode results is recorded.
 
 ### B20 · attribute payload — target Wed 28 Oct

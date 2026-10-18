@@ -56,12 +56,18 @@ go to `data/interim/benchmarks_YYYY/`.
 - `safmr_to_mha.py` — HUD SAFMR workbook (A5 -> B10), 0-4 bedrooms, long format.
   Matches HUD's line-wrapped headers and stops with the headers it saw if the
   layout changes.
+- `tax_insurance_to_mha.py` (with `fio_insurance.py`) — A8: per-MHA effective
+  property-tax rate from the A9 ACS pull (aggregate taxes / aggregate value over
+  the MHA's ZCTAs) and homeowners premium from the Treasury FIO workbook (median
+  of the MHA's published ZIPs), each flagged `locality` or `state_fallback`
+  (`make taxins`). Stops if the ACS vintage differs from `config/ownership.json`.
 - `ownership_cost.py` — monthly cost of owning the B9 home value (B11): VA
-  loan amortised at the window-average PMMS 30-year rate (A7), plus property
-  tax, insurance and B8 utilities. Parameters and their sources are in
-  `config/ownership.json`; tax and insurance are national placeholders until A8.
+  loan amortised at the window-average PMMS 30-year rate (A7), plus the MHA's
+  property tax and insurance from `mha_tax_insurance.csv`, and B8 utilities.
+  Parameters are in `config/ownership.json`, explained in
+  `docs/configuration.md`.
 
-Tests for all four run on synthetic fixtures with `make test`.
+Tests for all five run on synthetic fixtures with `make test`.
 
 ## `metrics/` — 2.5 computed metrics
 

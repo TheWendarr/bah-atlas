@@ -329,6 +329,27 @@ class TestStatsB17B18(SpatialFixture):
         self.assertLess(png.stat().st_size, 1_000_000)                        # small enough for make evidence
         self.assertIn(png.name, man["outputs"])
 
+    def test_buy_rows_not_ok_are_not_tested(self) -> None:
+        """A PITI-only buy row (decision 2.4) has values but is not comparable, so it is not tested."""
+        buy_path = grid_metrics(self.d / "mha_buy_metrics.csv")
+        with buy_path.open(newline="", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+        target = grid_code(2, 2)
+        for r in rows:
+            if r["mha"] == target:
+                r["status"] = "piti_only_no_zori"
+        write_metrics(buy_path, rows)
+        p = self.run_stats("--no-map", metrics=self.metrics, buy=buy_path)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        out = {(r["profile"], r["mode"], r["variable"], r["mha"]): r
+               for r in read(self.out / "mha_spatial_stats.csv")}
+        self.assertEqual(out[("e5_dep", "buy", "adequacy_gap", target)]["status"], "no_value")
+        self.assertEqual(out[("e5_dep", "rent", "adequacy_gap", target)]["status"], "tested")
+        man = json.loads((self.out / "spatial_stats_manifest.json").read_text())
+        buy_test = next(t for t in man["tests"] if (t["profile"], t["mode"], t["variable"])
+                        == ("e5_dep", "buy", "adequacy_gap"))
+        self.assertEqual(buy_test["n"], 24)                                   # one fewer than rent's 25
+
     def test_weights_from_other_geometry_fails(self) -> None:
         other = write_geometry(self.d / "other.geojson", extra=[("TX099", box(-90.0, 30.0, -89.0, 31.0))])
         p = self.run_stats("--no-map", metrics=self.metrics, geometry=other)

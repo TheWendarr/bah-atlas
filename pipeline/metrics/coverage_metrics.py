@@ -54,7 +54,11 @@ primary values and never replaces them.
 Every real MHA gets one row per profile, including MHAs with no benchmark. The
 `status` column says why a value is blank:
   rent:  ok | no_zori
-  buy:   ok | no_home_value (B9 had no ZHVI) | no_utilities (B8 had no ZORI)
+  buy:   ok | no_home_value (B9 had no ZHVI) |
+         piti_only_no_zori (home value but no ZORI, so no utilities estimate: the
+         metrics are computed against PITI alone, decision 2.4. They are map-only
+         values: the buy summaries below and the 2.6 tests use `ok` rows only, so
+         a cost without utilities is never compared with costs that include them)
 
 ------------------------------------------------------------------------------
 Output (written to --out)
@@ -397,8 +401,12 @@ def main() -> None:
                 o = own[m]
                 c = cost(o["own_total_monthly"], f"B11 {m} own_total_monthly", problems)
                 housing = cost(o["own_housing_monthly"], f"B11 {m} own_housing_monthly", problems)
-                status = ("ok" if c is not None
-                          else "no_home_value" if not o["zhvi_median"].strip() else "no_utilities")
+                if c is not None:
+                    status = "ok"
+                elif housing is not None:
+                    status, c = "piti_only_no_zori", housing     # decision 2.4: PITI alone
+                else:
+                    status = "no_home_value"
                 buy_rows.append({**base, "cost_monthly": agg.fmt(c), "own_housing_monthly": agg.fmt(housing),
                                  **metrics(b, share, c, target), "status": status})
     agg.fail_if(problems[:25] + ([f"... and {len(problems) - 25} more"] if len(problems) > 25 else []), TOOL)
@@ -432,9 +440,11 @@ def main() -> None:
             entry["rent_safmr_crosscheck"] = summarize_crosscheck(mine)
         if do_buy:
             mine = [r for r in buy_rows if r["profile"] == p["id"]]
-            entry["buy"] = summarize(mine, target, classes)
+            # Summaries compare like with like: PITI-only rows are mapped but not summarized.
+            entry["buy"] = {**summarize([r for r in mine if r["status"] == "ok"], target, classes),
+                            "mhas": len(mine)}
             entry["buy"]["status_counts"] = {s: sum(r["status"] == s for r in mine)
-                                             for s in ("ok", "no_home_value", "no_utilities")}
+                                             for s in ("ok", "piti_only_no_zori", "no_home_value")}
         summaries[p["id"]] = entry
 
     inputs = {"A12": args.profiles, "A13": args.classification, "B4": args.bah_rates, "B8": args.zori}

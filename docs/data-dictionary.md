@@ -111,12 +111,35 @@ including MHAs with no source data, whose value columns are blank.
 | loan_amount          | float | value x (1 - down payment) x (1 + financed funding fee) |
 | rate_pct             | float | mean PMMS 30-year rate over the window (one national value) |
 | pi_monthly           | float | principal and interest |
-| tax_monthly          | float | property tax (national placeholder rate until A8) |
-| insurance_monthly    | float | homeowners insurance (national placeholder until A8) |
+| tax_rate             | float | effective property-tax rate per year, from `mha_tax_insurance.csv` |
+| tax_monthly          | float | `zhvi_median x tax_rate / 12` |
+| tax_source           | str   | `locality` or `state_fallback` |
+| insurance_annual_usd | float | FIO premiums per policy (data year in `ownership.json`), from `mha_tax_insurance.csv` |
+| insurance_monthly    | float | `insurance_annual_usd / 12` |
+| insurance_source     | str   | `locality` or `state_fallback` |
 | mi_monthly           | float | mortgage insurance (0 for a VA loan) |
 | own_housing_monthly  | float | PITI: the sum of the four above |
 | utilities_usd        | float | from B8; blank where the MHA has no ZORI |
 | own_total_monthly    | float | `own_housing_monthly + utilities_usd`; the buy-mode benchmark |
+
+### `mha_tax_insurance.csv` (A8 rollup for B11; `make taxins`)
+One row per real MHA, from `tax_insurance_to_mha.py`.
+
+| column                   | type  | notes |
+|--------------------------|-------|-------|
+| mha                      | str   | MHA code |
+| n_zips                   | int   | ZIPs in the MHA (B1) |
+| tax_zips_with_data       | int   | of those, ZCTAs with usable ACS taxes and value |
+| effective_tax_rate       | float | sum(B25090_001E) / sum(B25079_001E) over those ZCTAs, or the state rate |
+| tax_source               | str   | `locality` or `state_fallback` |
+| insurance_zips_with_data | int   | of the MHA's ZIPs, those FIO publishes for the data year |
+| insurance_annual_usd     | float | median FIO premiums per policy over those ZIPs, or the state median |
+| insurance_source         | str   | `locality` or `state_fallback` |
+
+`mha_tax_insurance_manifest.json` records the A9, A8 and B1 files and SHA-256,
+the config hash, the ACS vintage and period, ZCTAs usable or skipped (missing
+estimate, zero value), the FIO sheet, years and ZIP counts, the MHAs on a state
+fallback and the state values used, rate and premium summaries, and warnings.
 
 ### ZIP-level companions
 `zip_zori.csv`, `zip_zhvi.csv` (`zip, mha, value, months_used`) and `zip_safmr.csv`
@@ -170,7 +193,9 @@ against 0.95.
 ### `mha_buy_metrics.csv` (B14 coverage ratio, B15 surplus/gap)
 `cost_monthly` = B11 `own_total_monthly` (PITI + utilities). Extra column
 `own_housing_monthly` (PITI only, from B11). `status` is `ok`, `no_home_value`
-(no ZHVI) or `no_utilities` (home value but no ZORI, so no utilities estimate).
+(no ZHVI) or `piti_only_no_zori` (home value but no ZORI, so no utilities
+estimate: the metrics are computed against PITI alone, decision 2.4; these rows
+are mapped but left out of the manifest's buy summaries and the 2.6 tests).
 
 ### `coverage_metrics_manifest.json`
 Input files and SHA-256, the statutory basis and cost-share parameters (source,
@@ -240,7 +265,7 @@ than k neighbours. Defaults: 9,999 permutations, seed 2026, alpha 0.05.
 |----------------------|-------|-------|
 | profile, mode, variable | str | the test: A12 profile id; `rent` or `buy`; `adequacy_gap` or `flat95_gap` |
 | mha                  | str   | MHA code |
-| status               | str   | `tested`, `no_value` (blank in B12/B14), `no_geometry` (not in B6), `out_of_scope` (AK, HI, territory) |
+| status               | str   | `tested`, `no_value` (blank in B12/B14, or a row whose B12/B14 status is not `ok`, such as a PITI-only buy row), `no_geometry` (not in B6), `out_of_scope` (AK, HI, territory) |
 | value                | float | the variable tested, copied from B12/B14 |
 | neighbors            | int   | k used for this test |
 | lisa_i               | float | local Moran's I_i (row-standardized) |

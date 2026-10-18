@@ -406,7 +406,9 @@ def main() -> None:
                         status[m] = ("out_of_scope", "" if v is None else r[var])
                     elif m not in geo_index:
                         status[m] = ("no_geometry", "" if v is None else r[var])
-                    elif v is None or ratio is None:
+                    elif v is None or ratio is None or (r.get("status") or "ok") != "ok":
+                        # Not `ok` (e.g. buy piti_only_no_zori, decision 2.4): a cost without
+                        # utilities is not comparable with the others, so it is not tested.
                         status[m] = ("no_value", "")
                     else:
                         if shift is not None and abs((ratio - shift) - v) > 1e-3:
