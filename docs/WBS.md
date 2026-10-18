@@ -372,9 +372,11 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 ## Weekly progress log
 
-- [Week of 17 October 2026](progress/2026-10-17.md)
-- [Week of 10 October 2026](progress/2026-10-10.md)
-- [Week of 03 October 2026](progress/2026-10-03.md)
+The [progress index](progress/README.md) shows each milestone's status beside its latest note.
+
+- [17 October 2026](progress/2026-10-17.md) — M4
+- [10 October 2026](progress/2026-10-10.md) — M3
+- [03 October 2026](progress/2026-10-03.md) — M1, M2
 
 ## Live views on GitHub
 
