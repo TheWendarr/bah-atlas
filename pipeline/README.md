@@ -139,6 +139,17 @@ Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
   and rounding, B7 codes against B20, every value against its source row,
   references into B21, one `build_id`, and `SHA256SUMS`.
 
+## `qa/` — 2.8 QA / validation report
+
+- `qa_report.py` — B23 (`make qa`, after `make handoff`): runs the contract
+  validator and `verify_hashes.py`, checks that the handoff was built from
+  committed code, and records file sizes, counts by status, values whose map class
+  changes with rounding (contract check 9), codes without a polygon (check 4), join
+  coverage at every step, every stage warning, three MHAs traced from their ZIP
+  values to B20 with each ratio recomputed, ZORI against SAFMR, the H1 and H2
+  statistical caveats, and every caveat text the map shows. Writes
+  `data/processed/qa/qa_YYYY.md` and its manifest; exit 1 if a check fails.
+
 ## Verifying a build
 
 `make verify` (`tools/verify_hashes.py`) checks every SHA-256 the manifests

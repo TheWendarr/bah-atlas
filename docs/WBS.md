@@ -349,7 +349,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18) |
+| 🟣 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit |
 | 🟣 | **B24** | ACS context join | optional | A9, A2, B1 | Reduced H2: population density per MHA from A9 (urbanicity); A2 ALAND20 gives land area; code ready 18 Oct: density_to_mha.py (make density), sum(pop)/sum(land) for B19 and population-weighted density for its sensitivity run |
 | ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |

@@ -365,6 +365,25 @@ rounding rules all builders share are in `pipeline/handoff/contract.py`. B28 (Co
 decision D9. The decisions behind the contract are in the
 [M6 plan](plans/m6-plan.md).
 
+## QA / validation report (B23, `pipeline/qa/qa_report.py`, written to `data/processed/qa/`)
+
+### `qa_YYYY.md`
+The report a reviewer reads: a verdict table (contract checks 2–9, provenance,
+stage manifests present, traces), then the validator and hash-check output, the
+delivered files with sizes and SHA-256, counts by status, classes changed by
+rounding, codes without a polygon, join coverage, stage warnings, the three MHA
+traces (per-ZIP ZORI values, the median and utilities gross-up recomputed, and
+every profile × mode ratio recomputed against B12/B14 and B20, with a line for the
+author's hand-check), ZORI against SAFMR, the H1 and H2 caveats, and the caveat
+texts from B21. Git-ignored until the D10 delivery commit copies it to `delivery/`.
+
+### `qa_YYYY_manifest.json` (node B23)
+The five delivered files and the B8, B11, B12 and B14 tables with SHA-256; the
+`build_id`; `verdict` and one entry per check; provenance (B22 commit, `dirty`
+flag, result of the committed-code check); file sizes; areas by class; status
+counts; `rounding_class_differences`; `codes_without_polygon`; the traces; output
+SHA-256. `make evidence` copies it to `docs/evidence/` like every other manifest.
+
 ## Configuration
 
 The authored configs (`config/profiles.json` A12, `config/classification.json`

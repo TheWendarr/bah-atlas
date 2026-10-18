@@ -22,7 +22,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -191,6 +191,16 @@ handoff:
 	cd $(HANDOFF) && sha256sum areas_$(YEAR).pmtiles payload_$(YEAR).json ui_metadata_$(YEAR).json \
 		hotspots_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
 	$(HANDOFF_PY)/validate_handoff.py --year $(YEAR) --handoff $(HANDOFF)
+
+# --- 2.8 QA / validation report (B23) ----------------------------------------
+# Reads the handoff and the tables behind it; writes qa_YYYY.md and its manifest to
+# $(QA) (git-ignored: the report enters the repository only with the D10 delivery).
+# Runs validate_handoff.py and verify_hashes.py itself; exit 1 if any check fails.
+# Choose the three traced MHAs with e.g. `make qa TRACE="CO018 TX283 MA119"`.
+QA ?= $(PROCESSED)/qa
+qa:
+	$(PYTHON) pipeline/qa/qa_report.py --year $(YEAR) --handoff $(HANDOFF) --out $(QA) \
+		$(if $(TRACE),--trace $(TRACE),)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:
