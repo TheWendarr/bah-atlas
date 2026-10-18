@@ -1,6 +1,6 @@
 # Data contract — Layer 2 → Layer 3 Interface Control Document
 
-**ICD version:** 1.0.0 · **contract `schema_version`:** 1.0.0 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
+**ICD version:** 1.0.1 · **contract `schema_version`:** 1.0.1 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
 
 This document fixes everything that crosses the boundary between the offline pipeline (Layer 2, B nodes) and the static map (Layer 3, C nodes): which files are handed over, the exact shape of each, the rules for missing values, and what the map may and may not do with them. Layer 3 is built against this document, not against the pipeline code.
 
@@ -58,11 +58,12 @@ Decision D9 (18 Oct 2026): one vector layer for every area, keyed on `code`.
 | Property | Value |
 |---|---|
 | Vector layer | `areas` |
-| Features | One per area code with at least one ZCTA polygon: 299 MHAs, 39 County Cost Groups, and the territory bucket if any of its ZIPs match a ZCTA. Expected 339 or 338. |
+| Features | One per area code with at least one ZCTA polygon: 299 MHAs, 39 County Cost Groups, and the territory bucket if any of its ZIPs match a ZCTA. 2026: 339 (299 MHA, 39 CCG, 1 territory). Every CCG and the territory bucket is a multipolygon. |
 | Feature properties | `code` (string, the join key) and `class` (`mha`, `ccg` or `unknown`). Nothing else: no values are baked into the tiles. |
 | Feature id | MapLibre promotes `code`: `promoteId: "code"`. |
 | Zoom | 2–10; MapLibre overzooms beyond 10. |
 | Geometry | Census 2020 ZCTA polygons dissolved through the DTMO ZIP-to-area crosswalk. All areas are tiled in **one** tippecanoe run with shared-border detection, so neighbouring areas of any class meet without gaps or overlaps. |
+| Territory bucket | One `XX###` code whose ZIPs lie in Puerto Rico (ZIP3 006, 007, 009), the U.S. Virgin Islands (008), the Pacific 969 range (Guam, the Northern Mariana Islands and the freely associated states) and one 967 ZIP, which in this bucket is expected to be 96799 (American Samoa). Its polygon therefore has parts in the Caribbean and the western Pacific, so a map fitted to all features spans the Pacific; the default view should be fitted to the `mha` class. These areas are outside CONUS and have no BAH rate (status `no_rate`). |
 | Authority | No DoD polygon layer exists for any class. MHA polygons are a reconstruction; CCG and territory polygons are additionally labelled non-authoritative (caveat `ccg_geometry`). |
 | Attribution | Carried in the archive metadata and repeated in B21 `sources`. |
 
@@ -87,7 +88,7 @@ B20 packs values already computed by B4 and B12–B15. It computes nothing new.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `schema_version` | string | `"1.0.0"` |
+| `schema_version` | string | `"1.0.1"` |
 | `bah_year` | integer | `2026` |
 | `build_id` | string | SHA-256 (64 hex characters) of the B22 file |
 | `profiles` | array of string | A12 profile ids in A12 order: `["e5_dep", "o3_dep"]` |
@@ -163,7 +164,7 @@ Illustrative numbers.
 
 ```json
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.0.1",
   "bah_year": 2026,
   "build_id": "9c1e…(64 hex)",
   "profiles": ["e5_dep", "o3_dep"],
@@ -339,6 +340,7 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 | Version | Date | Change |
 |---|---|---|
+| 1.0.1 | 18 Oct 2026 | Section 4: the 2026 feature count (339) and the territory bucket's extent, from the first B28/B7 run. No interface change. |
 | 1.0.0 | 18 Oct 2026 | First issue. Interface fixed from the 18 Oct decisions (D1–D8, N1, N2, 2.1–2.10) and D9 (one tile layer keyed on `code`). |
 
 ---

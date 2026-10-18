@@ -38,7 +38,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Acquisition:** auto
 - **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears. County Cost Groups are mapped with their BAH rates only, without adequacy metrics (decided 18 Oct 2026).
 - **License:** U.S. Government work; not subject to domestic copyright.
-- **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA. Quantified in the B6 manifest: 5,609 of the 20,280 ZIPs in real MHAs (2026) have no matching ZCTA (PO-box and point ZIPs); every MHA still gets a polygon.
+- **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA. Quantified in the B6 manifest: 5,609 of the 20,280 ZIPs in real MHAs (2026) have no matching ZCTA (PO-box and point ZIPs); every MHA still gets a polygon. For B28 (2026): 1,502 of 20,465 County Cost Group ZIPs and 66 of 214 territory ZIPs have no matching ZCTA; every code still gets a polygon.
 - **Verified:** 2026-10-03 — URL live, serves a valid zip archive.
 
 ### A3 · Zillow Observed Rent Index (ZORI) — ZIP level  `[incorporated]`

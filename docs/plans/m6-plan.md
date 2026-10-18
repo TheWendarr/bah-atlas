@@ -98,7 +98,7 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - every ZZ and XX code with ZIPs gets a feature
   - no ZCTA is assigned to both an MHA and a CCG
   - unmatched ZIPs are reported, as B6 does
-  - confirm which territory the XX bucket covers (expected: Puerto Rico)
+  - confirm which territory the XX bucket covers (expected: Puerto Rico). **Result (18 Oct):** wider than expected: Puerto Rico (ZIP3 006, 007, 009), the U.S. Virgin Islands (008), the Pacific 969 range (Guam, the Northern Mariana Islands and the freely associated states) and one 967 ZIP, which in this bucket is expected to be 96799 (American Samoa). Recorded in ICD section 4 (1.0.1).
 - **Built (code, 18 Oct):** `make non-mha` runs `build_mha_geometry.py --classes ccg,unknown` on B1 and writes `non_mha_2026.gpkg` / `.geojson` and the B28 manifest. B6 and B28 stay separate runs (mixing `mha` with the other classes is refused), so B6 is untouched. Six synthetic tests cover the classes, the manifest counts, the shared-ZCTA stop and the unchanged B6 path. The workstation run settles the counts and the XX territory (manifest `unknown_zip3_prefixes`).
 - **Tiles (D9):** B28 is not tiled on its own. `build_mha_pmtiles.py` takes the B6 and B28 GeoJSONs, writes each feature with `code` and `class`, and tiles all of them in one run to `areas_2026.pmtiles`, layer `areas`, `promoteId: "code"` (ICD section 4). The B7 manifest records both inputs and their hashes; its docstring and `make tiles` change to match. B7 stays complete in M2: the rebuild is M6 work, as A8 is. **Built (code, 18 Oct):** `make tiles` now writes `areas_2026.pmtiles` and removes the retired `mha_2026.pmtiles` and its manifest first, so `make evidence` copies only the new B7 manifest. Five tests cover the merge and a full tippecanoe run (skipped where tippecanoe is absent).
 
@@ -202,7 +202,7 @@ Wendell writes this; the outline points to the evidence each part draws on.
 | Target | Work |
 |---|---|
 | Sun 18 Oct | W2 data contract (ICD) written |
-| Wed 21 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) |
+| ~~Wed 21 Oct~~ Sun 18 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) — done 3 days early |
 | Sat 24 Oct | A8 and A9 pulls; B24; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations |
 | Wed 28 Oct | B20, B21, B27 |
 | Thu 29 Oct | B22 (written before B20, B21, B27 in the build order), B23, `make handoff` |
