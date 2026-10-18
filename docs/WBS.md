@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 66  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 7  ·  🟣 In progress: 7  ·  🔴 Not started: 30  ·  ⚪ Scrapped: 1
+**Nodes tracked:** 66  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 7  ·  🟣 In progress: 11  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,17 +18,21 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 6 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 0 / 7 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **A8** Property tax and insurance reference — optional
+- 🟣 **A8** Property tax and insurance reference — due 30 Oct (M6)
+- 🟣 **A9** Census ACS context — optional
+- 🟣 **B19** Spatial regression — optional
 - 🟣 **B20** Attribute payload JSON (data contract) — due 30 Oct (M6)
 - 🟣 **B21** UI metadata JSON — due 30 Oct (M6)
 - 🟣 **B22** Build manifest JSON — due 30 Oct (M6)
 - 🟣 **B28** CCG and territory polygons (ZCTA dissolve, non-authoritative) — due 30 Oct (M6)
 - 🟣 **B23** QA / validation report — due 30 Oct (M6)
+- 🟣 **B24** ACS context join — optional
+- 🟣 **B27** Hotspot overlay payload — optional
 - 🟣 **W1** Layer 2 writeup (how Layer 1 becomes Layer 3) — due 30 Oct (M6)
 
 ## Nodal map
@@ -176,19 +180,22 @@ flowchart LR
     B16 --> B18
     B12 --> B19
     B16 --> B19
-    B9 --> B19
+    B8 --> B19
+    A3 --> B19
     B24 --> B19
-    B25 --> B19
     B12 --> B20
     B13 --> B20
     B14 --> B20
     B15 --> B20
     B3 --> B20
+    B4 --> B20
     A12 --> B20
+    B28 --> B20
     A12 --> B21
     A13 --> B21
     B1 --> B21
     B3 --> B21
+    B28 --> B21
     B20 --> B22
     B21 --> B22
     B28 --> B22
@@ -204,6 +211,7 @@ flowchart LR
     B18 --> B27
     B23 --> W1
     B7 --> C1
+    B28 --> C1
     B20 --> C2
     B21 --> C3
     A11 --> C4
@@ -213,7 +221,6 @@ flowchart LR
     C4 --> C5
     C7 --> C6
     C13 --> C6
-    C15 --> C6
     C14 --> C8
     C2 --> C8
     C14 --> C9
@@ -225,6 +232,7 @@ flowchart LR
     C2 --> C14
     C3 --> C14
     C3 --> C15
+    C6 --> C15
     B27 --> C16
     C6 --> C17
     C6 --> C18
@@ -243,10 +251,10 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
     class B12,B13,B14,B15,B16,B17,B18 week
-    class A8,B20,B21,B22,B28,B23,W1 prog
-    class A9,A10,B19,B24,B25,B27,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
-    class B26 gone
-    class A8,A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
+    class A8,A9,B19,B20,B21,B22,B28,B23,B24,B27,W1 prog
+    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class A10,B25,B26 gone
+    class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
 
 ## Master node list
@@ -266,9 +274,9 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A5** | HUD FMR / SAFMR FY2026 | required | — | completed 03 Oct |
 | ⚫ | **A6** | DoD BAH Rate Component Breakdown | required | — | completed 03 Oct |
 | ⚫ | **A7** | Mortgage rate reference (Freddie Mac PMMS) | required | — |  |
-| 🟣 | **A8** | Property tax and insurance reference | optional | — | Locality rates replace the B11 national placeholders: ACS aggregate tax / aggregate value by ZCTA; Treasury FIO ZIP premiums with NAIC state fallback (plan: docs/plans/m6-plan.md) |
-| 🔴 | **A9** | Census ACS context | optional | — |  |
-| 🔴 | **A10** | BEA Regional Price Parities | optional | — |  |
+| 🟣 | **A8** | Property tax and insurance reference | required | — | Made required 18 Oct 2026: locality property tax and insurance replace the B11 national placeholders, and B11-B18 are rebuilt on them before the M6 payload. Tracked under M6 (milestones.csv) so M1 stays closed. Insurance used as published (2018-2022), understatement documented |
+| 🟣 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8 |
+| ⚪ | **A10** | BEA Regional Price Parities | optional | — | Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
 | ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |
 | ⚫ | **A13** | Classification and color scheme config | required | — | completed 03 Oct |
@@ -324,14 +332,14 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟢 | **B16** | Spatial weights matrix | required | B6 | completed 18 Oct |
 | 🟢 | **B17** | Global Moran's I | required | B12, B16 | completed 18 Oct |
 | 🟢 | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | completed 18 Oct |
-| 🔴 | **B19** | Spatial regression | optional | B12, B16, B9, B24, B25 |  |
+| 🟣 | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24) |
 
 #### 2.7 Front-End Payload — due 30 October 2026 (M6)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, A12 | Keyed by area code; includes CCGs (B28) and AK/HI; schema in docs/plans/m6-plan.md |
-| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3 |  |
+| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28 | Keyed by area code: MHAs, CCGs (BAH rate only, N1) and AK/HI; sensitivity values as map layers (D3); conventions D6; schema in docs/plans/m6-plan.md |
+| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28 |  |
 | 🟣 | **B22** | Build manifest JSON | required | B20, B21, B28 | Also reads every pipeline manifest |
 | 🟣 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18 |
 
@@ -340,10 +348,10 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | 🟣 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18) |
-| 🔴 | **B24** | ACS context join | optional | A9, B1 |  |
-| 🔴 | **B25** | BEA RPP context join | optional | A10, B1 |  |
+| 🟣 | **B24** | ACS context join | optional | A9, B1 | Reduced H2: population density per MHA from A9 (urbanicity) |
+| ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
-| 🔴 | **B27** | Hotspot overlay payload | optional | B18 |  |
+| 🟣 | **B27** | Hotspot overlay payload | optional | B18 | Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C) |
 | 🟣 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline |
 
 ### Layer 3 — Front-End
@@ -354,7 +362,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **C1** | MHA PMTiles (served) | required | B7 |  |
+| 🔴 | **C1** | MHA PMTiles (served) | required | B7, B28 |  |
 | 🔴 | **C2** | Attribute payload JSON (served) | required | B20 |  |
 | 🔴 | **C3** | UI metadata JSON (served) | required | B21 |  |
 | 🔴 | **C4** | Basemap PMTiles (served) | required | A11 |  |
@@ -364,7 +372,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | 🔴 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 |  |
-| 🔴 | **C6** | UI state object | required | C7, C13, C15 |  |
+| 🔴 | **C6** | UI state object | required | C7, C13 |  |
 | 🔴 | **C7** | Control panel (dropdowns) | required | — |  |
 | 🔴 | **C8** | Feature-state join | required | C14, C2 |  |
 | 🔴 | **C9** | Choropleth paint expression | required | C14, C3 |  |
@@ -373,7 +381,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🔴 | **C12** | A/B comparison panel | required | C14 |  |
 | 🔴 | **C13** | Rent/Buy toggle | required | — |  |
 | 🔴 | **C14** | Render function | required | C6, C2, C3 |  |
-| 🔴 | **C15** | ZIP search to highlight MHA | optional | C3 |  |
+| 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6 |  |
 | 🔴 | **C16** | Hotspot overlay toggle | optional | B27 |  |
 | 🔴 | **C17** | Shareable URL / permalink | optional | C6 |  |
 | 🔴 | **C18** | Utilities toggle | optional | C6, C2 |  |
