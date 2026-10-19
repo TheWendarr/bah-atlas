@@ -338,6 +338,7 @@ profile with population-weighted density, are sensitivity runs.
 | zori_median, ln_rent | float | B8 asking-rent level and its log |
 | rent_growth_pct     | float | median over the MHA's ZIPs of (end-window mean / start-window mean)^(1/5) − 1, × 100 |
 | growth_zips         | int   | ZIPs with ZORI in both windows (ZORI covers fewer ZIPs in earlier years) |
+| rent_growth_pct_sensitivity | float | the same over 3 years (`--sensitivity-growth-years`), used only by the `growth_3y` sensitivity run |
 | density_per_km2, ln_density | float | B24 crude density and its log (primary) |
 | pw_density_per_km2, ln_pw_density | float | B24 population-weighted density and its log (sensitivity) |
 | resid_ols, resid_model | float | residuals of the primary specification: OLS, and the chosen model (`u` for a lag model, spatially filtered for an error model) |
@@ -349,8 +350,15 @@ reason; one entry per run with the OLS table (coefficients, standard errors,
 standardized betas, VIF), R², AIC, condition number, Jarque-Bera and
 Breusch-Pagan p-values, residual Moran's I, the five LM tests, the model choice
 and its reason, and, when a spatial model is chosen, its table (lag model: total
-impact = β / (1 − ρ)), ρ or λ, pseudo R², AIC and residual Moran's I; the
-headline H2 reading; output SHA-256; warnings (VIF above 5 among them).
+impact = β / (1 − ρ)), ρ or λ, pseudo R², AIC and residual Moran's I. When the
+robust LM tests cannot separate lag from error, the choice is marked `ambiguous`,
+the other model is reported as `alternative`, AIC is given for both, and each
+predictor's reading says whether the two agree (`model_form_agrees`).
+`sample_selection` compares the modelled MHAs with those left out for want of rent
+growth (counts, medians of the gap, log density and log rent, Mann-Whitney U
+p-values). `growth_window_sensitivity` and the `growth_3y` run give the 3-year
+growth check. Then the headline H2 reading, output SHA-256, and warnings (VIF above
+5, and a significant sample difference, among them).
 
 ## Front-end payload (2.7, in progress)
 

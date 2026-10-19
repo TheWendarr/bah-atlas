@@ -56,13 +56,16 @@ class TestChooseModel(unittest.TestCase):
                 "rlm_error": [rerr_stat, rerr], "lm_sarma": [9.0, 0.01]}
 
     def test_rule(self) -> None:
-        self.assertEqual(rg.choose_model(self.lm(0.4, 0.3), 0.05)[0], "ols")
-        self.assertEqual(rg.choose_model(self.lm(0.01, 0.3), 0.05)[0], "lag")
-        self.assertEqual(rg.choose_model(self.lm(0.4, 0.01), 0.05)[0], "error")
-        self.assertEqual(rg.choose_model(self.lm(0.01, 0.01, rlag=0.5, rerr=0.02), 0.05)[0], "error")
-        self.assertEqual(rg.choose_model(self.lm(0.01, 0.01, rlag=0.02, rerr=0.5), 0.05)[0], "lag")
+        pick = lambda lm: rg.choose_model(lm, 0.05)[::2]                # (model, ambiguous)
+        self.assertEqual(pick(self.lm(0.4, 0.3)), ("ols", False))
+        self.assertEqual(pick(self.lm(0.01, 0.3)), ("lag", False))
+        self.assertEqual(pick(self.lm(0.4, 0.01)), ("error", False))
+        self.assertEqual(pick(self.lm(0.01, 0.01, rlag=0.5, rerr=0.02)), ("error", False))
+        self.assertEqual(pick(self.lm(0.01, 0.01, rlag=0.02, rerr=0.5)), ("lag", False))
         both = self.lm(0.01, 0.01, rlag=0.01, rerr=0.02, rlag_stat=3.0, rerr_stat=8.0)
-        self.assertEqual(rg.choose_model(both, 0.05)[0], "error")      # larger robust statistic
+        self.assertEqual(pick(both), ("error", True))                   # larger robust statistic first
+        neither = self.lm(0.01, 0.01, rlag=0.3, rerr=0.4, rlag_stat=1.2, rerr_stat=0.9)
+        self.assertEqual(pick(neither), ("lag", True))
 
 
 class TestFit(unittest.TestCase):
@@ -100,14 +103,45 @@ class TestFit(unittest.TestCase):
         ln_rent = next(c for c in sp["coefficients"] if c["name"] == "ln_rent")
         self.assertAlmostEqual(ln_rent["total_impact"], ln_rent["b"] / (1 - sp["rho"]), delta=1e-3)  # rho is rounded
 
+    def test_ambiguous_choice_fits_both_models(self) -> None:
+        from unittest import mock
+        rho = 0.6
+        A = np.linalg.inv(np.eye(self.w.n) - rho * self.w.full()[0])
+        y = A @ (TRUE_BETA[0] + self.X @ TRUE_BETA[1:] + self.e)
+        with mock.patch.object(rg, "choose_model", return_value=("lag", "forced for the test", True)):
+            result, _, _ = rg.fit(y, self.X, rg.PREDICTORS, self.w, 0.05, 999, 2026)
+        self.assertEqual((result["spatial"]["model"], result["alternative"]["model"]), ("ML_Lag", "ML_Error"))
+        self.assertEqual(set(result["choice"]["aic"]), {"lag", "error"})
+        self.assertIn(result["choice"]["lower_aic"], ("lag", "error"))
+        readings = rg.reading(result, 0.05)
+        self.assertEqual([r["predictor"] for r in readings], rg.PREDICTORS)
+        for r in readings:
+            self.assertEqual(r["alternative"]["model"], "ML_Error")
+            self.assertIn("model_form_agrees", r)
+            if not r["model_form_agrees"]:
+                self.assertTrue(r["reading"].startswith("depends on model form"))
+
+    def test_spreg_prints_nothing(self) -> None:
+        import contextlib
+        import io
+        rho = 0.6
+        A = np.linalg.inv(np.eye(self.w.n) - rho * self.w.full()[0])
+        y = A @ (TRUE_BETA[0] + self.X @ TRUE_BETA[1:] + self.e)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rg.fit(y, self.X, rg.PREDICTORS, self.w, 0.05, 99, 2026)
+        self.assertEqual(out.getvalue(), "")
+
 
 class TestScript(unittest.TestCase):
     """A 12 x 12 grid of one-degree squares (TX001-TX144) plus AK400, one ZIP each.
 
     Per MHA i: ZORI level, 5-year growth and density are drawn once; the ZORI history
-    holds 2021-01..03 at start and 2026-01..03 at start x (1 + g)^5, so the script must
-    recover g exactly. adequacy_gap follows TRUE_BETA with small independent noise.
-    TX144 has no density (B24 blank) and is left out; AK400 is out of scope.
+    holds 2021-01..03 at start, 2023-01..03 at start x (1 + g)^3 and 2026-01..03 at
+    start x (1 + g)^5, so both the 5-year growth and the 3-year sensitivity recover g
+    exactly. adequacy_gap follows TRUE_BETA with small independent noise.
+    TX001-TX010 have no 2021 ZORI (no 5-year growth) but do have 2023, so the 3-year run
+    keeps them; TX144 has no density (B24 blank); AK400 is out of scope.
     """
 
     def setUp(self) -> None:
@@ -134,11 +168,14 @@ class TestScript(unittest.TestCase):
         self.crosswalk = write(d / "zip_mha.csv", [["zip", "mha", "mha_class"]] +
                                [[z, c, "mha"] for c, z in self.zips.items()])
         head = ["RegionID", "SizeRank", "RegionName", "RegionType", "StateName", "State", "City", "Metro",
-                "CountyName", "2021-01-31", "2021-02-28", "2021-03-31", "2026-01-31", "2026-02-28", "2026-03-31"]
+                "CountyName", "2021-01-31", "2021-02-28", "2021-03-31", "2023-01-31", "2023-02-28", "2023-03-31",
+                "2026-01-31", "2026-02-28", "2026-03-31"]
         zrows = [head]
         for i, c in enumerate(allc):
             start = rent[i] / (1 + self.growth[i]) ** 5
-            zrows.append([i, i, self.zips[c], "zip", "", "TX", "", "", "", *[f"{start:.6f}"] * 3,
+            mid = start * (1 + self.growth[i]) ** 2
+            early = [""] * 3 if i < 10 else [f"{start:.6f}"] * 3              # TX001-TX010: no 2021 ZORI
+            zrows.append([i, i, self.zips[c], "zip", "", "TX", "", "", "", *early, *[f"{mid:.6f}"] * 3,
                           *[f"{rent[i]:.6f}"] * 3])
         self.zori_csv = write(d / "Zip_zori.csv", zrows)
         self.zori = write(d / "mha_zori.csv", [["mha", "zori_median"]] +
@@ -181,18 +218,25 @@ class TestScript(unittest.TestCase):
         e5 = {r["mha"]: r for r in rows if r["profile"] == "e5_dep"}
         self.assertNotIn("AK400", e5)                                       # out of scope
         self.assertEqual(e5["TX144"]["status"], "no_density")
-        self.assertEqual(sum(r["status"] == "modelled" for r in e5.values()), 143)
-        i = 4
-        self.assertAlmostEqual(float(e5["TX005"]["rent_growth_pct"]), self.growth[i] * 100, places=3)
+        self.assertEqual(e5["TX005"]["status"], "no_growth")
+        self.assertEqual(e5["TX005"]["rent_growth_pct"], "")
+        self.assertAlmostEqual(float(e5["TX005"]["rent_growth_pct_sensitivity"]), self.growth[4] * 100, places=3)
+        self.assertEqual(sum(r["status"] == "modelled" for r in e5.values()), 133)
+        self.assertAlmostEqual(float(e5["TX015"]["rent_growth_pct"]), self.growth[14] * 100, places=3)
         man = json.loads((self.out / "regression_manifest.json").read_text())
         self.assertEqual(man["nodes"], ["B19"])
         self.assertEqual(man["growth_window"]["start_window_months"], ["2021-01", "2021-02", "2021-03"])
-        self.assertEqual(man["not_modelled"]["e5_dep"], {"no_density": 1})
-        roles = [(r["profile"], r["specification"], r["role"]) for r in man["runs"]]
-        self.assertEqual(roles, [("e5_dep", "primary", "primary"), ("e5_dep", "pw_density", "sensitivity"),
-                                 ("o3_dep", "primary", "sensitivity")])
+        self.assertEqual(man["growth_window_sensitivity"]["start_window_months"], ["2023-01", "2023-02", "2023-03"])
+        self.assertEqual(man["not_modelled"]["e5_dep"], {"no_density": 1, "no_growth": 10})
+        roles = [(r["profile"], r["specification"], r["role"], r["n"]) for r in man["runs"]]
+        self.assertEqual(roles, [("e5_dep", "primary", "primary", 133), ("e5_dep", "pw_density", "sensitivity", 133),
+                                 ("e5_dep", "growth_3y", "sensitivity", 143), ("o3_dep", "primary", "sensitivity", 133)])
         head = man["headline"]
-        self.assertEqual((head["n"], head["model"]), (143, "ols"))
+        self.assertEqual((head["n"], head["model"]), (133, "ols"))
+        sel = man["sample_selection"]
+        self.assertEqual((sel["modelled"]["n"], sel["no_growth"]["n"], sel["eligible"]), (133, 10, 144))
+        self.assertEqual(set(sel["mann_whitney_p"]), {"adequacy_gap", "ln_density", "ln_rent"})
+        self.assertEqual(head["growth_sensitivity"]["n"], 143)
         b = {c["predictor"]: c["b"] for c in head["predictors"]}
         self.assertAlmostEqual(b["ln_rent"], TRUE_BETA[1], delta=0.01)
         self.assertAlmostEqual(b["rent_growth_pct"], TRUE_BETA[2], delta=0.002)

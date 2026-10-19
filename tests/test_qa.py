@@ -56,9 +56,23 @@ class QAFixture(th.Fixture):
         th.write_json(d / "interim" / f"spatial_{Y}" / "regression_manifest.json", {
             "nodes": ["B19"], "growth_window": {"zips_with_growth": 4, "mhas_with_growth": 2},
             "not_modelled": {"e5_dep": {"no_growth": 1}}, "warnings": ["e5_dep primary: VIF above 5 for ln_rent"],
-            "headline": {"test": "e5_dep rent adequacy_gap", "n": 2, "model": "ols", "choice_reason": "test",
+            "headline": {"test": "e5_dep rent adequacy_gap", "n": 2, "model": "error", "choice_reason": "test",
                          "ols_r2": 0.5, "predictors": [{"predictor": "ln_rent", "b": -0.2, "p": 0.01,
-                                                        "reading": "negative association, significant at 0.05"}]},
+                                                        "reading": "negative association, significant at 0.05",
+                                                        "alternative": {"model": "ML_Lag", "b": -0.19, "p": 0.02,
+                                                                        "reading": "x"},
+                                                        "model_form_agrees": True}],
+                         "ambiguous_form": {"aic": {"error": -10.0, "lag": -9.0}, "lower_aic": "error",
+                                            "alternative_parameter": {"rho": 0.3},
+                                            "alternative_residual_moran": {"I": 0.01, "p_sim": 0.4}},
+                         "sample_selection": {"modelled": {"n": 2, "median_adequacy_gap": 0.15,
+                                                           "median_ln_density": 5.2},
+                                              "no_growth": {"n": 1, "median_adequacy_gap": 0.05,
+                                                            "median_ln_density": 3.8},
+                                              "eligible": 3, "mann_whitney_p": {"adequacy_gap": 0.001},
+                                              "differs_at_alpha": ["adequacy_gap"]},
+                         "growth_sensitivity": {"years": 3, "n": 3, "model": "lag", "ambiguous": False,
+                                                "predictors": [{"predictor": "ln_rent", "reading": "y"}]}},
             "runs": [], "method": {"caveat": "shared denominator"}})
 
     def run_qa(self, *extra: str) -> subprocess.CompletedProcess:
@@ -91,6 +105,11 @@ class TestQA(QAFixture):
                         "## 10. ZORI against SAFMR", "## 12. Limitations"):
             self.assertIn(heading, report)
         self.assertIn("VIF above 5 for ln_rent", report)          # stage warnings are carried
+        self.assertIn("**Model form ambiguous:**", report)
+        self.assertIn("**Sample selection:** 2 of 3 eligible MHAs modelled", report)
+        self.assertIn("**3-year growth sensitivity:** n = 3", report)
+        notes = {c["check"]: c["result"] for c in man["checks"]}
+        self.assertEqual((notes["B19: spatial model form"], notes["B19: sample selection"]), ("NOTE", "NOTE"))
         self.assertIn("Hand-check against the raw files", report)
 
     def test_value_at_a_break_is_reported(self) -> None:

@@ -506,7 +506,36 @@ def main() -> None:
             f"- **Residual Moran's I:** OLS {json.dumps(rh.get('residual_moran_ols') or (prim_run.get('ols') or {}).get('residual_moran'))}"
             + (f", chosen model {json.dumps(rh.get('residual_moran_model'))}" if rh.get("residual_moran_model") else "") + "."]
         for p_ in rh.get("predictors", []):
-            stat_lines.append(f"  - `{p_['predictor']}`: b = {p_['b']}, p = {p_['p']} — {p_['reading']}.")
+            alt = p_.get("alternative")
+            stat_lines.append(f"  - `{p_['predictor']}`: b = {p_['b']}, p = {p_['p']} — {p_['reading']}."
+                              + (f" {alt['model']}: b = {alt['b']}, p = {alt['p']}." if alt else ""))
+        amb = rh.get("ambiguous_form")
+        if amb:
+            stat_lines.append(f"- **Model form ambiguous:** the LM tests show spatial dependence, but the robust tests "
+                              f"do not separate lag from error. Both fitted: AIC {json.dumps(amb.get('aic'))} (lower: "
+                              f"{amb.get('lower_aic')}); alternative parameter {json.dumps(amb.get('alternative_parameter'))}, "
+                              f"residual Moran's I {json.dumps(amb.get('alternative_residual_moran'))}.")
+            agree = all(p_.get("model_form_agrees", True) for p_ in rh.get("predictors", []))
+            judge("B19: spatial model form", True, "ambiguous (lag and error both fitted); predictor readings "
+                  + ("agree in both" if agree else "differ between them for at least one predictor"), note=True)
+        ss = rh.get("sample_selection")
+        if ss:
+            stat_lines.append(
+                f"- **Sample selection:** {ss['modelled']['n']} of {ss.get('eligible')} eligible MHAs modelled; the "
+                f"{ss['no_growth']['n']} without rent growth have median gap {ss['no_growth']['median_adequacy_gap']} "
+                f"(modelled {ss['modelled']['median_adequacy_gap']}), median ln density "
+                f"{ss['no_growth']['median_ln_density']} ({ss['modelled']['median_ln_density']}); Mann-Whitney p "
+                f"{json.dumps(ss.get('mann_whitney_p'))}.")
+            judge("B19: sample selection", True,
+                  f"{ss['modelled']['n']} of {ss.get('eligible')} modelled; " +
+                  (f"dropped MHAs differ in {', '.join(ss['differs_at_alpha'])}" if ss.get("differs_at_alpha")
+                   else "no significant difference"), note=bool(ss.get("differs_at_alpha")))
+        gs_ = rh.get("growth_sensitivity")
+        if gs_:
+            stat_lines.append(f"- **{gs_['years']}-year growth sensitivity:** n = {gs_['n']}, model {gs_['model']}"
+                              + (" (ambiguous)" if gs_.get("ambiguous") else "") + ": "
+                              + "; ".join(f"`{p_['predictor']}` {p_['reading']}" for p_ in gs_.get("predictors", []))
+                              + ".")
         stat_lines.append(f"- **Shared denominator:** {((b19.get('method') or {}).get('caveat'))}.")
 
     # 12. limitations -----------------------------------------------------------------------

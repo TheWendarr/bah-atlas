@@ -108,8 +108,11 @@ esda (PySAL); matplotlib for the map; spreg for B19.
   rent, 5-year annualised ZORI growth (from the A3 history, matched calendar
   months) and log population density (B24), on the B17 scope and weights. OLS
   with LM diagnostics and VIF, the Anselin (2005) rule to choose OLS, spatial lag
-  or spatial error, and the chosen model by maximum likelihood (spreg). Stops if
-  B8 was built from another A3 file or B16 from another B6 file.
+  or spatial error, and the chosen model by maximum likelihood (spreg); when the
+  robust tests cannot separate lag from error, both are fitted and compared. It
+  also compares the modelled MHAs with those that have no 5-year growth, and reruns
+  the primary profile with 3-year growth. Stops if B8 was built from another A3
+  file or B16 from another B6 file.
 
 ## `tiles/` — web tiles
 

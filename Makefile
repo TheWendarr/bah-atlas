@@ -155,13 +155,17 @@ spatial: weights
 # decision D8). Rent growth is annualised over GROWTH_YEARS before the B8 window
 # (5, decided 18 Oct 2026). Needs `make spatial` (B16) first; runs `make density`.
 GROWTH_YEARS ?= 5
+# Sensitivity run of the primary profile with a shorter growth window, which keeps the MHAs
+# whose ZIPs have no ZORI in the 5-year start window (0 turns it off).
+SENS_GROWTH_YEARS ?= 3
 regression: density
 	$(PYTHON) pipeline/spatial/regression.py --geometry $(PROCESSED)/mha_$(YEAR).gpkg \
 		--weights-manifest $(SPATIAL)/weights_manifest.json \
 		--rent-metrics $(METRICS)/mha_rent_metrics.csv \
 		--zori $(BENCH)/mha_zori.csv --zori-manifest $(BENCH)/mha_zori_manifest.json --zori-csv $(ZORI_CSV) \
 		--crosswalk $(INTERIM)/zip_mha.csv --density $(CONTEXT)/mha_density.csv \
-		--growth-years $(GROWTH_YEARS) --seed $(SEED) --out $(SPATIAL)
+		--growth-years $(GROWTH_YEARS) --sensitivity-growth-years $(SENS_GROWTH_YEARS) \
+		--seed $(SEED) --out $(SPATIAL)
 
 # --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27; docs/data-contract.md) ---
 # Writes the five delivered files and SHA256SUMS into $(HANDOFF), then validates them

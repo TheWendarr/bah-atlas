@@ -51,18 +51,30 @@ Method
        neither LM-lag nor LM-error significant      -> OLS is kept
        only one significant                         -> that model
        both significant                             -> the model whose robust
-                                                       test is significant; if
-                                                       both or neither are, the
-                                                       larger robust statistic
+                                                       test is significant
+       both significant, and the robust tests both  -> AMBIGUOUS: the data show
+       or neither significant                          spatial dependence but not
+                                                       its form. Both models are
+                                                       fitted and reported; the
+                                                       one with the larger robust
+                                                       statistic is listed first
   4. The chosen spatial model by maximum likelihood (spreg ML_Lag or ML_Error,
      full Jacobian). In the lag model the coefficients are not marginal effects:
      with row-standardized weights the average total impact of a predictor is
      beta / (1 - rho), reported beside it. Residual Moran's I is tested again on
      the chosen model (permutation, fixed seed) to show whether it absorbed the
-     spatial dependence.
-  5. Sensitivity: the primary profile is rerun with the population-weighted
-     density (B24 pw_density_per_km2) in place of the crude density, and every
-     other A12 profile is run with the primary specification.
+     spatial dependence. When the choice is ambiguous, each predictor's H2
+     reading states whether the lag and error models agree on its sign and
+     significance, and AIC is reported for both.
+  5. Sample selection. MHAs left out for want of rent growth (ZORI covers few
+     ZIPs in the start window) are compared with the modelled MHAs on the
+     adequacy gap, log density and log rent: medians and a two-sided
+     Mann-Whitney U test. A significant difference is a warning: the H2 result
+     then describes the modelled sample, not all CONUS MHAs.
+  6. Sensitivity: the primary profile is rerun with the population-weighted
+     density (B24 pw_density_per_km2) in place of the crude density, and with
+     rent growth over --sensitivity-growth-years (default 3), which keeps more
+     MHAs; every other A12 profile is run with the primary specification.
 
   Shared-denominator caveat: the dependent variable divides by the utilities-
   inclusive ZORI, and ln_rent is the log of the same ZORI before the gross-up.
@@ -79,8 +91,10 @@ Output (written to --out)
   regression_manifest.json      inputs and SHA-256, windows, method, one entry
                                 per model run (OLS table with VIF and
                                 standardized betas, diagnostics, choice, spatial
-                                model table, residual Moran's I), the headline
-                                H2 reading, output SHA-256, warnings
+                                model table, the alternative model when the
+                                choice is ambiguous, residual Moran's I), the
+                                sample-selection check, the headline H2 reading,
+                                output SHA-256, warnings
 
 ------------------------------------------------------------------------------
 Validation (loud)
@@ -97,12 +111,15 @@ Validation (loud)
 from __future__ import annotations
 
 import argparse
+import contextlib
 import copy
 import csv
+import io
 import json
 import math
 import statistics
 import sys
+import warnings as pywarnings
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -118,6 +135,7 @@ try:
     import esda
     import numpy as np
     import spreg
+    from scipy.stats import mannwhitneyu
     from spreg.diagnostics import vif as spreg_vif
 except ImportError as e:  # pragma: no cover - environment problem, reported loudly
     sys.exit(f"{TOOL}: {e.name} is not installed. Run `pip install -r requirements.txt`.")
@@ -125,8 +143,8 @@ except ImportError as e:  # pragma: no cover - environment problem, reported lou
 PREDICTORS = ["ln_rent", "rent_growth_pct", "ln_density"]
 VIF_WARN = 5.0
 FIELDS = ["profile", "mha", "status", "adequacy_gap", "zori_median", "ln_rent", "rent_growth_pct",
-          "growth_zips", "density_per_km2", "ln_density", "pw_density_per_km2", "ln_pw_density",
-          "resid_ols", "resid_model"]
+          "growth_zips", "rent_growth_pct_sensitivity", "density_per_km2", "ln_density", "pw_density_per_km2",
+          "ln_pw_density", "resid_ols", "resid_model"]
 
 
 # --- inputs -------------------------------------------------------------------
@@ -201,20 +219,33 @@ def pair(t: object) -> list[float]:
     return [round(float(stat), 4), round(float(p), 6)]
 
 
-def choose_model(lm: dict[str, list[float]], alpha: float) -> tuple[str, str]:
-    """Anselin (2005) rule on the OLS LM tests. Returns (model, reason)."""
+def choose_model(lm: dict[str, list[float]], alpha: float) -> tuple[str, str, bool]:
+    """Anselin (2005) rule on the OLS LM tests. Returns (model, reason, ambiguous).
+
+    Ambiguous: both LM tests are significant but the robust tests cannot separate the
+    lag and error forms (both or neither significant). The model with the larger robust
+    statistic is returned first, and the caller fits the other one as well."""
     lag, err = lm["lm_lag"][1] < alpha, lm["lm_error"][1] < alpha
     if not lag and not err:
-        return "ols", f"neither LM-lag nor LM-error significant at {alpha}"
+        return "ols", f"neither LM-lag nor LM-error significant at {alpha}", False
     if lag != err:
-        return ("lag" if lag else "error"), f"only LM-{'lag' if lag else 'error'} significant at {alpha}"
+        return ("lag" if lag else "error"), f"only LM-{'lag' if lag else 'error'} significant at {alpha}", False
     rlag, rerr = lm["rlm_lag"][1] < alpha, lm["rlm_error"][1] < alpha
     if rlag != rerr:
         return ("lag" if rlag else "error"), (f"both LM tests significant; only robust LM-"
-                                              f"{'lag' if rlag else 'error'} significant at {alpha}")
+                                              f"{'lag' if rlag else 'error'} significant at {alpha}"), False
     model = "lag" if lm["rlm_lag"][0] >= lm["rlm_error"][0] else "error"
     which = "both" if rlag else "neither"
-    return model, f"both LM tests significant; {which} robust test significant, larger robust statistic"
+    return model, (f"ambiguous: both LM tests significant and {which} robust test significant at {alpha}; "
+                   "lag and error models both fitted"), True
+
+
+@contextlib.contextmanager
+def quiet():
+    """spreg prints the model name and scipy warns about its optimizer tolerance; neither is a result."""
+    with contextlib.redirect_stdout(io.StringIO()), pywarnings.catch_warnings():
+        pywarnings.simplefilter("ignore", RuntimeWarning)
+        yield
 
 
 def residual_moran(resid: "np.ndarray", w, permutations: int, seed: int) -> dict:
@@ -232,7 +263,8 @@ def fit(y: "np.ndarray", X: "np.ndarray", names: list[str], w, alpha: float, per
     w = copy.deepcopy(w)
     w.transform = "r"
     yc = y.reshape(-1, 1)
-    ols = spreg.OLS(yc, X, w=w, spat_diag=True, moran=True, name_y="adequacy_gap", name_x=names)
+    with quiet():
+        ols = spreg.OLS(yc, X, w=w, spat_diag=True, moran=True, name_y="adequacy_gap", name_x=names)
     sd_y = float(np.std(y, ddof=1))
     vifs = spreg_vif(ols)
     coefs = []
@@ -257,43 +289,92 @@ def fit(y: "np.ndarray", X: "np.ndarray", names: list[str], w, alpha: float, per
                 "residual_moran": residual_moran(resid_ols, w, permutations, seed)},
         "lm_tests": lm,
     }
-    model, reason = choose_model(lm, alpha)
-    result["choice"] = {"model": model, "reason": reason, "rule": "Anselin (2005)", "alpha": alpha}
+    model, reason, ambiguous = choose_model(lm, alpha)
+    result["choice"] = {"model": model, "reason": reason, "ambiguous": ambiguous, "rule": "Anselin (2005)",
+                        "alpha": alpha}
     resid_model = resid_ols
     if model != "ols":
-        cls = spreg.ML_Lag if model == "lag" else spreg.ML_Error
-        sp = cls(yc, X, w=w, method="full", name_y="adequacy_gap", name_x=names)
-        param = float(sp.rho if model == "lag" else sp.lam)
-        rows = []
-        for j, name in enumerate(sp.name_x):
-            z, p = sp.z_stat[j]
-            row = {"name": name, "b": round(float(sp.betas[j, 0]), 6), "se": round(float(sp.std_err[j]), 6),
-                   "z": round(float(z), 3), "p": round(float(p), 6)}
-            if model == "lag" and name in names:
-                row["total_impact"] = round(float(sp.betas[j, 0]) / (1 - param), 6)
-            rows.append(row)
-        resid_model = np.asarray(sp.u if model == "lag" else sp.e_filtered).ravel()
-        result["spatial"] = {
-            "model": f"ML_{model.title()}", "method": "full", ("rho" if model == "lag" else "lambda"): round(param, 4),
-            "coefficients": rows, "pseudo_r2": round(float(sp.pr2), 4), "logll": round(float(sp.logll), 3),
-            "aic": round(float(sp.aic), 3),
-            "residual_moran": residual_moran(resid_model, w, permutations, seed),
-            "residuals": "u (lag model)" if model == "lag" else "e_filtered (spatially filtered, error model)"}
+        result["spatial"], resid_model = spatial_fit(model, yc, X, names, w, permutations, seed)
+        if ambiguous:
+            other = "error" if model == "lag" else "lag"
+            result["alternative"], _ = spatial_fit(other, yc, X, names, w, permutations, seed)
+            aics = {model: result["spatial"]["aic"], other: result["alternative"]["aic"]}
+            result["choice"]["aic"] = aics
+            result["choice"]["lower_aic"] = min(aics, key=aics.get)
     return result, resid_ols, resid_model
 
 
+def spatial_fit(model: str, yc: "np.ndarray", X: "np.ndarray", names: list[str], w, permutations: int,
+                seed: int) -> tuple[dict, "np.ndarray"]:
+    """ML spatial lag or error model; returns its report and its residuals."""
+    cls = spreg.ML_Lag if model == "lag" else spreg.ML_Error
+    with quiet():
+        sp = cls(yc, X, w=w, method="full", name_y="adequacy_gap", name_x=names)
+    param = float(sp.rho if model == "lag" else sp.lam)
+    rows = []
+    for j, name in enumerate(sp.name_x):
+        z, p = sp.z_stat[j]
+        row = {"name": name, "b": round(float(sp.betas[j, 0]), 6), "se": round(float(sp.std_err[j]), 6),
+               "z": round(float(z), 3), "p": round(float(p), 6)}
+        if model == "lag" and name in names:
+            row["total_impact"] = round(float(sp.betas[j, 0]) / (1 - param), 6)
+        rows.append(row)
+    resid = np.asarray(sp.u if model == "lag" else sp.e_filtered).ravel()
+    return {
+        "model": f"ML_{model.title()}", "method": "full", ("rho" if model == "lag" else "lambda"): round(param, 4),
+        "coefficients": rows, "pseudo_r2": round(float(sp.pr2), 4), "logll": round(float(sp.logll), 3),
+        "aic": round(float(sp.aic), 3),
+        "residual_moran": residual_moran(resid, w, permutations, seed),
+        "residuals": "u (lag model)" if model == "lag" else "e_filtered (spatially filtered, error model)"}, resid
+
+
+def verdict(row: dict, alpha: float) -> str:
+    if row["p"] < alpha:
+        return f"{'positive' if row['b'] > 0 else 'negative'} association, significant at {alpha}"
+    return f"no association significant at {alpha}"
+
+
 def reading(result: dict, alpha: float) -> list[dict]:
-    """Sign and significance of each predictor in the chosen model."""
+    """Sign and significance of each predictor in the chosen model. When the choice is ambiguous,
+    each reading also says whether the alternative model gives the same verdict."""
     table = (result.get("spatial") or {}).get("coefficients") or result["ols"]["coefficients"]
     stat = "z" if result.get("spatial") else "t"
+    alt = {r["name"]: r for r in (result.get("alternative") or {}).get("coefficients", [])}
+    alt_model = (result.get("alternative") or {}).get("model")
     out = []
     for row in table:
-        if row["name"] not in PREDICTORS:
+        if row["name"] in ("CONSTANT", "lambda") or row["name"].startswith("W_"):   # intercept, rho, lambda
             continue
-        sig = row["p"] < alpha
-        out.append({"predictor": row["name"], "b": row["b"], stat: row[stat], "p": row["p"],
-                    "reading": (f"{'positive' if row['b'] > 0 else 'negative'} association, significant at {alpha}"
-                                if sig else f"no association significant at {alpha}")})
+        entry = {"predictor": row["name"], "b": row["b"], stat: row[stat], "p": row["p"],
+                 "reading": verdict(row, alpha)}
+        if row["name"] in alt:
+            a = alt[row["name"]]
+            same = verdict(a, alpha) == entry["reading"]
+            entry["alternative"] = {"model": alt_model, "b": a["b"], "p": a["p"], "reading": verdict(a, alpha)}
+            entry["model_form_agrees"] = same
+            if not same:
+                entry["reading"] = (f"depends on model form: {result['spatial']['model']} {entry['reading']}; "
+                                    f"{alt_model} {verdict(a, alpha)}")
+        out.append(entry)
+    return out
+
+
+def selection(groups: dict[str, list[tuple[float, float, float]]], alpha: float) -> dict:
+    """Modelled MHAs against those left out for want of rent growth: medians and Mann-Whitney U p-values
+    for the adequacy gap, log density and log rent."""
+    def summary(rows: list[tuple[float, float, float]]) -> dict:
+        return {"n": len(rows),
+                **{f"median_{name}": (round(statistics.median(r[i] for r in rows), 4) if rows else None)
+                   for i, name in enumerate(("adequacy_gap", "ln_density", "ln_rent"))}}
+    out = {"modelled": summary(groups["modelled"]), "no_growth": summary(groups["no_growth"])}
+    tests = {}
+    if len(groups["modelled"]) >= 3 and len(groups["no_growth"]) >= 3:
+        for i, name in enumerate(("adequacy_gap", "ln_density", "ln_rent")):
+            p = float(mannwhitneyu([r[i] for r in groups["modelled"]], [r[i] for r in groups["no_growth"]],
+                                   alternative="two-sided").pvalue)
+            tests[name] = round(p, 6)
+    out["mann_whitney_p"] = tests
+    out["differs_at_alpha"] = sorted(k for k, p in tests.items() if p < alpha)
     return out
 
 
@@ -312,6 +393,8 @@ def main() -> None:
     ap.add_argument("--out", type=Path, required=True, help="output folder")
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
     ap.add_argument("--growth-years", type=int, default=5)
+    ap.add_argument("--sensitivity-growth-years", type=int, default=3,
+                    help="rent-growth window for the sensitivity run of the primary profile (0 = none)")
     ap.add_argument("--min-months", type=int, default=3)
     ap.add_argument("--alpha", type=float, default=0.05)
     ap.add_argument("--permutations", type=int, default=9999, help="for the residual Moran's I")
@@ -319,6 +402,8 @@ def main() -> None:
     args = ap.parse_args()
     if args.growth_years < 1:
         agg.die(TOOL, "--growth-years must be at least 1")
+    if args.sensitivity_growth_years < 0 or args.sensitivity_growth_years == args.growth_years:
+        agg.die(TOOL, "--sensitivity-growth-years must be 0 (none) or differ from --growth-years")
 
     warnings: list[str] = []
 
@@ -354,6 +439,9 @@ def main() -> None:
     print(f"B19 spatial regression: rent adequacy_gap on {', '.join(PREDICTORS)}; KNN k={k} (B16); "
           f"growth {args.growth_years} years")
     growth, gstats = rent_growth(args.zori_csv, crosswalk, end_months, args.growth_years, args.min_months)
+    sens_years = args.sensitivity_growth_years
+    growth_s, gstats_s = (rent_growth(args.zori_csv, crosswalk, end_months, sens_years, args.min_months)
+                          if sens_years else ({}, None))
     zori = {r["mha"]: num(r["zori_median"]) for r in read_csv(args.zori, {"mha", "zori_median"}, "B8")}
     dens = {r["mha"]: (num(r["density_per_km2"]), num(r["pw_density_per_km2"]))
             for r in read_csv(args.density, {"mha", "density_per_km2", "pw_density_per_km2"}, "B24")}
@@ -366,22 +454,22 @@ def main() -> None:
     out_rows: list[dict] = []
     runs: list[dict] = []
     excluded_summary: dict[str, dict[str, int]] = {}
-    for profile in profiles:
-        rows = sorted((r for r in metrics if r["profile"] == profile and bw.in_scope(r["mha"])),
-                      key=lambda r: r["mha"])
-        if not rows:
-            warnings.append(f"{args.rent_metrics.name} has no CONUS rows for profile {profile}")
-            continue
-        data, reasons = [], {}
+    sample_selection: dict | None = None
+
+    def assemble(rows: list[dict], profile: str, gmap: dict) -> tuple[list[tuple], dict[str, int], list[dict]]:
+        """Model rows (code, y, ln_rent, growth %, ln_density, ln_pw_density, base) and exclusions."""
+        data, reasons, excluded = [], {}, []
         for r in rows:
             m = r["mha"]
             y = num(r["adequacy_gap"])
             rent = zori.get(m)
-            gr = growth.get(m)
+            gr = gmap.get(m)
+            gs = growth_s.get(m)
             d, pw = dens.get(m, (None, None))
             base = {"profile": profile, "mha": m, "adequacy_gap": r["adequacy_gap"],
                     "zori_median": agg.fmt(rent), "ln_rent": agg.fmt(math.log(rent), 6) if rent else "",
                     "rent_growth_pct": agg.fmt(gr[0] * 100, 4) if gr else "", "growth_zips": gr[1] if gr else 0,
+                    "rent_growth_pct_sensitivity": agg.fmt(gs[0] * 100, 4) if gs else "",
                     "density_per_km2": agg.fmt(d, 3), "ln_density": agg.fmt(math.log(d), 6) if d else "",
                     "pw_density_per_km2": agg.fmt(pw, 3), "ln_pw_density": agg.fmt(math.log(pw), 6) if pw else ""}
             reason = ("status_" + (r["status"] or "blank") if (r["status"] or "ok") != "ok" or y is None
@@ -392,44 +480,72 @@ def main() -> None:
                       else None)
             if reason:
                 reasons[reason] = reasons.get(reason, 0) + 1
-                out_rows.append({**base, "status": reason})
+                excluded.append({**base, "status": reason, "_y": y, "_rent": rent, "_d": d})
             else:
                 data.append((m, y, math.log(rent), gr[0] * 100, math.log(d), math.log(pw), base))
-        excluded_summary[profile] = reasons
+        return data, reasons, excluded
+
+    def run_spec(data: list[tuple], profile: str, spec: str, cols: list[int], names: list[str],
+                 reasons: dict[str, int], role: str) -> tuple[dict, "np.ndarray", "np.ndarray"]:
         n = len(data)
         if n <= max(k, len(PREDICTORS) + 10):
-            agg.die(TOOL, f"{profile}: {n} MHAs with every variable; needs more than {max(k, len(PREDICTORS) + 10)}")
-        ids = [t[0] for t in data]
-        y = np.array([t[1] for t in data])
+            agg.die(TOOL, f"{profile} {spec}: {n} MHAs with every variable; needs more than "
+                          f"{max(k, len(PREDICTORS) + 10)}")
+        ids = [t_[0] for t_ in data]
+        y = np.array([t_[1] for t_ in data])
         idx = [geo_index[m] for m in ids]
         w, _ = bw.knn_weights(ids, xy_all[idx], k, tool=TOOL)
-        specs = [("primary", [2, 3, 4])]
-        if profile == primary_profile:
-            specs.append(("pw_density", [2, 3, 5]))
-        for spec, cols in specs:
-            X = np.column_stack([[t[c] for t in data] for c in cols])
-            names = PREDICTORS if spec == "primary" else ["ln_rent", "rent_growth_pct", "ln_pw_density"]
-            constant = [names[j] for j in range(X.shape[1]) if float(np.std(X[:, j])) == 0.0]
-            if constant or float(np.std(y)) == 0.0:
-                agg.die(TOOL, f"{profile} {spec}: constant variable(s) {constant or ['adequacy_gap']}")
-            result, r_ols, r_model = fit(y, X, names, w, args.alpha, args.permutations, args.seed)
-            role = ("primary" if profile == primary_profile and spec == "primary"
-                    else "sensitivity")
-            high = [c["name"] for c in result["ols"]["coefficients"] if c.get("vif", 0) > VIF_WARN]
-            if high:
-                warnings.append(f"{profile} {spec}: VIF above {VIF_WARN} for {', '.join(high)}")
-            runs.append({"profile": profile, "specification": spec, "role": role, "predictors": names,
-                         "weights": f"knn k={k}, row-standardized", **result,
-                         "h2_reading": reading(result, args.alpha),
-                         "not_modelled": reasons})
-            if spec == "primary":
-                for i, (m, *_rest, base) in enumerate(data):
-                    out_rows.append({**base, "status": "modelled", "resid_ols": f"{r_ols[i]:.6f}",
-                                     "resid_model": f"{r_model[i]:.6f}"})
-            chosen = result["choice"]["model"]
-            print(f"  {profile:7} {spec:10} n={result['n']:3}  R2={result['ols']['r2']:.3f}  "
-                  f"LM-lag p={result['lm_tests']['lm_lag'][1]:.4f}  LM-error p={result['lm_tests']['lm_error'][1]:.4f}"
-                  f"  -> {chosen}")
+        X = np.column_stack([[t_[c] for t_ in data] for c in cols])
+        constant = [names[j] for j in range(X.shape[1]) if float(np.std(X[:, j])) == 0.0]
+        if constant or float(np.std(y)) == 0.0:
+            agg.die(TOOL, f"{profile} {spec}: constant variable(s) {constant or ['adequacy_gap']}")
+        result, r_ols, r_model = fit(y, X, names, w, args.alpha, args.permutations, args.seed)
+        high = [c_["name"] for c_ in result["ols"]["coefficients"] if c_.get("vif", 0) > VIF_WARN]
+        if high:
+            warnings.append(f"{profile} {spec}: VIF above {VIF_WARN} for {', '.join(high)}")
+        runs.append({"profile": profile, "specification": spec, "role": role, "predictors": names,
+                     "weights": f"knn k={k}, row-standardized", **result,
+                     "h2_reading": reading(result, args.alpha), "not_modelled": reasons})
+        ch = result["choice"]
+        print(f"  {profile:7} {spec:10} n={result['n']:3}  R2={result['ols']['r2']:.3f}  "
+              f"LM-lag p={result['lm_tests']['lm_lag'][1]:.4f}  LM-error p={result['lm_tests']['lm_error'][1]:.4f}"
+              f"  -> {ch['model']}" + (f" (ambiguous; also {result['alternative']['model']})" if ch["ambiguous"]
+                                      else ""))
+        return result, r_ols, r_model
+
+    for profile in profiles:
+        rows = sorted((r for r in metrics if r["profile"] == profile and bw.in_scope(r["mha"])),
+                      key=lambda r: r["mha"])
+        if not rows:
+            warnings.append(f"{args.rent_metrics.name} has no CONUS rows for profile {profile}")
+            continue
+        data, reasons, excluded = assemble(rows, profile, growth)
+        excluded_summary[profile] = reasons
+        primary_role = "primary" if profile == primary_profile else "sensitivity"
+        result, r_ols, r_model = run_spec(data, profile, "primary", [2, 3, 4], PREDICTORS, reasons, primary_role)
+        for i, (m, *_rest, base) in enumerate(data):
+            out_rows.append({**base, "status": "modelled", "resid_ols": f"{r_ols[i]:.6f}",
+                             "resid_model": f"{r_model[i]:.6f}"})
+        out_rows += [{k_: v for k_, v in e.items() if not k_.startswith("_")} for e in excluded]
+        if profile != primary_profile:
+            continue
+        run_spec(data, profile, "pw_density", [2, 3, 5], ["ln_rent", "rent_growth_pct", "ln_pw_density"],
+                 reasons, "sensitivity")
+        if sens_years:
+            data_s, reasons_s, _ = assemble(rows, profile, growth_s)
+            run_spec(data_s, profile, f"growth_{sens_years}y", [2, 3, 4], PREDICTORS, reasons_s, "sensitivity")
+        dropped = [(e["_y"], math.log(e["_d"]), math.log(e["_rent"])) for e in excluded
+                   if e["status"] == "no_growth" and e["_y"] is not None and e["_d"] and e["_rent"]]
+        sample_selection = selection({"modelled": [(t_[1], t_[4], t_[2]) for t_ in data], "no_growth": dropped},
+                                     args.alpha)
+        eligible = len(data) + sum(v for k_, v in reasons.items() if k_ in ("no_growth", "no_density"))
+        sample_selection["eligible"] = eligible
+        sample_selection["share_modelled"] = round(len(data) / eligible, 4) if eligible else None
+        if sample_selection["differs_at_alpha"]:
+            warnings.append(f"{profile}: the {len(dropped)} MHAs left out for want of {args.growth_years}-year rent "
+                            f"growth differ from the {len(data)} modelled MHAs in "
+                            f"{', '.join(sample_selection['differs_at_alpha'])} (Mann-Whitney, alpha {args.alpha}); "
+                            "the H2 result describes the modelled sample")
 
     out_rows.sort(key=lambda r: (r["profile"], r["mha"]))
     out_csv = args.out / "mha_regression.csv"
@@ -446,6 +562,20 @@ def main() -> None:
             headline["spatial_parameter"] = {k_: sp[k_] for k_ in ("rho", "lambda") if k_ in sp}
             headline["residual_moran_ols"] = primary["ols"]["residual_moran"]
             headline["residual_moran_model"] = sp["residual_moran"]
+        if primary["choice"]["ambiguous"]:
+            alt = primary["alternative"]
+            headline["ambiguous_form"] = {"models": [sp["model"], alt["model"]], "aic": primary["choice"]["aic"],
+                                          "lower_aic": primary["choice"]["lower_aic"],
+                                          "alternative_parameter": {k_: alt[k_] for k_ in ("rho", "lambda")
+                                                                    if k_ in alt},
+                                          "alternative_residual_moran": alt["residual_moran"]}
+        headline["sample_selection"] = sample_selection
+        gsens = next((r for r in runs if r["specification"] == f"growth_{sens_years}y"), None)
+        if gsens:
+            headline["growth_sensitivity"] = {"years": sens_years, "n": gsens["n"],
+                                              "model": gsens["choice"]["model"],
+                                              "ambiguous": gsens["choice"]["ambiguous"],
+                                              "predictors": gsens["h2_reading"]}
 
     inputs = {"A12": args.profiles, "A3": args.zori_csv, "B1": args.crosswalk, "B6": args.geometry,
               "B8": args.zori, "B12": args.rent_metrics, "B16": args.weights_manifest, "B24": args.density}
@@ -465,11 +595,16 @@ def main() -> None:
             "ln_pw_density": "ln(B24 pw_density_per_km2), population-weighted (sensitivity only)",
         },
         "growth_window": gstats,
+        "growth_window_sensitivity": gstats_s,
         "method": {
             "scope": "CONUS MHAs (AK, HI excluded; decision 2.2) with rent status ok and every predictor",
             "weights": f"knn k={k} from B16, rebuilt on the modelled MHAs, row-standardized",
             "ols": "spreg.OLS with spat_diag and Moran's I of residuals; VIF per predictor, condition number",
-            "choice": "Anselin (2005) decision rule on LM-lag, LM-error and their robust forms",
+            "choice": "Anselin (2005) decision rule on LM-lag, LM-error and their robust forms; when both LM tests "
+                      "are significant and the robust tests do not separate the forms, both models are fitted "
+                      "(ambiguous) and each reading states whether they agree",
+            "sample_selection": "modelled MHAs against those without rent growth: medians and two-sided "
+                                "Mann-Whitney U on adequacy_gap, ln_density, ln_rent",
             "spatial": "spreg ML_Lag or ML_Error, full Jacobian; lag model total impact = beta / (1 - rho)",
             "residual_moran": f"esda Moran's I, {args.permutations} permutations, seed {args.seed}",
             "alpha": args.alpha,
@@ -479,6 +614,7 @@ def main() -> None:
                          "libpysal": __import__("libpysal").__version__, "numpy": np.__version__},
         },
         "not_modelled": excluded_summary,
+        "sample_selection": sample_selection,
         "headline": headline,
         "runs": runs,
         "outputs": [out_csv.name, "regression_manifest.json"],
@@ -491,6 +627,15 @@ def main() -> None:
         print(f"  primary ({headline['test']}): {headline['model']} ({headline['choice_reason']})")
         for p_ in headline["predictors"]:
             print(f"    {p_['predictor']:16} b={p_['b']:+.5f}  p={p_['p']:.4f}  {p_['reading']}")
+        ss = headline.get("sample_selection")
+        if ss:
+            print(f"  sample: {ss['modelled']['n']} of {ss['eligible']} eligible MHAs modelled; no-growth MHAs "
+                  f"median gap {ss['no_growth']['median_adequacy_gap']} vs {ss['modelled']['median_adequacy_gap']}; "
+                  f"Mann-Whitney p {ss['mann_whitney_p']}")
+        gs_ = headline.get("growth_sensitivity")
+        if gs_:
+            print(f"  {gs_['years']}-year growth sensitivity: n={gs_['n']}, {gs_['model']}: " +
+                  "; ".join(f"{p_['predictor']} {p_['reading']}" for p_ in gs_["predictors"]))
     for w_ in warnings:
         print(f"  WARNING: {w_}")
     print(f"  wrote {args.out}/" + ", ".join(manifest["outputs"]))

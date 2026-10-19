@@ -179,6 +179,9 @@ H2 asks what the adequacy gaps are associated with. The research question itself
   - `benchmarks/density_to_mha.py` (B24, `make density`): Σ population ÷ Σ ALAND20 over each MHA's ZCTAs (the plan's measure, B19 primary), and the population-weighted density (B19 sensitivity). ALAND20 is read from the A2 attribute table, so the generalized polygons play no part. 3 tests.
   - `spatial/regression.py` (B19, `make regression`): growth from the A3 history over the 5 years before the B8 window, matched calendar months, median of ZIP growth per MHA; OLS with residual Moran's I, the five LM tests, VIF and condition number; the Anselin (2005) rule chooses OLS, ML_Lag or ML_Error; residual Moran's I retested on the chosen model; sensitivity runs for population-weighted density and the O-3 profile. Stops if B8 came from another A3 file. 7 tests, including recovery of planted coefficients and of ρ = 0.6 on a lattice.
   - **Caveat recorded in the manifest:** the dependent variable divides by the utilities-inclusive ZORI and `ln_rent` is the log of ZORI, so part of a negative rent-level coefficient is mechanical. W1 should say so.
+- **First run on the 2026 data (18 Oct) and the changes it led to:**
+  - **Sample.** n = 201 of the 283 CONUS MHAs with a rent value. The 82 left out have no ZIP with ZORI in both the 2021 and 2026 windows. They differ from the modelled MHAs: median adequacy gap 0.054 against 0.156, median ln density 3.83 against 5.20. The 5-year result therefore describes the denser, better-covered MHAs. B19 now reports this comparison with Mann-Whitney U tests (`sample_selection`), warns when the groups differ, and reruns the primary profile with 3-year growth (2023 → 2026, `SENS_GROWTH_YEARS ?= 3`), which keeps more MHAs. The 5-year window stays primary (D15).
+  - **Model form.** Both LM tests were significant (p ≈ 0) and neither robust test was, so the rule could not choose between lag and error; the three runs split (error, lag, lag). B19 now marks such a choice `ambiguous`, fits both models, reports AIC for both, and states for each predictor whether the two agree. B23 shows both as NOTE rows.
 - **Why reduced:** BEA Regional Price Parities (A10, B25) exist only for states and metro areas, which is coarser than MHAs. Their rent component is built from ACS rents, so it would largely repeat the rent-level variable. Both are scrapped. The research proposal records this.
 
 ### B22 · build manifest — target Thu 29 Oct
@@ -230,7 +233,8 @@ Wendell writes this; the outline points to the evidence each part draws on. **Sc
 | ~~Sat 24 Oct~~ Sun 18 Oct | A8 and A9 pulls; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations — done 6 days early |
 | Sun 18 Oct | B20, B21, B22, B27 code; first `make handoff` on the 2026 data, validated against ICD 1.0.2 |
 | Sun 18 Oct | B24, B19 (D15), B23 code; `make layer2`, `make deliver` and its gates (D16, D17); ICD 1.0.3 (wording) |
-| Workstation, next | `make layer2` from `data/raw`; review the B23 report and hand-check its three traces; `make done N="B19 B20-B22 B23 B24 B27"` |
+| Sun 18 Oct | First `make layer2` on the 2026 data: handoff validated, B23 PASS. B19 sample and model-form findings; patch for both. Stale B23 output fixed in `make handoff` |
+| Workstation, next | `make layer2` again with the B19 changes; review the B23 report and hand-check its three traces; `make done N="B19 B20-B22 B23 B24 B27"` |
 | Fri 30 Oct | W1; `make deliver`; `make done N=W1`; one commit with `delivery/2026/`, W1 and the tracker; close M6 |
 
 ---

@@ -333,7 +333,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟢 | **B16** | Spatial weights matrix | required | B6 | completed 18 Oct |
 | 🟢 | **B17** | Global Moran's I | required | B12, B16 | completed 18 Oct |
 | 🟢 | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | completed 18 Oct |
-| 🟣 | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error |
+| 🟣 | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error; first 2026 run: n = 201 of 283 (82 MHAs lack 5-year ZORI growth and are less dense and nearer the design point), robust LM tests ambiguous; 18 Oct: both forms fitted when ambiguous, selection check, 3-year growth sensitivity |
 
 #### 2.7 Front-End Payload — due 30 October 2026 (M6)
 
