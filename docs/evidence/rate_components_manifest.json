@@ -6,7 +6,7 @@
   "input_file": "dod_bah_rate_components_2026.pdf",
   "input_sha256": "a0cbf7f4dad787ffbb3605c151f69c61ee4e2dd7bb39e1bcff3646bed8b69800",
   "text_extractor": "pypdf",
-  "generated_at": "2026-10-18T20:33:14+00:00",
+  "generated_at": "2026-10-19T01:00:13+00:00",
   "rows": 299,
   "utilities_share": {
     "min": 0.08,

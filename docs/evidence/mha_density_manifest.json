@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    "B24"
+  ],
+  "role": "population density per MHA (urbanicity) for the B19 spatial regression (reduced H2, D8)",
+  "generated_at": "2026-10-19T01:01:12+00:00",
+  "inputs": {
+    "A9": "acs5_2024_zcta.json",
+    "A2": "cb_2020_us_zcta520_500k.zip",
+    "B1": "zip_mha.csv"
+  },
+  "input_sha256": {
+    "A9": "51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30",
+    "A2": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b"
+  },
+  "acs_vintage": 2024,
+  "acs_period": "2020-2024",
+  "variables": {
+    "population": "B01003_001E",
+    "land_area": "ALAND20"
+  },
+  "method": {
+    "join": "direct zip == zcta over the MHA's B1 ZIPs, as B6 and A8",
+    "density_per_km2": "sum(population) / sum(land km2) over the MHA's usable ZCTAs (B19 primary)",
+    "pw_density_per_km2": "sum(pop_i * density_i) / sum(pop_i): population-weighted (B19 sensitivity)"
+  },
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "zctas_in_acs": 33772,
+  "zctas_with_population": 33772,
+  "zctas_missing_population": 0,
+  "zcta_file_column_code": "ZCTA5CE20",
+  "zcta_file_column_land": "ALAND20",
+  "zctas_in_boundary_file": 33791,
+  "zctas_with_land": 33791,
+  "zctas_zero_land": 0,
+  "real_mha_zips_with_usable_zcta": 14669,
+  "mhas": 299,
+  "mhas_with_data": 299,
+  "mhas_without_data": [],
+  "density_summary": {
+    "min": 0.29,
+    "median": 124.97,
+    "max": 11416.25
+  },
+  "pw_density_summary": {
+    "min": 1.06,
+    "median": 487.46,
+    "max": 18808.59
+  },
+  "outputs": [
+    "mha_density.csv"
+  ],
+  "output_sha256": {
+    "mha_density.csv": "1f5ff62a200db196a55bb554288a31d1bc974a9c2bcb4ef7e9154e4756139239"
+  },
+  "warnings": []
+}

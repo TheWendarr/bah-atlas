@@ -1,6 +1,6 @@
 {
   "node": "B6",
-  "generated_at": "2026-10-18T20:33:13+00:00",
+  "generated_at": "2026-10-19T01:00:03+00:00",
   "method": "ZCTA polygons dissolved to MHA through the DTMO ZIP-to-MHA crosswalk (direct zip == zcta match unless --zip-to-zcta is given); no DoD MHA polygons exist",
   "inputs": {
     "A2": "cb_2020_us_zcta520_500k.zip",
@@ -22,7 +22,7 @@
     "mha_2026.geojson"
   ],
   "output_sha256": {
-    "mha_2026.gpkg": "fd76280780d1dbd1ac20f01eb75b770ef969129b012e665bb38843f647422b4f",
+    "mha_2026.gpkg": "675a278a9f9f6879dc5f2bebc2dbebd8c5bfaed0c736d3b58d1b7c653391742f",
     "mha_2026.geojson": "557543b4924954a19763bb3a367de842da1e8186d65c145b6bcfafb87ba7ec1d"
   }
 }

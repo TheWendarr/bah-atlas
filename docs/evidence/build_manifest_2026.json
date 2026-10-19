@@ -1,11 +1,11 @@
 {
   "node": "B22",
-  "schema_version": "1.0.2",
+  "schema_version": "1.0.3",
   "bah_year": 2026,
-  "generated_at": "2026-10-18T22:31:51+00:00",
+  "generated_at": "2026-10-19T01:01:14+00:00",
   "git": {
-    "commit": "21e918c10996f8f6f3fe3c5fc64f065444c2a9f8",
-    "dirty": false
+    "commit": "518cc2fa8f2d45e1ca167b4c5d1cefa7cc66a8f4",
+    "dirty": true
   },
   "software": {
     "python": "3.14.8",
@@ -103,15 +103,15 @@
     {
       "nodes": "B1-B4",
       "file": "manifest.json",
-      "sha256": "7db2a6cc0ffad61e5a384a633f57587fb707535599e0fa8ffa55e90cf85d25ab",
-      "generated_at": "2026-10-18T20:33:08+00:00",
+      "sha256": "2a7322265b3e3a3231c21caade3036950526a885110c7044f345f10c7e69509f",
+      "generated_at": "2026-10-19T00:59:58+00:00",
       "warnings": []
     },
     {
       "nodes": "B5",
       "file": "rate_components_manifest.json",
-      "sha256": "71c35220ede358965ab1c99f38c3ecfc81cfbfd7e15e5a2f0ae796c90ab5ded8",
-      "generated_at": "2026-10-18T20:33:14+00:00",
+      "sha256": "76364ab891bcf1147e3c65a8c967a898ce6f62b46991904f605ee48a0f6f4dcd",
+      "generated_at": "2026-10-19T01:00:13+00:00",
       "warnings": [
         "MS168 (GULFPORT, MS) is listed more than once with identical values in the source; kept one row"
       ]
@@ -119,29 +119,29 @@
     {
       "nodes": "B6",
       "file": "mha_2026_geometry_manifest.json",
-      "sha256": "97d72586bf96d18da12d0a31256dbfb2318a9b915c816458f41cf6d68e71f35c",
-      "generated_at": "2026-10-18T20:33:13+00:00",
+      "sha256": "600bf48da3aa2b6e72167fbf2d9c4230607a7e1a6ddd775e2ab5de104124b770",
+      "generated_at": "2026-10-19T01:00:03+00:00",
       "warnings": []
     },
     {
       "nodes": "B28",
       "file": "non_mha_2026_geometry_manifest.json",
-      "sha256": "f7f92d8582f2034139ea255f5edca26c4d4bd3a971f5e31899fd122f355e4977",
-      "generated_at": "2026-10-18T21:33:17+00:00",
+      "sha256": "b373e6f1613ff16d576d9243dbdd13acb2e29336b5470622d47891ad436d83bb",
+      "generated_at": "2026-10-19T01:00:13+00:00",
       "warnings": []
     },
     {
       "nodes": "B7",
       "file": "areas_2026_manifest.json",
-      "sha256": "b660df750c3189cf0f28e256f215267b3ede60e13ff903893ee5ea5ac6ca8e6e",
-      "generated_at": "2026-10-18T21:33:23+00:00",
+      "sha256": "15627a91fa4cdc6fff7e2526ba551d86d3f493e0120a51d704855af2de8ece91",
+      "generated_at": "2026-10-19T01:00:19+00:00",
       "warnings": []
     },
     {
       "nodes": "B8",
       "file": "mha_zori_manifest.json",
-      "sha256": "de032b384946bce8748a0977c3420ae03a070a3e04cf9d0a995bd8d80753d0ef",
-      "generated_at": "2026-10-18T22:00:33+00:00",
+      "sha256": "f5ed7e12cd5f9ba009a43bd9e90dbfb17a1dffcf12987700653dd4ec29c6f0fd",
+      "generated_at": "2026-10-19T01:00:19+00:00",
       "warnings": [
         "862 ZIP(s) had fewer than 3 months in the window and were left out",
         "6 ZIP(s) above 25,000 in the window, kept (seasonal luxury markets; the MHA median limits their pull): 11930 (NY218, peak 52,565), 11937 (NY218, peak 35,440), 11963 (NY218, peak 55,972), 11968 (NY218, peak 41,575), 11976 (NY218, peak 101,167), 81611 (not in a real MHA, peak 27,159)"
@@ -150,15 +150,15 @@
     {
       "nodes": "B9",
       "file": "mha_zhvi_manifest.json",
-      "sha256": "0093e47088252854c6c1dfa6389742e2198a459a11132220268c0a46c6e792be",
-      "generated_at": "2026-10-18T22:00:34+00:00",
+      "sha256": "d5df475eb34de76b3af575f27151406ec723f82665902cd2d8a613d5a2774888",
+      "generated_at": "2026-10-19T01:00:20+00:00",
       "warnings": []
     },
     {
       "nodes": "B10",
       "file": "mha_safmr_manifest.json",
-      "sha256": "c983519d203f586e176e0365ddd0fe4a93095e6ba021941067e200e89618bf56",
-      "generated_at": "2026-10-18T22:00:37+00:00",
+      "sha256": "fa48e411224997fc477308aed0b6fda98824d36cb05459374a229bc18a1d14f4",
+      "generated_at": "2026-10-19T01:00:23+00:00",
       "warnings": [
         "10106 ZIP(s) appear under more than one HUD area; their rows were averaged"
       ]
@@ -166,15 +166,15 @@
     {
       "nodes": "A8",
       "file": "mha_tax_insurance_manifest.json",
-      "sha256": "3ddd56a6b2a951cdfd6b88fd34854ce86a8ca9d8fc6419ea87094e256d350654",
-      "generated_at": "2026-10-18T22:00:39+00:00",
+      "sha256": "8e93911112c2f3920c6b333962572fc94ce070cc483019e0a3c7c1bf87510655",
+      "generated_at": "2026-10-19T01:00:25+00:00",
       "warnings": []
     },
     {
       "nodes": "B11",
       "file": "mha_ownership_manifest.json",
-      "sha256": "0cd788d1cd7d505d3374b566b786e32b6a1aa5873872a21a3c8ae72cd55ccd5e",
-      "generated_at": "2026-10-18T22:00:39+00:00",
+      "sha256": "e28bf71ac781480a7b9eec582825e34645bd57b4c57ffa4513487cfcfcd2befe",
+      "generated_at": "2026-10-19T01:00:25+00:00",
       "warnings": [
         "10 MHA(s) have a home value but no ZORI utilities estimate; own_total_monthly is blank there"
       ]
@@ -182,8 +182,8 @@
     {
       "nodes": "B12-B15",
       "file": "coverage_metrics_manifest.json",
-      "sha256": "e8f38be5abe7289df905bc8bd6255192b986a706ca464cc47df0c9208c4005ef",
-      "generated_at": "2026-10-18T22:00:39+00:00",
+      "sha256": "257b0d531771a21f742ba570007021f1c22984a713247b55a4785dd267cf7e1e",
+      "generated_at": "2026-10-19T01:00:25+00:00",
       "warnings": [
         "2 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2006, o3_dep/MA119=0.2513"
       ]
@@ -191,8 +191,8 @@
     {
       "nodes": "B16",
       "file": "weights_manifest.json",
-      "sha256": "049c2155c2a8e84e64cc13f43a28d6833a3321c0a4e3d3d042682acf9f0d19c8",
-      "generated_at": "2026-10-18T22:00:41+00:00",
+      "sha256": "414d0f7c8f090bf4aceaf18547a4fb3075779bd5de11f7652b89074bfcae4470",
+      "generated_at": "2026-10-19T01:00:27+00:00",
       "warnings": [
         "25 KNN link(s) longer than 500 km; longest MT175->WA313 724.0 km",
         "queen contiguity leaves 81 of 289 MHAs with no neighbour and splits the map into 122 pieces; KNN is the primary weights"
@@ -201,8 +201,8 @@
     {
       "nodes": "B17-B18",
       "file": "spatial_stats_manifest.json",
-      "sha256": "25d85bf7d945eee537c3333b6a324911ff6f33d7c38b6f94b73509587f46ef0c",
-      "generated_at": "2026-10-18T22:01:24+00:00",
+      "sha256": "ecb4eb81d145734f26a31f06164cf8a57e4baa3385d312943708bfdd7b42f823",
+      "generated_at": "2026-10-19T01:01:11+00:00",
       "warnings": []
     }
   ],

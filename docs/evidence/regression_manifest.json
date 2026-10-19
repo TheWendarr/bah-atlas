@@ -1,0 +1,1191 @@
+{
+  "nodes": [
+    "B19"
+  ],
+  "generated_at": "2026-10-19T01:01:14+00:00",
+  "inputs": {
+    "A12": "profiles.json",
+    "A3": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
+    "B1": "zip_mha.csv",
+    "B6": "mha_2026.gpkg",
+    "B8": "mha_zori.csv",
+    "B12": "mha_rent_metrics.csv",
+    "B16": "weights_manifest.json",
+    "B24": "mha_density.csv"
+  },
+  "input_sha256": {
+    "A12": "a92559c9d6a1a96eece241fc21fcb3a888d8d4d0ffd833f44885058089d2e3f3",
+    "A3": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
+    "B6": "675a278a9f9f6879dc5f2bebc2dbebd8c5bfaed0c736d3b58d1b7c653391742f",
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
+    "B16": "414d0f7c8f090bf4aceaf18547a4fb3075779bd5de11f7652b89074bfcae4470",
+    "B24": "1f5ff62a200db196a55bb554288a31d1bc974a9c2bcb4ef7e9154e4756139239"
+  },
+  "hypothesis": "H2: adequacy gaps are associated with the local rent level, recent rent growth and urbanicity (reduced chain, decision D8)",
+  "variables": {
+    "adequacy_gap": "B12 rent mode, (BAH + cost share) / utilities-inclusive ZORI - 1 (dependent)",
+    "ln_rent": "ln(B8 zori_median), asking rent before the B5 utilities gross-up",
+    "rent_growth_pct": "annualised ZORI growth over 5 years, percent per year; median over the MHA's ZIPs of (end mean / start mean)^(1/years) - 1",
+    "ln_density": "ln(B24 density_per_km2), sum(population) / sum(land km2)",
+    "ln_pw_density": "ln(B24 pw_density_per_km2), population-weighted (sensitivity only)"
+  },
+  "growth_window": {
+    "end_window_months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "start_window_months": [
+      "2021-01",
+      "2021-02",
+      "2021-03",
+      "2021-04",
+      "2021-05",
+      "2021-06",
+      "2021-07"
+    ],
+    "years": 5,
+    "min_months_per_window": 3,
+    "zips_with_end": 6659,
+    "zips_with_start": 2758,
+    "zips_with_growth": 2758,
+    "mhas_with_growth": 203
+  },
+  "growth_window_sensitivity": {
+    "end_window_months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "start_window_months": [
+      "2023-01",
+      "2023-02",
+      "2023-03",
+      "2023-04",
+      "2023-05",
+      "2023-06",
+      "2023-07"
+    ],
+    "years": 3,
+    "min_months_per_window": 3,
+    "zips_with_end": 6659,
+    "zips_with_start": 4451,
+    "zips_with_growth": 4451,
+    "mhas_with_growth": 259
+  },
+  "method": {
+    "scope": "CONUS MHAs (AK, HI excluded; decision 2.2) with rent status ok and every predictor",
+    "weights": "knn k=6 from B16, rebuilt on the modelled MHAs, row-standardized",
+    "ols": "spreg.OLS with spat_diag and Moran's I of residuals; VIF per predictor, condition number",
+    "choice": "Anselin (2005) decision rule on LM-lag, LM-error and their robust forms; when both LM tests are significant and the robust tests do not separate the forms, both models are fitted (ambiguous) and each reading states whether they agree",
+    "sample_selection": "modelled MHAs against those without rent growth: medians and two-sided Mann-Whitney U on adequacy_gap, ln_density, ln_rent",
+    "spatial": "spreg ML_Lag or ML_Error, full Jacobian; lag model total impact = beta / (1 - rho)",
+    "residual_moran": "esda Moran's I, 9999 permutations, seed 2026",
+    "alpha": 0.05,
+    "caveat": "shared denominator: adequacy_gap divides by utilities-inclusive ZORI and ln_rent is the log of ZORI, so part of a negative ln_rent coefficient is mechanical",
+    "software": {
+      "spreg": "1.9.1",
+      "esda": "2.10.0",
+      "libpysal": "4.15.0",
+      "numpy": "2.4.6"
+    }
+  },
+  "not_modelled": {
+    "e5_dep": {
+      "no_growth": 82,
+      "status_no_zori": 6
+    },
+    "o3_dep": {
+      "no_growth": 82,
+      "status_no_zori": 6
+    }
+  },
+  "sample_selection": {
+    "modelled": {
+      "n": 201,
+      "median_adequacy_gap": 0.1563,
+      "median_ln_density": 5.2019,
+      "median_ln_rent": 7.4579
+    },
+    "no_growth": {
+      "n": 82,
+      "median_adequacy_gap": 0.0543,
+      "median_ln_density": 3.8283,
+      "median_ln_rent": 7.2465
+    },
+    "mann_whitney_p": {
+      "adequacy_gap": 1e-06,
+      "ln_density": 0.0,
+      "ln_rent": 0.0
+    },
+    "differs_at_alpha": [
+      "adequacy_gap",
+      "ln_density",
+      "ln_rent"
+    ],
+    "eligible": 283,
+    "share_modelled": 0.7102
+  },
+  "headline": {
+    "test": "e5_dep rent adequacy_gap",
+    "n": 201,
+    "model": "error",
+    "choice_reason": "ambiguous: both LM tests significant and neither robust test significant at 0.05; lag and error models both fitted",
+    "ols_r2": 0.2927,
+    "predictors": [
+      {
+        "predictor": "ln_rent",
+        "b": -0.210614,
+        "z": -4.203,
+        "p": 2.6e-05,
+        "reading": "negative association, significant at 0.05",
+        "alternative": {
+          "model": "ML_Lag",
+          "b": -0.151069,
+          "p": 5.8e-05,
+          "reading": "negative association, significant at 0.05"
+        },
+        "model_form_agrees": true
+      },
+      {
+        "predictor": "rent_growth_pct",
+        "b": -0.013827,
+        "z": -1.954,
+        "p": 0.050682,
+        "reading": "depends on model form: ML_Error no association significant at 0.05; ML_Lag negative association, significant at 0.05",
+        "alternative": {
+          "model": "ML_Lag",
+          "b": -0.013909,
+          "p": 0.034385,
+          "reading": "negative association, significant at 0.05"
+        },
+        "model_form_agrees": false
+      },
+      {
+        "predictor": "ln_density",
+        "b": 0.083109,
+        "z": 8.563,
+        "p": 0.0,
+        "reading": "positive association, significant at 0.05",
+        "alternative": {
+          "model": "ML_Lag",
+          "b": 0.078385,
+          "p": 0.0,
+          "reading": "positive association, significant at 0.05"
+        },
+        "model_form_agrees": true
+      }
+    ],
+    "spatial_parameter": {
+      "lambda": 0.4829
+    },
+    "residual_moran_ols": {
+      "I": 0.1802,
+      "p_sim": 0.0001
+    },
+    "residual_moran_model": {
+      "I": -0.0037,
+      "p_sim": 0.4744
+    },
+    "ambiguous_form": {
+      "models": [
+        "ML_Error",
+        "ML_Lag"
+      ],
+      "aic": {
+        "error": -251.845,
+        "lag": -247.216
+      },
+      "lower_aic": "error",
+      "alternative_parameter": {
+        "rho": 0.39
+      },
+      "alternative_residual_moran": {
+        "I": 0.0257,
+        "p_sim": 0.2151
+      }
+    },
+    "sample_selection": {
+      "modelled": {
+        "n": 201,
+        "median_adequacy_gap": 0.1563,
+        "median_ln_density": 5.2019,
+        "median_ln_rent": 7.4579
+      },
+      "no_growth": {
+        "n": 82,
+        "median_adequacy_gap": 0.0543,
+        "median_ln_density": 3.8283,
+        "median_ln_rent": 7.2465
+      },
+      "mann_whitney_p": {
+        "adequacy_gap": 1e-06,
+        "ln_density": 0.0,
+        "ln_rent": 0.0
+      },
+      "differs_at_alpha": [
+        "adequacy_gap",
+        "ln_density",
+        "ln_rent"
+      ],
+      "eligible": 283,
+      "share_modelled": 0.7102
+    },
+    "growth_sensitivity": {
+      "years": 3,
+      "n": 255,
+      "model": "error",
+      "ambiguous": false,
+      "predictors": [
+        {
+          "predictor": "ln_rent",
+          "b": -0.166924,
+          "z": -3.869,
+          "p": 0.000109,
+          "reading": "negative association, significant at 0.05"
+        },
+        {
+          "predictor": "rent_growth_pct",
+          "b": -0.009546,
+          "z": -2.094,
+          "p": 0.036274,
+          "reading": "negative association, significant at 0.05"
+        },
+        {
+          "predictor": "ln_density",
+          "b": 0.077028,
+          "z": 8.845,
+          "p": 0.0,
+          "reading": "positive association, significant at 0.05"
+        }
+      ]
+    }
+  },
+  "runs": [
+    {
+      "profile": "e5_dep",
+      "specification": "primary",
+      "role": "primary",
+      "predictors": [
+        "ln_rent",
+        "rent_growth_pct",
+        "ln_density"
+      ],
+      "weights": "knn k=6, row-standardized",
+      "n": 201,
+      "ols": {
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.796248,
+            "se": 0.280819,
+            "t": 2.835,
+            "p": 0.005054
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.133619,
+            "se": 0.039777,
+            "t": -3.359,
+            "p": 0.000938,
+            "std_beta": -0.2235,
+            "vif": 1.233
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.010201,
+            "se": 0.006992,
+            "t": -1.459,
+            "p": 0.146191,
+            "std_beta": -0.0877,
+            "vif": 1.007
+          },
+          {
+            "name": "ln_density",
+            "b": 0.08343,
+            "se": 0.009526,
+            "t": 8.758,
+            "p": 0.0,
+            "std_beta": 0.5835,
+            "vif": 1.236
+          }
+        ],
+        "r2": 0.2927,
+        "adj_r2": 0.2819,
+        "logll": 120.174,
+        "aic": -232.348,
+        "condition_number": 85.095,
+        "jarque_bera_p": 0.001081,
+        "breusch_pagan_p": 0.039304,
+        "residual_moran": {
+          "I": 0.1802,
+          "p_sim": 0.0001
+        }
+      },
+      "lm_tests": {
+        "lm_lag": [
+          20.7587,
+          5e-06
+        ],
+        "lm_error": [
+          22.1006,
+          3e-06
+        ],
+        "rlm_lag": [
+          0.8756,
+          0.34941
+        ],
+        "rlm_error": [
+          2.2176,
+          0.136447
+        ],
+        "lm_sarma": [
+          22.9762,
+          1e-05
+        ]
+      },
+      "choice": {
+        "model": "error",
+        "reason": "ambiguous: both LM tests significant and neither robust test significant at 0.05; lag and error models both fitted",
+        "ambiguous": true,
+        "rule": "Anselin (2005)",
+        "alpha": 0.05,
+        "aic": {
+          "error": -251.845,
+          "lag": -247.216
+        },
+        "lower_aic": "error"
+      },
+      "spatial": {
+        "model": "ML_Error",
+        "method": "full",
+        "lambda": 0.4829,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 1.396795,
+            "se": 0.352675,
+            "z": 3.961,
+            "p": 7.5e-05
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.210614,
+            "se": 0.050114,
+            "z": -4.203,
+            "p": 2.6e-05
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.013827,
+            "se": 0.007076,
+            "z": -1.954,
+            "p": 0.050682
+          },
+          {
+            "name": "ln_density",
+            "b": 0.083109,
+            "se": 0.009705,
+            "z": 8.563,
+            "p": 0.0
+          },
+          {
+            "name": "lambda",
+            "b": 0.482932,
+            "se": 0.085108,
+            "z": 5.674,
+            "p": 0.0
+          }
+        ],
+        "pseudo_r2": 0.2756,
+        "logll": 129.922,
+        "aic": -251.845,
+        "residual_moran": {
+          "I": -0.0037,
+          "p_sim": 0.4744
+        },
+        "residuals": "e_filtered (spatially filtered, error model)"
+      },
+      "alternative": {
+        "model": "ML_Lag",
+        "method": "full",
+        "rho": 0.39,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.906495,
+            "se": 0.265695,
+            "z": 3.412,
+            "p": 0.000645
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.151069,
+            "se": 0.037582,
+            "z": -4.02,
+            "p": 5.8e-05,
+            "total_impact": -0.247661
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.013909,
+            "se": 0.006575,
+            "z": -2.116,
+            "p": 0.034385,
+            "total_impact": -0.022803
+          },
+          {
+            "name": "ln_density",
+            "b": 0.078385,
+            "se": 0.009198,
+            "z": 8.522,
+            "p": 0.0,
+            "total_impact": 0.128504
+          },
+          {
+            "name": "W_adequacy_gap",
+            "b": 0.390015,
+            "se": 0.082482,
+            "z": 4.729,
+            "p": 2e-06
+          }
+        ],
+        "pseudo_r2": 0.3657,
+        "logll": 128.608,
+        "aic": -247.216,
+        "residual_moran": {
+          "I": 0.0257,
+          "p_sim": 0.2151
+        },
+        "residuals": "u (lag model)"
+      },
+      "h2_reading": [
+        {
+          "predictor": "ln_rent",
+          "b": -0.210614,
+          "z": -4.203,
+          "p": 2.6e-05,
+          "reading": "negative association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Lag",
+            "b": -0.151069,
+            "p": 5.8e-05,
+            "reading": "negative association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        },
+        {
+          "predictor": "rent_growth_pct",
+          "b": -0.013827,
+          "z": -1.954,
+          "p": 0.050682,
+          "reading": "depends on model form: ML_Error no association significant at 0.05; ML_Lag negative association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Lag",
+            "b": -0.013909,
+            "p": 0.034385,
+            "reading": "negative association, significant at 0.05"
+          },
+          "model_form_agrees": false
+        },
+        {
+          "predictor": "ln_density",
+          "b": 0.083109,
+          "z": 8.563,
+          "p": 0.0,
+          "reading": "positive association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Lag",
+            "b": 0.078385,
+            "p": 0.0,
+            "reading": "positive association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        }
+      ],
+      "not_modelled": {
+        "no_growth": 82,
+        "status_no_zori": 6
+      }
+    },
+    {
+      "profile": "e5_dep",
+      "specification": "pw_density",
+      "role": "sensitivity",
+      "predictors": [
+        "ln_rent",
+        "rent_growth_pct",
+        "ln_pw_density"
+      ],
+      "weights": "knn k=6, row-standardized",
+      "n": 201,
+      "ols": {
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.58678,
+            "se": 0.270079,
+            "t": 2.173,
+            "p": 0.031002
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.140085,
+            "se": 0.039094,
+            "t": -3.583,
+            "p": 0.000428,
+            "std_beta": -0.2344,
+            "vif": 1.233
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.006629,
+            "se": 0.00691,
+            "t": -0.959,
+            "p": 0.338598,
+            "std_beta": -0.057,
+            "vif": 1.018
+          },
+          {
+            "name": "ln_pw_density",
+            "b": 0.103557,
+            "se": 0.011145,
+            "t": 9.292,
+            "p": 0.0,
+            "std_beta": 0.6109,
+            "vif": 1.246
+          }
+        ],
+        "r2": 0.3167,
+        "adj_r2": 0.3063,
+        "logll": 123.651,
+        "aic": -239.302,
+        "condition_number": 84.072,
+        "jarque_bera_p": 0.001679,
+        "breusch_pagan_p": 0.006892,
+        "residual_moran": {
+          "I": 0.1589,
+          "p_sim": 0.0001
+        }
+      },
+      "lm_tests": {
+        "lm_lag": [
+          20.5881,
+          6e-06
+        ],
+        "lm_error": [
+          17.1686,
+          3.4e-05
+        ],
+        "rlm_lag": [
+          3.639,
+          0.05644
+        ],
+        "rlm_error": [
+          0.2195,
+          0.639412
+        ],
+        "lm_sarma": [
+          20.8076,
+          3e-05
+        ]
+      },
+      "choice": {
+        "model": "lag",
+        "reason": "ambiguous: both LM tests significant and neither robust test significant at 0.05; lag and error models both fitted",
+        "ambiguous": true,
+        "rule": "Anselin (2005)",
+        "alpha": 0.05,
+        "aic": {
+          "lag": -254.074,
+          "error": -256.035
+        },
+        "lower_aic": "error"
+      },
+      "spatial": {
+        "model": "ML_Lag",
+        "method": "full",
+        "rho": 0.385,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.708172,
+            "se": 0.253995,
+            "z": 2.788,
+            "p": 0.005301
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.156944,
+            "se": 0.036721,
+            "z": -4.274,
+            "p": 1.9e-05,
+            "total_impact": -0.255206
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.010502,
+            "se": 0.006489,
+            "z": -1.618,
+            "p": 0.105573,
+            "total_impact": -0.017078
+          },
+          {
+            "name": "ln_pw_density",
+            "b": 0.097387,
+            "se": 0.010566,
+            "z": 9.217,
+            "p": 0.0,
+            "total_impact": 0.158361
+          },
+          {
+            "name": "W_adequacy_gap",
+            "b": 0.385033,
+            "se": 0.082007,
+            "z": 4.695,
+            "p": 3e-06
+          }
+        ],
+        "pseudo_r2": 0.3864,
+        "logll": 132.037,
+        "aic": -254.074,
+        "residual_moran": {
+          "I": 0.0183,
+          "p_sim": 0.2602
+        },
+        "residuals": "u (lag model)"
+      },
+      "alternative": {
+        "model": "ML_Error",
+        "method": "full",
+        "lambda": 0.4618,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.955257,
+            "se": 0.334951,
+            "z": 2.852,
+            "p": 0.004345
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.175112,
+            "se": 0.047502,
+            "z": -3.686,
+            "p": 0.000227
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.01566,
+            "se": 0.006948,
+            "z": -2.254,
+            "p": 0.024195
+          },
+          {
+            "name": "ln_pw_density",
+            "b": 0.094818,
+            "se": 0.010651,
+            "z": 8.902,
+            "p": 0.0
+          },
+          {
+            "name": "lambda",
+            "b": 0.461781,
+            "se": 0.087592,
+            "z": 5.272,
+            "p": 0.0
+          }
+        ],
+        "pseudo_r2": 0.3026,
+        "logll": 132.018,
+        "aic": -256.035,
+        "residual_moran": {
+          "I": 0.0036,
+          "p_sim": 0.4029
+        },
+        "residuals": "e_filtered (spatially filtered, error model)"
+      },
+      "h2_reading": [
+        {
+          "predictor": "ln_rent",
+          "b": -0.156944,
+          "z": -4.274,
+          "p": 1.9e-05,
+          "reading": "negative association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": -0.175112,
+            "p": 0.000227,
+            "reading": "negative association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        },
+        {
+          "predictor": "rent_growth_pct",
+          "b": -0.010502,
+          "z": -1.618,
+          "p": 0.105573,
+          "reading": "depends on model form: ML_Lag no association significant at 0.05; ML_Error negative association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": -0.01566,
+            "p": 0.024195,
+            "reading": "negative association, significant at 0.05"
+          },
+          "model_form_agrees": false
+        },
+        {
+          "predictor": "ln_pw_density",
+          "b": 0.097387,
+          "z": 9.217,
+          "p": 0.0,
+          "reading": "positive association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": 0.094818,
+            "p": 0.0,
+            "reading": "positive association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        }
+      ],
+      "not_modelled": {
+        "no_growth": 82,
+        "status_no_zori": 6
+      }
+    },
+    {
+      "profile": "e5_dep",
+      "specification": "growth_3y",
+      "role": "sensitivity",
+      "predictors": [
+        "ln_rent",
+        "rent_growth_pct",
+        "ln_density"
+      ],
+      "weights": "knn k=6, row-standardized",
+      "n": 255,
+      "ols": {
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 0.693544,
+            "se": 0.248303,
+            "t": 2.793,
+            "p": 0.005622
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.121337,
+            "se": 0.03522,
+            "t": -3.445,
+            "p": 0.000669,
+            "std_beta": -0.2106,
+            "vif": 1.273
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.003035,
+            "se": 0.00431,
+            "t": -0.704,
+            "p": 0.482039,
+            "std_beta": -0.0386,
+            "vif": 1.025
+          },
+          {
+            "name": "ln_density",
+            "b": 0.076583,
+            "se": 0.008271,
+            "t": 9.259,
+            "p": 0.0,
+            "std_beta": 0.5686,
+            "vif": 1.285
+          }
+        ],
+        "r2": 0.2635,
+        "adj_r2": 0.2547,
+        "logll": 147.298,
+        "aic": -286.595,
+        "condition_number": 81.637,
+        "jarque_bera_p": 0.0,
+        "breusch_pagan_p": 0.023805,
+        "residual_moran": {
+          "I": 0.1555,
+          "p_sim": 0.0001
+        }
+      },
+      "lm_tests": {
+        "lm_lag": [
+          14.3108,
+          0.000155
+        ],
+        "lm_error": [
+          20.7167,
+          5e-06
+        ],
+        "rlm_lag": [
+          0.2382,
+          0.625517
+        ],
+        "rlm_error": [
+          6.644,
+          0.009949
+        ],
+        "lm_sarma": [
+          20.9548,
+          2.8e-05
+        ]
+      },
+      "choice": {
+        "model": "error",
+        "reason": "both LM tests significant; only robust LM-error significant at 0.05",
+        "ambiguous": false,
+        "rule": "Anselin (2005)",
+        "alpha": 0.05
+      },
+      "spatial": {
+        "model": "ML_Error",
+        "method": "full",
+        "lambda": 0.4036,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 1.056538,
+            "se": 0.306224,
+            "z": 3.45,
+            "p": 0.00056
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.166924,
+            "se": 0.043144,
+            "z": -3.869,
+            "p": 0.000109
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.009546,
+            "se": 0.004559,
+            "z": -2.094,
+            "p": 0.036274
+          },
+          {
+            "name": "ln_density",
+            "b": 0.077028,
+            "se": 0.008709,
+            "z": 8.845,
+            "p": 0.0
+          },
+          {
+            "name": "lambda",
+            "b": 0.403612,
+            "se": 0.084633,
+            "z": 4.769,
+            "p": 2e-06
+          }
+        ],
+        "pseudo_r2": 0.253,
+        "logll": 156.035,
+        "aic": -304.069,
+        "residual_moran": {
+          "I": -0.0145,
+          "p_sim": 0.388
+        },
+        "residuals": "e_filtered (spatially filtered, error model)"
+      },
+      "h2_reading": [
+        {
+          "predictor": "ln_rent",
+          "b": -0.166924,
+          "z": -3.869,
+          "p": 0.000109,
+          "reading": "negative association, significant at 0.05"
+        },
+        {
+          "predictor": "rent_growth_pct",
+          "b": -0.009546,
+          "z": -2.094,
+          "p": 0.036274,
+          "reading": "negative association, significant at 0.05"
+        },
+        {
+          "predictor": "ln_density",
+          "b": 0.077028,
+          "z": 8.845,
+          "p": 0.0,
+          "reading": "positive association, significant at 0.05"
+        }
+      ],
+      "not_modelled": {
+        "no_growth": 28,
+        "status_no_zori": 6
+      }
+    },
+    {
+      "profile": "o3_dep",
+      "specification": "primary",
+      "role": "sensitivity",
+      "predictors": [
+        "ln_rent",
+        "rent_growth_pct",
+        "ln_density"
+      ],
+      "weights": "knn k=6, row-standardized",
+      "n": 201,
+      "ols": {
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 1.746113,
+            "se": 0.355762,
+            "t": 4.908,
+            "p": 2e-06
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.211721,
+            "se": 0.050392,
+            "t": -4.201,
+            "p": 4e-05,
+            "std_beta": -0.3094,
+            "vif": 1.233
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.004189,
+            "se": 0.008858,
+            "t": -0.473,
+            "p": 0.636808,
+            "std_beta": -0.0315,
+            "vif": 1.007
+          },
+          {
+            "name": "ln_density",
+            "b": 0.059493,
+            "se": 0.012069,
+            "t": 4.93,
+            "p": 2e-06,
+            "std_beta": 0.3635,
+            "vif": 1.236
+          }
+        ],
+        "r2": 0.1337,
+        "adj_r2": 0.1205,
+        "logll": 72.627,
+        "aic": -137.254,
+        "condition_number": 85.095,
+        "jarque_bera_p": 0.004521,
+        "breusch_pagan_p": 0.79685,
+        "residual_moran": {
+          "I": 0.2558,
+          "p_sim": 0.0001
+        }
+      },
+      "lm_tests": {
+        "lm_lag": [
+          46.236,
+          0.0
+        ],
+        "lm_error": [
+          44.5055,
+          0.0
+        ],
+        "rlm_lag": [
+          2.3032,
+          0.129106
+        ],
+        "rlm_error": [
+          0.5727,
+          0.449187
+        ],
+        "lm_sarma": [
+          46.8087,
+          0.0
+        ]
+      },
+      "choice": {
+        "model": "lag",
+        "reason": "ambiguous: both LM tests significant and neither robust test significant at 0.05; lag and error models both fitted",
+        "ambiguous": true,
+        "rule": "Anselin (2005)",
+        "alpha": 0.05,
+        "aic": {
+          "lag": -165.515,
+          "error": -170.018
+        },
+        "lower_aic": "error"
+      },
+      "spatial": {
+        "model": "ML_Lag",
+        "method": "full",
+        "rho": 0.4877,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 1.442332,
+            "se": 0.343312,
+            "z": 4.201,
+            "p": 2.7e-05
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.190122,
+            "se": 0.047339,
+            "z": -4.016,
+            "p": 5.9e-05,
+            "total_impact": -0.371125
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.008562,
+            "se": 0.007993,
+            "z": -1.071,
+            "p": 0.28407,
+            "total_impact": -0.016714
+          },
+          {
+            "name": "ln_density",
+            "b": 0.049696,
+            "se": 0.011045,
+            "z": 4.499,
+            "p": 7e-06,
+            "total_impact": 0.097009
+          },
+          {
+            "name": "W_adequacy_gap",
+            "b": 0.487716,
+            "se": 0.079555,
+            "z": 6.131,
+            "p": 0.0
+          }
+        ],
+        "pseudo_r2": 0.2888,
+        "logll": 87.758,
+        "aic": -165.515,
+        "residual_moran": {
+          "I": 0.0031,
+          "p_sim": 0.4047
+        },
+        "residuals": "u (lag model)"
+      },
+      "alternative": {
+        "model": "ML_Error",
+        "method": "full",
+        "lambda": 0.5489,
+        "coefficients": [
+          {
+            "name": "CONSTANT",
+            "b": 2.394594,
+            "se": 0.445662,
+            "z": 5.373,
+            "p": 0.0
+          },
+          {
+            "name": "ln_rent",
+            "b": -0.286547,
+            "se": 0.063373,
+            "z": -4.522,
+            "p": 6e-06
+          },
+          {
+            "name": "rent_growth_pct",
+            "b": -0.009807,
+            "se": 0.008673,
+            "z": -1.131,
+            "p": 0.258156
+          },
+          {
+            "name": "ln_density",
+            "b": 0.048242,
+            "se": 0.011921,
+            "z": 4.047,
+            "p": 5.2e-05
+          },
+          {
+            "name": "lambda",
+            "b": 0.54894,
+            "se": 0.077003,
+            "z": 7.129,
+            "p": 0.0
+          }
+        ],
+        "pseudo_r2": 0.1136,
+        "logll": 89.009,
+        "aic": -170.018,
+        "residual_moran": {
+          "I": -0.0075,
+          "p_sim": 0.485
+        },
+        "residuals": "e_filtered (spatially filtered, error model)"
+      },
+      "h2_reading": [
+        {
+          "predictor": "ln_rent",
+          "b": -0.190122,
+          "z": -4.016,
+          "p": 5.9e-05,
+          "reading": "negative association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": -0.286547,
+            "p": 6e-06,
+            "reading": "negative association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        },
+        {
+          "predictor": "rent_growth_pct",
+          "b": -0.008562,
+          "z": -1.071,
+          "p": 0.28407,
+          "reading": "no association significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": -0.009807,
+            "p": 0.258156,
+            "reading": "no association significant at 0.05"
+          },
+          "model_form_agrees": true
+        },
+        {
+          "predictor": "ln_density",
+          "b": 0.049696,
+          "z": 4.499,
+          "p": 7e-06,
+          "reading": "positive association, significant at 0.05",
+          "alternative": {
+            "model": "ML_Error",
+            "b": 0.048242,
+            "p": 5.2e-05,
+            "reading": "positive association, significant at 0.05"
+          },
+          "model_form_agrees": true
+        }
+      ],
+      "not_modelled": {
+        "no_growth": 82,
+        "status_no_zori": 6
+      }
+    }
+  ],
+  "outputs": [
+    "mha_regression.csv",
+    "regression_manifest.json"
+  ],
+  "output_sha256": {
+    "mha_regression.csv": "fc7531f6f24e49699f379b96608fa5834b1e82b57f1b24c05893966f2181d59a"
+  },
+  "warnings": [
+    "e5_dep: the 82 MHAs left out for want of 5-year rent growth differ from the 201 modelled MHAs in adequacy_gap, ln_density, ln_rent (Mann-Whitney, alpha 0.05); the H2 result describes the modelled sample"
+  ]
+}

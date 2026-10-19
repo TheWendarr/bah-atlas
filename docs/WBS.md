@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 11  ·  🟣 In progress: 8  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
+**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 18  ·  🟣 In progress: 1  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,18 +18,11 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 3 / 8 | `████░░░░░░ 38%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 7 / 8 | `█████████░ 88%` | 🗓️ Upcoming |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **B19** Spatial regression — optional
-- 🟣 **B20** Attribute payload JSON (data contract) — due 30 Oct (M6)
-- 🟣 **B21** UI metadata JSON — due 30 Oct (M6)
-- 🟣 **B22** Build manifest JSON — due 30 Oct (M6)
-- 🟣 **B23** QA / validation report — due 30 Oct (M6)
-- 🟣 **B24** ACS context join — optional
-- 🟣 **B27** Hotspot overlay payload — optional
 - 🟣 **W1** Layer 2 writeup (how Layer 1 becomes Layer 3) — due 30 Oct (M6)
 
 ## Nodal map
@@ -251,8 +244,8 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
-    class A8,A9,B12,B13,B14,B15,B16,B17,B18,B28,W2 week
-    class B19,B20,B21,B22,B23,B24,B27,W1 prog
+    class A8,A9,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,W2 week
+    class W1 prog
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
     class A10,B25,B26 gone
     class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
@@ -333,15 +326,15 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟢 | **B16** | Spatial weights matrix | required | B6 | completed 18 Oct |
 | 🟢 | **B17** | Global Moran's I | required | B12, B16 | completed 18 Oct |
 | 🟢 | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | completed 18 Oct |
-| 🟣 | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error; first 2026 run: n = 201 of 283 (82 MHAs lack 5-year ZORI growth and are less dense and nearer the design point), robust LM tests ambiguous; 18 Oct: both forms fitted when ambiguous, selection check, 3-year growth sensitivity |
+| 🟢 | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error; first 2026 run: n = 201 of 283 (82 MHAs lack 5-year ZORI growth and are less dense and nearer the design point), robust LM tests ambiguous; 18 Oct: both forms fitted when ambiguous, selection check, 3-year growth sensitivity; completed 18 Oct |
 
 #### 2.7 Front-End Payload — due 30 October 2026 (M6)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22; code ready 18 Oct: pipeline/handoff/build_payload.py (make handoff) |
-| 🟣 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12) |
-| 🟣 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py |
+| 🟢 | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22; code ready 18 Oct: pipeline/handoff/build_payload.py (make handoff); completed 18 Oct |
+| 🟢 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12); completed 18 Oct |
+| 🟢 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py; completed 18 Oct |
 | 🟢 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; completed 18 Oct |
 
@@ -349,11 +342,11 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit |
-| 🟣 | **B24** | ACS context join | optional | A9, A2, B1 | Reduced H2: population density per MHA from A9 (urbanicity); A2 ALAND20 gives land area; code ready 18 Oct: density_to_mha.py (make density), sum(pop)/sum(land) for B19 and population-weighted density for its sensitivity run |
+| 🟢 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit; completed 18 Oct |
+| 🟢 | **B24** | ACS context join | optional | A9, A2, B1 | Reduced H2: population density per MHA from A9 (urbanicity); A2 ALAND20 gives land area; code ready 18 Oct: density_to_mha.py (make density), sum(pop)/sum(land) for B19 and population-weighted density for its sensitivity run; completed 18 Oct |
 | ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
-| 🟣 | **B27** | Hotspot overlay payload | optional | B18, B22 | Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C); code ready 18 Oct: build_hotspots.py; p-values to 5 decimals (ICD 1.0.2) |
+| 🟢 | **B27** | Hotspot overlay payload | optional | B18, B22 | Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C); code ready 18 Oct: build_hotspots.py; p-values to 5 decimals (ICD 1.0.2); completed 18 Oct |
 | 🟣 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline; scaffold 18 Oct: docs/layer2-writeup.md (headings, evidence, prompts; section 7 records actions and decisions per D10); completed in the delivery commit |
 
 ### Layer 3 — Front-End

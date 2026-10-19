@@ -1,0 +1,356 @@
+{
+  "nodes": [
+    "B23"
+  ],
+  "generated_at": "2026-10-19T01:01:52+00:00",
+  "build_id": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1",
+  "schema_version": "1.0.3",
+  "inputs": {
+    "B7": "areas_2026.pmtiles",
+    "B20": "payload_2026.json",
+    "B21": "ui_metadata_2026.json",
+    "B27": "hotspots_2026.json",
+    "B22": "build_manifest_2026.json",
+    "B12": "mha_rent_metrics.csv",
+    "B14": "mha_buy_metrics.csv",
+    "B8": "mha_zori.csv",
+    "B11": "mha_ownership.csv"
+  },
+  "input_sha256": {
+    "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
+    "B20": "030e3f66ebf70acf4e0fcbdf14eb67238461307ea42c965a0e95533faceae00d",
+    "B21": "4dfa607e265fc1ad5110e6e76ac90436359e1cc836fb9ea7016b01376ada0dc7",
+    "B27": "968897c934f2f18381c7b3a5c04056c5be1e5b7a9bab48a23dc695c19ea44256",
+    "B22": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1",
+    "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
+    "B14": "15777758c86086245f55b8751c5c055d73c906309cd42f67eb9f2e9b2501446a",
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d"
+  },
+  "verdict": "PASS",
+  "checks": [
+    {
+      "check": "Contract checks 3-8 (validate_handoff.py)",
+      "result": "PASS",
+      "detail": "the handoff conforms to the data contract"
+    },
+    {
+      "check": "Check 2: recorded hashes (verify_hashes.py)",
+      "result": "PASS",
+      "detail": "verify_hashes: all recorded hashes agree"
+    },
+    {
+      "check": "Provenance: built from committed code",
+      "result": "PASS",
+      "detail": "B22 commit 518cc2fa8f2d is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    },
+    {
+      "check": "Check 9: file sizes recorded; SHA256SUMS matches",
+      "result": "PASS",
+      "detail": "B20 payload 44 KB gzipped (plan expectation: under 300 KB)"
+    },
+    {
+      "check": "Check 9: counts by status recorded",
+      "result": "PASS",
+      "detail": "339 areas: ccg 39, mha 299, unknown 1"
+    },
+    {
+      "check": "Check 9: classes that differ between rounded and unrounded values",
+      "result": "NOTE",
+      "detail": "1 value(s) change class; 15 sit within rounding of a break"
+    },
+    {
+      "check": "Check 4: B20 codes without a polygon listed",
+      "result": "PASS",
+      "detail": "0: none"
+    },
+    {
+      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28)",
+      "result": "PASS",
+      "detail": "all present"
+    },
+    {
+      "check": "Traces: three MHAs recomputed from inputs to B20",
+      "result": "PASS",
+      "detail": "KS105, NC182, MA119 agree at every step"
+    },
+    {
+      "check": "B19: spatial model form",
+      "result": "NOTE",
+      "detail": "ambiguous (lag and error both fitted); predictor readings differ between them for at least one predictor"
+    },
+    {
+      "check": "B19: sample selection",
+      "result": "NOTE",
+      "detail": "201 of 283 modelled; dropped MHAs differ in adequacy_gap, ln_density, ln_rent"
+    }
+  ],
+  "provenance": {
+    "b22_commit": "518cc2fa8f2d45e1ca167b4c5d1cefa7cc66a8f4",
+    "b22_dirty": true,
+    "detail": "B22 commit 518cc2fa8f2d is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+  },
+  "files": {
+    "areas_2026.pmtiles": {
+      "bytes": 17584031,
+      "gzip_bytes": 17191315,
+      "sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb"
+    },
+    "payload_2026.json": {
+      "bytes": 462207,
+      "gzip_bytes": 45140,
+      "sha256": "030e3f66ebf70acf4e0fcbdf14eb67238461307ea42c965a0e95533faceae00d"
+    },
+    "ui_metadata_2026.json": {
+      "bytes": 29965,
+      "gzip_bytes": 8265,
+      "sha256": "4dfa607e265fc1ad5110e6e76ac90436359e1cc836fb9ea7016b01376ada0dc7"
+    },
+    "hotspots_2026.json": {
+      "bytes": 133164,
+      "gzip_bytes": 6570,
+      "sha256": "968897c934f2f18381c7b3a5c04056c5be1e5b7a9bab48a23dc695c19ea44256"
+    },
+    "build_manifest_2026.json": {
+      "bytes": 9585,
+      "gzip_bytes": 3556,
+      "sha256": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1"
+    }
+  },
+  "areas_by_class": {
+    "mha": 299,
+    "unknown": 1,
+    "ccg": 39
+  },
+  "status_counts": {
+    "e5_dep": {
+      "rent": {
+        "no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      },
+      "buy": {
+        "piti_only_no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      }
+    },
+    "o3_dep": {
+      "rent": {
+        "no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      },
+      "buy": {
+        "piti_only_no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      }
+    }
+  },
+  "rounding_class_differences": [
+    {
+      "area": "FL057",
+      "profile": "e5_dep",
+      "mode": "rent",
+      "metric": "surplus_usd",
+      "unrounded": 49.92,
+      "rounded": 50,
+      "class_unrounded": 3,
+      "class_rounded": 4
+    }
+  ],
+  "values_near_a_break": 15,
+  "codes_without_polygon": [],
+  "traces": [
+    {
+      "area": "KS105",
+      "why": "surplus: adequacy gap nearest the median of the positive gaps",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 1626.0,
+          "cost_share": 126.0,
+          "cost": 1510.56,
+          "adequacy_recomputed": 1.159834763266603,
+          "adequacy_b12_b14": 1.1598,
+          "adequacy_b20": 1.1598,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 1626.0,
+          "cost_share": 126.0,
+          "cost": 2253.08,
+          "adequacy_recomputed": 0.7776022156337103,
+          "adequacy_b12_b14": 0.7776,
+          "adequacy_b20": 0.7776,
+          "agree": true,
+          "b27_cluster": "HL"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 2064.0,
+          "cost_share": 151.0,
+          "cost": 1510.56,
+          "adequacy_recomputed": 1.4663436076686793,
+          "adequacy_b12_b14": 1.4663,
+          "adequacy_b20": 1.4663,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 2064.0,
+          "cost_share": 151.0,
+          "cost": 2253.08,
+          "adequacy_recomputed": 0.9830986915688746,
+          "adequacy_b12_b14": 0.9831,
+          "adequacy_b20": 0.9831,
+          "agree": true,
+          "b27_cluster": "NS"
+        }
+      ],
+      "zori_median_recomputed": 1223.55,
+      "zori_median_b8": 1223.55
+    },
+    {
+      "area": "NC182",
+      "why": "short of design: adequacy gap nearest the median of the negative gaps",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 1806.0,
+          "cost_share": 126.0,
+          "cost": 2097.09,
+          "adequacy_recomputed": 0.921276626181995,
+          "adequacy_b12_b14": 0.9213,
+          "adequacy_b20": 0.9213,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 1806.0,
+          "cost_share": 126.0,
+          "cost": 2323.83,
+          "adequacy_recomputed": 0.8313861168846258,
+          "adequacy_b12_b14": 0.8314,
+          "adequacy_b20": 0.8314,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 2175.0,
+          "cost_share": 151.0,
+          "cost": 2097.09,
+          "adequacy_recomputed": 1.1091560209623812,
+          "adequacy_b12_b14": 1.1092,
+          "adequacy_b20": 1.1092,
+          "agree": true,
+          "b27_cluster": "LL"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 2175.0,
+          "cost_share": 151.0,
+          "cost": 2323.83,
+          "adequacy_recomputed": 1.0009338032472255,
+          "adequacy_b12_b14": 1.0009,
+          "adequacy_b20": 1.0009,
+          "agree": true,
+          "b27_cluster": "NS"
+        }
+      ],
+      "zori_median_recomputed": 1719.61,
+      "zori_median_b8": 1719.61
+    },
+    {
+      "area": "MA119",
+      "why": "fallback: buy cost on PITI alone, no ZORI for utilities (decision 2.4)",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "no_zori",
+          "bah": 4344.0,
+          "cost_share": 126.0,
+          "cost": null,
+          "adequacy_recomputed": null,
+          "adequacy_b12_b14": null,
+          "adequacy_b20": null,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "piti_only_no_zori",
+          "bah": 4344.0,
+          "cost_share": 126.0,
+          "cost": 21655.5,
+          "adequacy_recomputed": 0.2064140749463185,
+          "adequacy_b12_b14": 0.2064,
+          "adequacy_b20": 0.2064,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "no_zori",
+          "bah": 5442.0,
+          "cost_share": 151.0,
+          "cost": null,
+          "adequacy_recomputed": null,
+          "adequacy_b12_b14": null,
+          "adequacy_b20": null,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "piti_only_no_zori",
+          "bah": 5442.0,
+          "cost_share": 151.0,
+          "cost": 21655.5,
+          "adequacy_recomputed": 0.25827157073260837,
+          "adequacy_b12_b14": 0.2583,
+          "adequacy_b20": 0.2583,
+          "agree": true,
+          "b27_cluster": null
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    "qa_2026.md",
+    "qa_2026_manifest.json"
+  ],
+  "output_sha256": {
+    "qa_2026.md": "5dd470bd94af390e5b181ff16d74e77d68ce10418bf8c45c417312f849c6c53f"
+  }
+}

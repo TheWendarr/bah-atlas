@@ -3,7 +3,7 @@
     "A8"
   ],
   "role": "per-MHA property tax rate (A9 ACS) and homeowners premium (A8 FIO) for B11",
-  "generated_at": "2026-10-18T22:00:39+00:00",
+  "generated_at": "2026-10-19T01:00:25+00:00",
   "inputs": {
     "A9": "acs5_2024_zcta.json",
     "A8": "Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",

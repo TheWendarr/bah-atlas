@@ -1,7 +1,42 @@
-2026-10-18 — Ran 81 tests in 25.962s — OK
+2026-10-18 — Ran 102 tests in 33.686s — OK
 
-.................................................................................
+......................................................................................................
 ----------------------------------------------------------------------
-Ran 81 tests in 25.962s
+Ran 102 tests in 33.686s
 
 OK
+  PASS  gate 1 tracker: ok
+  PASS  gate 2 contract: ok
+  PASS  gate 3 hashes: ok
+  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 5 provenance: ok
+  PASS  gate 6 write-up: ok
+deliver_handoff: every gate passes; `make deliver` will copy the handoff to /tmp/tmpewpt7awt/delivery/2026/
+  PASS  gate 1 tracker: ok
+  PASS  gate 2 contract: ok
+  PASS  gate 3 hashes: ok
+  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 5 provenance: ok
+  PASS  gate 6 write-up: ok
+deliver_handoff: delivered 8 files to /tmp/tmpewpt7awt/delivery/2026/ and checked them against SHA256SUMS and B23
+next:
+  make done N=W1
+  git add /tmp/tmpewpt7awt/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpewpt7awt/delivery/2026/ with the W1 write-up"
+  PASS  gate 1 tracker: ok
+  PASS  gate 2 contract: ok
+  PASS  gate 3 hashes: ok
+  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 5 provenance: ok
+  PASS  gate 6 write-up: ok
+  PASS  gate 1 tracker: ok
+  PASS  gate 2 contract: ok
+  PASS  gate 3 hashes: ok
+  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 5 provenance: ok
+  PASS  gate 6 write-up: ok
+deliver_handoff: delivered 8 files to /tmp/tmpewpt7awt/delivery/2026/ and checked them against SHA256SUMS and B23
+next:
+  make done N=W1
+  git add /tmp/tmpewpt7awt/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpewpt7awt/delivery/2026/ with the W1 write-up"
