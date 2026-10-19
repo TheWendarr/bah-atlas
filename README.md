@@ -55,7 +55,8 @@ Each layer is attributed to its source:
 - **Affordability reference** — HUD Fair Market Rents (FMR / SAFMR)
 - **Rent/utilities split and member cost share** — DTMO BAH Rate Component Breakdown and out-of-pocket table
 - **Mortgage rate** — Freddie Mac Primary Mortgage Market Survey (PMMS)
-- **Planned:** property tax (U.S. Census ACS) and homeowners insurance (U.S. Treasury FIO, NAIC) by locality; population density (ACS) for hypothesis H2
+- **Property tax and population density** — U.S. Census American Community Survey (ACS) 5-year, ZCTA level
+- **Homeowners insurance** — U.S. Treasury Federal Insurance Office (FIO) ZIP-level premiums, 2022
 
 The full register, with licences and caveats, is [`docs/SOURCES.md`](docs/SOURCES.md).
 
@@ -74,8 +75,11 @@ bah-atlas/
 │   ├── geometry/    spatial builders: crosswalk + ZCTA -> MHA polygons (B6)
 │   ├── benchmarks/  ZIP-level benchmarks rolled up to the MHA (B8-B11)
 │   ├── metrics/     coverage and adequacy metrics (B12-B15)
-│   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18)
-│   └── tiles/       PMTiles builders: area tiles (B7) and basemap cutout (A11)
+│   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18), spatial regression (B19)
+│   ├── tiles/       PMTiles builders: area tiles (B7) and basemap cutout (A11)
+│   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27)
+│   └── qa/          QA / validation report (B23)
+├── delivery/        the validated handoff, added only by `make deliver` (decision D10)
 ├── web/             MapLibre GL JS frontend (Layer 3, not started)
 ├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
@@ -103,10 +107,14 @@ make basemap        # basemap cutout from a Protomaps build (A11); needs the pmt
 make benchmarks     # ZORI, ZHVI, SAFMR, A8 tax and insurance, ownership cost at the MHA (B8-B11)
 make metrics        # adequacy and coverage metrics (B12-B15)
 make spatial        # spatial weights, Moran's I, LISA, Gi* (B16-B18)
+make regression     # population density (B24) and the H2 spatial regression (B19)
 make test           # unit tests on synthetic fixtures
 make handoff        # the Layer 3 handoff files + SHA256SUMS in data/processed/handoff, validated
 make evidence       # copy manifests and test results into docs/evidence/
 make verify         # check every recorded SHA-256 against configs, evidence and data
+make qa             # QA / validation report (B23) in data/processed/qa
+make layer2         # all of the above from data/raw (no fetch), end to end, with evidence and checks
+make deliver-check  # the six D10 gates; `make deliver` copies the handoff into delivery/ when they pass
 ```
 
 `make all` runs check-config, geometry, non-mha, components, tiles, benchmarks, metrics,

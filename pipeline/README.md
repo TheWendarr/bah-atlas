@@ -158,6 +158,17 @@ files through each stage, and, where `data/` holds pipeline output, the live
 files. Run it after `make evidence`; it should end with "all recorded hashes
 agree".
 
+## End to end, and delivery
+
+`make layer2` runs every stage from `data/raw` (no refetch) through B24, B19, the
+handoff, B23 and the evidence and hash checks (data contract check 1).
+`make deliver-check` runs the six D10 gates in `tools/deliver_handoff.py`: every
+Layer 1–2 node complete or scrapped (W1 aside), contract checks 3–8, `make verify`,
+a passing B23 for this exact build, a build from committed code, and a written W1.
+`make deliver` runs them and only then copies the five files, `SHA256SUMS` and the
+B23 report into `delivery/YYYY/`, the one place processed data enters the
+repository (data contract section 12).
+
 ## `check_config.py`
 
 Validates `config/profiles.json` (A12) and `config/classification.json` (A13):

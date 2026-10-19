@@ -1,6 +1,6 @@
 # Data contract — Layer 2 → Layer 3 Interface Control Document
 
-**ICD version:** 1.0.2 · **contract `schema_version`:** 1.0.2 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
+**ICD version:** 1.0.3 · **contract `schema_version`:** 1.0.3 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
 
 This document fixes everything that crosses the boundary between the offline pipeline (Layer 2, B nodes) and the static map (Layer 3, C nodes): which files are handed over, the exact shape of each, the rules for missing values, and what the map may and may not do with them. Layer 3 is built against this document, not against the pipeline code.
 
@@ -88,7 +88,7 @@ B20 packs values already computed by B4 and B12–B15. It computes nothing new.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `schema_version` | string | `"1.0.2"` |
+| `schema_version` | string | `"1.0.3"` |
 | `bah_year` | integer | `2026` |
 | `build_id` | string | SHA-256 (64 hex characters) of the B22 file |
 | `profiles` | array of string | A12 profile ids in A12 order: `["e5_dep", "o3_dep"]` |
@@ -152,7 +152,7 @@ Every status code has a label and explanatory text in B21 `statuses`.
 | `piti_only_no_zori` | row | Buy rows with that status: cost excludes utilities |
 | `tax_insurance_locality` | row | Buy rows whose tax and insurance both come from locality sources (A8) |
 | `tax_state_fallback` | row | Buy rows whose property-tax rate fell back to the state rate (A8) |
-| `insurance_state_fallback` | row | Buy rows whose insurance fell back to the NAIC state average (A8) |
+| `insurance_state_fallback` | row | Buy rows whose insurance fell back to the state median of the FIO premiums published for real-MHA ZIPs (A8, decision D11) |
 | `insurance_2022_dollars` | row | Every buy row with a value: insurance is used as published, 2018–2022, not scaled to 2026 (decision N2) |
 | `lisa_exploratory` | overlay | The B27 file as a whole: local clusters at pseudo p < 0.05, not corrected for multiple testing (decision D2) |
 
@@ -164,7 +164,7 @@ Illustrative numbers.
 
 ```json
 {
-  "schema_version": "1.0.2",
+  "schema_version": "1.0.3",
   "bah_year": 2026,
   "build_id": "9c1e…(64 hex)",
   "profiles": ["e5_dep", "o3_dep"],
@@ -322,7 +322,7 @@ The ICD version and `schema_version` move together. Every change is entered in s
 
 These are the exit criteria for the handoff. B20–B23 implement them, and M6 does not close until all pass.
 
-1. `make handoff` runs from `data/raw` to `SHA256SUMS` without error.
+1. `make layer2` runs from `data/raw` to `SHA256SUMS` and the B23 report without error. (`make handoff` alone rebuilds only the delivered files from the existing stage outputs.)
 2. `make verify` reports no failed checks.
 3. Each JSON file validates against this document: required fields present, types correct, every enumeration value from its closed list, ratios at no more than 4 decimal places (p-values 5), dollars whole.
 4. The B7 codes and the B20 codes match exactly, except areas with no ZCTA polygon, which are listed in B23.
@@ -334,14 +334,24 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 ## 12. Delivery
 
-1. Layers 1 and 2 are completed in full first.
-2. The delivered files, `SHA256SUMS`, and the author's write-up of every action and decision behind them are then added to the repository together. The repository location is recorded here when that commit is made.
-3. Layer 3 work begins after that commit. Until then, the files exist only on the author's workstation in `data/processed/handoff/` (written by `make handoff`), which git ignores.
+1. Layers 1 and 2 are completed in full first: every Layer 1 and Layer 2 node complete or scrapped, `make layer2` run end to end from `data/raw`, and the B23 report passing every check.
+2. **Location (decided 18 Oct 2026, option B):** a frozen copy in `delivery/2026/` in the repository, holding the five delivered files, `SHA256SUMS`, and the B23 report with its manifest (`qa_2026.md`, `qa_2026_manifest.json`). Layer 3 reads only this folder. A pipeline rerun on the workstation changes `data/processed/handoff/` and nothing here; the delivery changes only by a deliberate re-delivery, entered in section 13.
+3. `make deliver` is the only way files reach `delivery/`. It copies them only when all six gates pass (`make deliver-check` runs the gates alone):
+   1. every Layer 1–2 node is complete or scrapped, apart from W1, which completes in the delivery commit
+   2. the contract checks 3–8 pass
+   3. `make verify` passes
+   4. the B23 verdict is PASS, for this exact build and these five files, and the report is unedited
+   5. the build came from committed code: the B22 commit is an ancestor of `HEAD`, and the pipeline code, configs, tools, Makefile and requirements are unchanged since
+   6. the W1 write-up is written
+
+   Each copy is then re-hashed against `SHA256SUMS` and the B23 manifest.
+4. The delivered folder, the author's write-up of every action and decision behind it (W1, `docs/layer2-writeup.md`) and the tracker update are committed together. Layer 3 work begins after that commit. Until then, the files exist only on the author's workstation in `data/processed/handoff/` and `data/processed/qa/`, which git ignores.
 
 ## 13. Change log
 
 | Version | Date | Change |
 |---|---|---|
+| 1.0.3 | 18 Oct 2026 | Wording only. Section 5.5: `insurance_state_fallback` describes the D11 fallback (FIO state median), not the NAIC average it replaced. Section 11, check 1: `make layer2` is the end-to-end run. Section 12: delivery location `delivery/2026/` (option B, a frozen copy) and the six `make deliver` gates. Made before any delivery, so no consumer is affected. |
 | 1.0.2 | 18 Oct 2026 | p-values in B27 rounded to 5 decimal places instead of 4: at 99,999 permutations the smallest p is 0.00002, which 4 places would show as 0. Section 8 lists the fields B22 carries; section 6 names the window keys; section 12 names the handoff folder. Made before any file was produced under 1.0.x, so no consumer is affected. |
 | 1.0.1 | 18 Oct 2026 | Section 4: the 2026 feature count (339) and the territory bucket's extent, from the first B28/B7 run. No interface change. |
 | 1.0.0 | 18 Oct 2026 | First issue. Interface fixed from the 18 Oct decisions (D1–D8, N1, N2, 2.1–2.10) and D9 (one tile layer keyed on `code`). |

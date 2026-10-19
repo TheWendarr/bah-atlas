@@ -12,7 +12,8 @@ M6 is the handoff from the offline pipeline to the map. When it closes, Layer 3 
 
 The exact shape of every one of these files is fixed in the **[data contract (Layer 2 → Layer 3 ICD)](../data-contract.md)**, tracked as W2. This page records the decisions behind it and how each node will be built and checked.
 
-**In progress (18 Oct):** A8, B20, B21, B22, B23, B28, W1, W2 (required); A9, B24, B19, B27 (optional).
+**In progress (18 Oct):** A8, B20, B21, B22, B23, B28, W1, W2 (required); A9, B24, B19, B27 (optional). B19 is tracked under M6 from 18 Oct (D15).
+**Code complete (18 Oct):** every Layer 2 node. What remains is the end-to-end run (`make layer2`), the author's review of the B23 report, W1, and the D10 delivery (`make deliver`).
 **Scrapped:** B26, A10, B25.
 **Layer 3 (C1–C24):** not started until this handoff exists.
 
@@ -40,6 +41,9 @@ The exact shape of every one of these files is fixed in the **[data contract (La
 | D12 | **Map wording in `config/ui_text.json`** (part of A13), read only by B21: status and caveat texts, global caveats, boundary statements, source attributions. | A wording change reruns only B21; B12–B18 keep their recorded hashes. Documented in `docs/configuration.md`. |
 | D13 | **99,999 permutations is the Makefile default**, matching the recorded run. | A full rebuild reproduces the recorded B17/B18 evidence. |
 | D14 | **Handoff files are written to `data/processed/handoff/`**, apart from the intermediate outputs. | The D10 delivery commit copies one folder. ICD 1.0.2, section 12. |
+| D15 | **B19 is done now, inside M6 (decided 18 Oct).** H2 is tested before Layers 1 and 2 are declared complete, rather than after M6 by 16 Nov. Rent growth is annualised over **5 years** before the B8 window, in the same calendar months. | `milestones.csv` M6 tracks A8 and B19. `make regression` (B24 then B19); `GROWTH_YEARS ?= 5`. B23 and W1 report the H2 result. |
+| D16 | **Delivery location: option B, a frozen copy in `delivery/2026/` (decided 18 Oct).** Option A (tracking `data/processed/handoff/` in place) was rejected: every rerun would rewrite the 17.6 MB tile archive in git history and move the Layer 3 input without a decision. | ICD 1.0.3, section 12. `make deliver` is the only writer and copies only when its six gates pass; `.gitignore` admits `delivery/*/*.pmtiles` only. |
+| D17 | **Processed data enters the repository only after Layers 1–2 are complete and validated (restates D10 as gates, 18 Oct).** | `make deliver` refuses unless every Layer 1–2 node is complete or scrapped (W1 aside), the contract checks and `make verify` pass, the B23 verdict is PASS for this exact build, the build came from committed code, and W1 is written. The B23 report is written to the git-ignored `data/processed/qa/` and travels with the delivery. |
 
 **Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
 
@@ -159,7 +163,7 @@ Every script follows the existing pattern: read inputs as-is, validate loudly, w
   - So the current count of two FDR survivors may be limited by permutation resolution rather than the data. The rerun settles which MHAs are marked; the result is recorded either way.
   - **Result (18 Oct):** at 99,999 permutations the primary test still has 2 FDR survivors (1 HL, 1 LH; cut-off p = 0.00011), so the count reflects the data. Buy mode after A8: E-5 29, O-3 23.
 
-### H2 chain (D8, reduced) — A9 and B24 by Sat 24 Oct with A8; B19 after M6, before 16 Nov (optional)
+### H2 chain (D8, reduced) — A9 done 18 Oct; B24 and B19 code written 18 Oct, inside M6 (D15)
 
 H2 asks what the adequacy gaps are associated with. The research question itself is answered by B12–B18. H2 supplies the explanation the instructor's original redirect asked for.
 
@@ -171,6 +175,10 @@ H2 asks what the adequacy gaps are associated with. The research question itself
   - log population density (B24)
 
   Method: ordinary least squares first, then the Lagrange-multiplier diagnostics to choose a spatial lag or spatial error model (PySAL `spreg`), on the same CONUS scope and KNN weights as B17.
+- **Built (code, 18 Oct):**
+  - `benchmarks/density_to_mha.py` (B24, `make density`): Σ population ÷ Σ ALAND20 over each MHA's ZCTAs (the plan's measure, B19 primary), and the population-weighted density (B19 sensitivity). ALAND20 is read from the A2 attribute table, so the generalized polygons play no part. 3 tests.
+  - `spatial/regression.py` (B19, `make regression`): growth from the A3 history over the 5 years before the B8 window, matched calendar months, median of ZIP growth per MHA; OLS with residual Moran's I, the five LM tests, VIF and condition number; the Anselin (2005) rule chooses OLS, ML_Lag or ML_Error; residual Moran's I retested on the chosen model; sensitivity runs for population-weighted density and the O-3 profile. Stops if B8 came from another A3 file. 7 tests, including recovery of planted coefficients and of ρ = 0.6 on a lattice.
+  - **Caveat recorded in the manifest:** the dependent variable divides by the utilities-inclusive ZORI and `ln_rent` is the log of ZORI, so part of a negative rent-level coefficient is mechanical. W1 should say so.
 - **Why reduced:** BEA Regional Price Parities (A10, B25) exist only for states and metro areas, which is coarser than MHAs. Their rent component is built from ACS rents, so it would largely repeat the rent-level variable. Both are scrapped. The research proposal records this.
 
 ### B22 · build manifest — target Thu 29 Oct
@@ -179,11 +187,13 @@ H2 asks what the adequacy gaps are associated with. The research question itself
 - Its own SHA-256 is the `build_id` in B20, B21 and B27.
 - **Build order (found while writing the ICD):** B22 cannot list the hashes of files that embed its own hash. So B22 is written first, from the stage manifests and B7; B20, B21 and B27 follow; a `SHA256SUMS` file over all five is written last ([ICD section 8](../data-contract.md#8-b22--build-manifest-build_manifest_2026json)). `nodes.csv` now shows B22 feeding B20, B21 and B27 instead of the reverse.
 - **Check:** the build stops if any stage manifest is missing, or was built from inputs (configs included) other than the ones beside it.
-- **`make handoff`:** one target that runs `all`, B28, B7, B22, B20, B21, B27, `SHA256SUMS`, B23 and `verify` in that order (ICD conformance check 1).
+- **`make handoff`:** builds B22, B20, B21, B27 and `SHA256SUMS` from the existing stage outputs and validates them. **`make layer2`** (18 Oct) is the end-to-end run ICD check 1 names: `all`, `regression`, `handoff`, `evidence`, `verify`, `qa`, `evidence`, `verify`.
 
 ### B23 · QA / validation report — target Thu 29 Oct
 
-A generated `docs/qa/qa-2026.md` covering:
+**Built (code, 18 Oct):** `pipeline/qa/qa_report.py` (`make qa`). The report is written to `data/processed/qa/qa_2026.md`, git-ignored, not `docs/qa/`: it is processed output, so it enters the repository with the D10 delivery (D17). It adds a verdict table, ICD checks 2, 4 and 9 (sizes, counts by status, classes changed by rounding), and a provenance check (the build came from committed code). The three traces are chosen automatically (one surplus and one short of design, each nearest the median of its side, inside cluster scope; one fallback) unless `make qa TRACE="..."` names them; each ratio is recomputed from its inputs. The hand-check against the raw files is recorded in the progress note, because the report itself is never edited. 4 tests.
+
+Planned content (all covered):
 
 1. Join coverage at each step: ZIPs → ZCTAs → MHAs (5,609 of 20,280 MHA ZIPs have no ZCTA polygon, from the B6 manifest); ZIPs with no ZORI, ZHVI or SAFMR.
 2. Every warning carried in the stage manifests.
@@ -218,11 +228,10 @@ Wendell writes this; the outline points to the evidence each part draws on.
 | Sun 18 Oct | W2 data contract (ICD) written |
 | ~~Wed 21 Oct~~ Sun 18 Oct | B28 polygons; B7 rebuilt as one `areas` layer (D9) — done 3 days early |
 | ~~Sat 24 Oct~~ Sun 18 Oct | A8 and A9 pulls; `ownership.json` split as A12/A13 were; rerun B11 → B18 with 99,999 permutations — done 6 days early |
-| Sat 24 Oct | B24 (optional) |
-| Wed 28 Oct | B20, B21, B27 — code written Sun 18 Oct; run with `make handoff` |
-| Thu 29 Oct | B22 (code written Sun 18 Oct, first in the build order), `make handoff` (written 18 Oct); B23 |
-| Fri 30 Oct | W1; close M6 |
-| By 16 Nov | B19 (H2) |
+| Sun 18 Oct | B20, B21, B22, B27 code; first `make handoff` on the 2026 data, validated against ICD 1.0.2 |
+| Sun 18 Oct | B24, B19 (D15), B23 code; `make layer2`, `make deliver` and its gates (D16, D17); ICD 1.0.3 (wording) |
+| Workstation, next | `make layer2` from `data/raw`; review the B23 report and hand-check its three traces; `make done N="B19 B20-B22 B23 B24 B27"` |
+| Fri 30 Oct | W1; `make deliver`; `make done N=W1`; one commit with `delivery/2026/`, W1 and the tracker; close M6 |
 
 ---
 

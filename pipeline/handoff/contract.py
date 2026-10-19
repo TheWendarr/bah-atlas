@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 
-SCHEMA_VERSION = "1.0.2"
+SCHEMA_VERSION = "1.0.3"
 CODE = re.compile(r"^[A-Z]{2}[0-9]{3}$")
 CLASSES = ("mha", "ccg", "unknown")
 MODES = ("rent", "buy")

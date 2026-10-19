@@ -25,5 +25,7 @@ data/processed/*
 # Large geo/tile build artifacts if they land elsewhere
 *.gpkg
 *.pmtiles
+# ...except the delivered handoff (decision D10; written only by `make deliver`)
+!delivery/*/*.pmtiles
 *.mbtiles
 *.patch

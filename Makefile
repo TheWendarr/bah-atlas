@@ -22,7 +22,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa layer2 deliver-check deliver test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -201,6 +201,32 @@ QA ?= $(PROCESSED)/qa
 qa:
 	$(PYTHON) pipeline/qa/qa_report.py --year $(YEAR) --handoff $(HANDOFF) --out $(QA) \
 		$(if $(TRACE),--trace $(TRACE),)
+
+# --- Layers 1-2 end to end, and the D10 delivery -------------------------------
+# One command from data/raw to a validated handoff and its QA report (data contract
+# check 1): every stage, B24 and B19, the handoff, evidence and hash checks, B23,
+# then evidence and hash checks again so the B23 manifest is recorded. Each step is a
+# separate make call because make runs a target only once per invocation.
+layer2:
+	$(MAKE) all
+	$(MAKE) regression
+	$(MAKE) handoff
+	$(MAKE) evidence
+	$(MAKE) verify
+	$(MAKE) qa
+	$(MAKE) evidence
+	$(MAKE) verify
+
+# Decision D10 (data contract section 12): copy the validated handoff and the B23
+# report into delivery/$(YEAR)/, the only place processed data enters the repository.
+# deliver-check runs the gates (tracker, contract, hashes, B23, provenance, W1) and
+# changes nothing; deliver runs them and copies only if all pass.
+DELIVERY ?= delivery/$(YEAR)
+deliver-check:
+	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY) --check
+
+deliver:
+	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:
