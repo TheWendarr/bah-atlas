@@ -212,7 +212,7 @@ C21 (the about / data-caveats page) is built from this report.
 
 ### W1 · Layer 2 writeup — target Fri 30 Oct (author-written)
 
-Wendell writes this; the outline points to the evidence each part draws on.
+Wendell writes this; the outline points to the evidence each part draws on. **Scaffold (18 Oct):** [`docs/layer2-writeup.md`](../layer2-writeup.md) holds the headings, evidence links and a prompt per section, and adds section 7, the record of actions and decisions D10 asks for. Section 4 now covers H2 (B19, D15). `make deliver` refuses while any section still carries its prompt marker.
 
 1. **Purpose** — how Layer 1 becomes Layer 3, and why the pipeline is offline and reproducible.
 2. **From sources to areas** — the crosswalk, the synthesized geometry (B6, B28), and the median rule. Evidence: B1–B11 manifests.
