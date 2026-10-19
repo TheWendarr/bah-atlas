@@ -17,6 +17,15 @@ node_modules/
 data/raw/*
 !data/raw/README.md
 !data/raw/.gitkeep
+# ...except the U.S. Government source files, committed exactly as downloaded (decided 18 Oct 2026).
+# Third-party data (Zillow A3, A4; Freddie Mac A7) stays ignored: listed by URL and SHA-256 in docs/SOURCES.md.
+!data/raw/BAH-ASCII-2026.zip
+!data/raw/cb_2020_us_zcta520_500k.zip
+!data/raw/fy2026_safmrs_revised.xlsx
+!data/raw/dod_bah_rate_components_2026.pdf
+!data/raw/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx
+!data/raw/acs5_2024_zcta.json
+!data/raw/2026-BAH_OOP_Amounts.pdf
 data/interim/*
 !data/interim/.gitkeep
 data/processed/*

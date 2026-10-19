@@ -65,7 +65,7 @@ The full register, with licences and caveats, is [`docs/SOURCES.md`](docs/SOURCE
 ```
 bah-atlas/
 ├── data/
-│   ├── raw/         vendor artifacts as downloaded (gitignored)
+│   ├── raw/         vendor artifacts as downloaded; the U.S. Government ones are committed, third-party data is gitignored
 │   ├── interim/     tidy parsed outputs (gitignored)
 │   └── processed/   final web-ready geometry/tiles (gitignored)
 ├── config/          authored config, values only: profiles.json (A12), classification.json (A13), ownership.json (B11)
@@ -80,7 +80,6 @@ bah-atlas/
 │   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27)
 │   └── qa/          QA / validation report (B23)
 ├── delivery/        the validated handoff, added only by `make deliver` (decision D10)
-├── sources/         Layer 1 source archive: the U.S. Government source files as .zip volumes (`make sources-zip`)
 ├── web/             MapLibre GL JS frontend (Layer 3, not started)
 ├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
@@ -116,7 +115,6 @@ make verify         # check every recorded SHA-256 against configs, evidence and
 make qa             # QA / validation report (B23) in data/processed/qa
 make layer2         # all of the above from data/raw (no fetch), end to end, with evidence and checks
 make deliver-check  # the six D10 gates; `make deliver` copies the handoff into delivery/ when they pass
-make sources-zip    # archive the U.S. Government source files into sources/ (third-party data listed only)
 ```
 
 `make all` runs check-config, geometry, non-mha, components, tiles, benchmarks, metrics,

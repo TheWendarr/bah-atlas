@@ -22,7 +22,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa layer2 deliver-check deliver sources-zip test clean
+	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa layer2 deliver-check deliver test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -235,14 +235,6 @@ deliver-check:
 
 deliver:
 	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY)
-
-# Layer 1 source archive (decided 18 Oct 2026): the U.S. Government source files in
-# data/raw/, checked against the fetch manifest's SHA-256, packed into sources/ as .zip
-# volumes under 95 MB each (GitHub's per-file limit is 100 MB). Zillow (A3, A4) and
-# Freddie Mac (A7) are listed by URL and SHA-256 only. `make sources-zip CHECK=1` plans
-# without writing.
-sources-zip:
-	$(PYTHON) tools/package_sources.py --year $(YEAR) $(if $(CHECK),--check,)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:

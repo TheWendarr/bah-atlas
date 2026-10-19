@@ -1,7 +1,7 @@
 # data/raw
 
-Vendor artifacts exactly as downloaded. Contents are gitignored — this folder is
-tracked only for its structure and this note. Do not edit files here; the
+Vendor artifacts exactly as downloaded. The U.S. Government files are committed;
+third-party files are gitignored (see the end of this note). Do not edit files here; the
 pipeline reads them read-only and writes to `data/interim/`.
 
 Expected drops (`make fetch` pulls every auto-pullable one and records URL,
@@ -22,8 +22,10 @@ sha256, size, and time in `fetch_manifest.json`):
 
 Run `python pipeline/fetch/fetch_sources.py --list` for the full registry.
 
-**Archived copies.** The U.S. Government files above are also kept in the repository
-in [`sources/`](../../sources/README.md) (`make sources-zip`). To restore them, unzip the
-volumes and copy each `<node>/<file>` here; `make fetch` then validates them without
-downloading. Zillow (A3, A4) and Freddie Mac (A7) files are listed there by URL and
-SHA-256 only and must be downloaded from the provider.
+**Committed copies (decided 18 Oct 2026).** The U.S. Government files above (A1, A2,
+A5, A6, A8, A9, A12) are committed here exactly as downloaded, so a fresh clone holds
+the inputs the 2026 build read; `make verify` checks each against the SHA-256 in the
+fetch manifest. The third-party files (Zillow A3, A4; Freddie Mac A7) stay gitignored,
+because their providers' terms do not clearly allow re-posting them: `make fetch`
+downloads them, and [`docs/SOURCES.md`](../../docs/SOURCES.md) gives the SHA-256 a
+download must match to be the copy the build used.
