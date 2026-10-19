@@ -11,12 +11,52 @@ human-readable companion to that manifest. Status is one of `[incorporated]`,
 `[planned]`, `[reference]`, or `[not used]` (considered, then dropped; kept with
 the reason so the decision stays visible).
 
-Fields per entry: **Provider · Link · Artifact · Acquisition · Role · License · Notes · Verified**
+Fields per entry: **Provider · Link · Artifact · Archive · Acquisition · Role · License · Notes · Verified**
+
+**Archive (decided 18 Oct 2026).** The U.S. Government source files the 2026 build read
+are kept in the repository in [`sources/`](../sources/README.md) as .zip volumes, each
+under GitHub's 100 MB file limit, written by `make sources-zip` after checking every
+file against the SHA-256 recorded when it was pulled. Third-party data (Zillow A3, A4;
+Freddie Mac A7) is **not** re-posted, because the providers' terms do not clearly allow
+it: `sources/README.md` lists each with its download URL and SHA-256, so a fresh
+download can be proved identical to the copy the build used.
 
 Headings carry the node ID from the [work breakdown structure](WBS.md) (A = Layer 1 source).
 Acquisition is one of: **auto** (pulled by `make fetch`), **browser** (the host blocks
 scripted downloads; save it once from a web browser into `data/raw/` and `make fetch`
 validates and checksums it), **api**, or **build** (produced by a local build step).
+
+## Source index
+
+Where each entry below is used. "Nodes" are the WBS nodes that read it; "Code and
+config" are the files that read or cite it (documentation is not listed).
+
+| Entry | Status | Archive | Nodes | Code and config |
+|---|---|---|---|---|
+| A1 DTMO BAH ASCII 2026 | incorporated | `sources/` | B1–B4 → B12–B15, B20 | `ingest/ingest_bah_ascii.py`, `fetch/fetch_sources.py` |
+| A2 Census 2020 ZCTA boundaries | incorporated | `sources/` | B6, B28, B7, B24 | `geometry/build_mha_geometry.py`, `benchmarks/density_to_mha.py` |
+| A3 Zillow ZORI | incorporated | listed only | B8 → B12–B13, B11 utilities, B19 growth | `benchmarks/zillow_to_mha.py`, `spatial/regression.py` |
+| A4 Zillow ZHVI | incorporated | listed only | B9 → B11, B14–B15 | `benchmarks/zillow_to_mha.py`, `benchmarks/ownership_cost.py` |
+| A5 HUD SAFMR FY2026 | incorporated | `sources/` | B10 → B12–B13 cross-check | `benchmarks/safmr_to_mha.py` |
+| A6 DTMO rate components | incorporated | `sources/` | B5 → B8 | `ingest/ingest_rate_components.py` |
+| A12 DTMO out-of-pocket amounts | incorporated | `sources/` | A12 → B12–B15, B20 | `config/profiles.json` |
+| A7 Freddie Mac PMMS | incorporated | listed only | B11 | `benchmarks/ownership_cost.py`, `config/ownership.json` |
+| A11 Protomaps basemap | incorporated | not archived | C4 (Layer 3) | `tiles/build_basemap.sh`, `config/ui_text.json` |
+| A8 property tax (Census ACS) | incorporated | `sources/` (as A9) | B11 | `benchmarks/tax_insurance_to_mha.py` |
+| A8 insurance (Treasury FIO) | incorporated | `sources/` | B11 | `benchmarks/fio_insurance.py`, `config/ownership.json` |
+| A9 Census ACS 5-year (ZCTA) | incorporated | `sources/` | A8, B24 → B19 | `fetch/fetch_sources.py`, `benchmarks/density_to_mha.py` |
+| A10 BEA RPP | not used | — | (B25, scrapped) | — |
+| Software (Python and packages, tippecanoe, pmtiles, gh, MapLibre) | incorporated / planned | not redistributed | all | `requirements.txt`, `Makefile` |
+| 37 U.S.C. § 403 | incorporated | — | B12–B15, D1 | `metrics/coverage_metrics.py` |
+| DoD housing standards | incorporated | — | A12 profiles | `config/profiles.json` |
+| ColorBrewer RdBu | incorporated | — | A13, B21 | `config/classification.json` |
+| VA funding fee | incorporated | — | B11 | `config/ownership.json`, `benchmarks/ownership_cost.py` |
+| NAHB tax rate, NAIC premium | reference | — | former B11 placeholders | — |
+| Moran's I; LISA; Getis-Ord Gi\*; KNN weights; FDR; PySAL | incorporated | — | B16–B18, B27 | `spatial/build_weights.py`, `spatial/spatial_stats.py` |
+| Spatial regression (LM tests, ML lag/error, impacts); regression diagnostics; Mann-Whitney U | incorporated | — | B19 | `spatial/regression.py` |
+| NAD83 / Conus Albers (EPSG:5070) | incorporated | — | B16–B19 | `spatial/build_weights.py` |
+| PMTiles format | incorporated | — | B7, A11 → C1, C4 | `tiles/build_mha_pmtiles.py` |
+| 2019 Tableau BAH map | reference | — | (positioning) | — |
 
 ---
 
@@ -26,6 +66,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
 - **Link:** https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/ · rate-file download page (used by the fetcher registry): https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Rate-Files-Alt/ · data collection method: https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Data-Collection/
 - **Artifact:** `data/raw/BAH-ASCII-2026.zip` (paste the exact download URL you used into the raw manifest)
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A1/BAH-ASCII-2026.zip` (U.S. Government work).
 - **Acquisition:** browser
 - **Role:** Primary source. The BAH rate numerator and the authoritative ZIP-to-MHA crosswalk. Ingested by `pipeline/ingest/ingest_bah_ascii.py` into B1–B4.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -33,10 +74,11 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 
 ### A2 · U.S. Census 2020 ZCTA cartographic boundaries (1:500k)  `[incorporated]`
 - **Provider:** U.S. Census Bureau
-- **Link:** https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip · landing: https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
+- **Link:** https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip · landing: https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html · 2020 file page (recorded by the fetcher and shown in the map's source list): https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.2020.html
 - **Artifact:** `data/raw/cb_2020_us_zcta520_500k.zip` (`cb_2020_us_zcta520_500k.shp` inside; the geometry step reads the zip directly)
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A2/cb_2020_us_zcta520_500k.zip` (U.S. Government work).
 - **Acquisition:** auto
-- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears. County Cost Groups are mapped with their BAH rates only, without adequacy metrics (decided 18 Oct 2026).
+- **Role:** Base geometry. Dissolved to MHA polygons (B6) via the DTMO crosswalk by `pipeline/geometry/build_mha_geometry.py`. From M6 the same dissolve also builds the County Cost Group and territory polygons (B28). DoD publishes no polygons for either, so B28 is a non-authoritative geometry and is labelled as one wherever it appears. County Cost Groups are mapped with their BAH rates only, without adequacy metrics (decided 18 Oct 2026). Its land-area attribute (ALAND20, square metres) is also the denominator of population density per MHA (B24, for the B19 regression); the published land area is used, not the area of the generalized polygon.
 - **License:** U.S. Government work; not subject to domestic copyright.
 - **Notes:** Single 2020 vintage (no annual reissue), stable across the 2026 cycle. 500k is pre-simplified for thematic web mapping. ZCTA-to-ZIP is approximate — not every DTMO ZIP has a matching ZCTA. Quantified in the B6 manifest: 5,609 of the 20,280 ZIPs in real MHAs (2026) have no matching ZCTA (PO-box and point ZIPs); every MHA still gets a polygon. For B28 (2026): 1,502 of 20,465 County Cost Group ZIPs and 66 of 214 territory ZIPs have no matching ZCTA; every code still gets a polygon.
 - **Verified:** 2026-10-03 — URL live, serves a valid zip archive.
@@ -45,6 +87,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv · landing: https://www.zillow.com/research/data/ (Rentals → ZORI, all homes plus multifamily, smoothed → Geography: ZIP)
 - **Artifact:** `data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv` (vendor filename; current copy pulled 2026-09-07)
+- **Archive:** listed only, not re-posted (third-party terms); download URL and SHA-256 in [`sources/README.md`](../sources/README.md).
 - **Acquisition:** auto
 - **Role:** Independent rent benchmark; denominator for the rent-mode coverage ratio (via B8). Its history also gives the rent-growth predictor in the B19 regression (H2): annualised change over the 5 years before the B8 window, same calendar months (decided 18 Oct 2026).
 - **License:** Free for public use; **attribution to Zillow required** (per Zillow terms of use).
@@ -55,6 +98,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv · landing: https://www.zillow.com/research/data/ (Home Values → ZHVI, mid-tier 35th–65th pct, SFR+condo, smoothed & seasonally adjusted → Geography: ZIP)
 - **Artifact:** `data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` (vendor filename; current copy pulled 2026-09-07)
+- **Archive:** listed only, not re-posted (third-party terms); download URL and SHA-256 in [`sources/README.md`](../sources/README.md).
 - **Acquisition:** auto
 - **Role:** Independent home-value benchmark for buy mode (via B9 → B11).
 - **License:** Free for public use; **attribution to Zillow required** (per Zillow terms of use).
@@ -65,6 +109,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** U.S. Department of Housing and Urban Development — Office of Policy Development & Research (HUD USER / PD&R)
 - **Link:** https://www.huduser.gov/portal/datasets/fmr/fmr2026/fy2026_safmrs_revised.xlsx · landing: https://www.huduser.gov/portal/datasets/fmr/smallarea/index.html · FMR: https://www.huduser.gov/portal/datasets/fmr.html · API: https://www.huduser.gov/hudapi/public/fmr
 - **Artifact:** `data/raw/fy2026_safmrs_revised.xlsx` (vendor filename)
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A5/fy2026_safmrs_revised.xlsx` (U.S. Government work).
 - **Acquisition:** auto
 - **Role:** Affordability reference and utilities-inclusive cross-check against ZORI (via B10), selected by each profile's anchor bedroom count.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -75,6 +120,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
 - **Link:** https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH-Rate-Component-Breakdown/2026-BAH-Rate-Component-Breakdown.pdf
 - **Artifact:** `data/raw/dod_bah_rate_components_2026.pdf`
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A6/dod_bah_rate_components_2026.pdf` (U.S. Government work).
 - **Acquisition:** browser — travel.dod.mil returns HTTP 403 to scripted clients, even with browser headers. Open the link in a browser, save it under the artifact name, then run `make fetch` to validate and checksum it.
 - **Role:** DoD's own published rent/utilities percentage split per MHA. Directly addresses the construct-validity gap where BAH's 95% target includes utilities but Zillow ZORI excludes them — this lets the utilities component be isolated rather than assumed. Parsed into B5 by `pipeline/ingest/ingest_rate_components.py`.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -85,6 +131,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Defense Travel Management Office (DTMO), U.S. Department of Defense
 - **Link:** https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf · statute: https://www.law.cornell.edu/uscode/text/37/403
 - **Artifact:** `data/raw/2026-BAH_OOP_Amounts.pdf` (SHA-256 `375ff25e…20c3`, pinned in the fetcher)
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A12/2026-BAH_OOP_Amounts.pdf` (U.S. Government work).
 - **Acquisition:** browser — travel.dod.mil blocks scripted clients, as for A1 and A6.
 - **Role:** The statutory target. 37 U.S.C. 403(b)(3) sets BAH = local cost of adequate housing − a percentage (5% since 2019) of the *national* average cost for the pay grade and dependency status. This table gives that deduction in dollars per grade; E05 with dependents ($126/month) and O03 with dependents ($151/month) are recorded as `cost_share_monthly` in `config/profiles.json` (A12) and used by B12–B15: adequacy ratio = (BAH + cost share) / benchmark, target 1.00.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -95,6 +142,7 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 - **Provider:** Freddie Mac
 - **Link:** https://www.freddiemac.com/pmms/docs/PMMS_history.csv · landing: https://www.freddiemac.com/pmms
 - **Artifact:** `data/raw/PMMS_history.csv` (vendor filename)
+- **Archive:** listed only, not re-posted (third-party terms); download URL and SHA-256 in [`sources/README.md`](../sources/README.md).
 - **Acquisition:** auto
 - **Role:** Interest rate for amortizing ZHVI into a monthly ownership cost (B11, buy mode).
 - **License:** Freddie Mac data; **attribution required** — cite as Freddie Mac, Primary Mortgage Market Survey (PMMS).
@@ -103,8 +151,9 @@ validates and checksums it), **api**, or **build** (produced by a local build st
 
 ### A11 · Protomaps basemap (OpenStreetMap-derived)  `[incorporated]`
 - **Provider:** Protomaps (basemap build); map data © OpenStreetMap contributors
-- **Link:** daily planet builds at `https://build.protomaps.com/YYYYMMDD.pmtiles` · docs: https://docs.protomaps.com/basemaps/downloads
+- **Link:** daily planet builds at `https://build.protomaps.com/YYYYMMDD.pmtiles` · docs: https://docs.protomaps.com/basemaps/downloads · project (linked in the map's source list): https://protomaps.com/
 - **Artifact:** `data/processed/basemap.pmtiles` + `basemap_provenance.json` (build date, bounding box, max zoom, SHA-256)
+- **Archive:** not archived: an extract of an OpenStreetMap planet build (ODbL), rebuilt by `make basemap`; `basemap_provenance.json` records the build.
 - **Acquisition:** build — `make basemap` (`pipeline/tiles/build_basemap.sh`) extracts a CONUS bounding box from the newest daily build with the pmtiles CLI; only the needed tiles are downloaded.
 - **Role:** Self-hosted basemap under the MHA choropleth (served as C4), so no third-party tile API key is needed.
 - **License:** Open Database License (ODbL) Produced Work. **Attribution required on the map:** "© OpenStreetMap contributors" and Protomaps.
@@ -118,6 +167,7 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 - **Provider:** U.S. Census Bureau
 - **Link:** API: https://api.census.gov/data/2024/acs/acs5 · variable pages for [B25090](https://api.census.gov/data/2024/acs/acs5/groups/B25090.html) and [B25079](https://api.census.gov/data/2024/acs/acs5/groups/B25079.html) (universe for both: owner-occupied housing units)
 - **Artifact:** `data/raw/acs5_2024_zcta.json`, the A9 pull below (one query serves A8 tax and A9 population).
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A9/acs5_2024_zcta.json` (U.S. Government work).
 - **Acquisition:** api — ZCTA level, 2020–2024 5-year (vintage 2024, released 29 Jan 2026), pinned in the query URL.
 - **Role:** B25090_001E (aggregate real estate taxes paid) ÷ B25079_001E (aggregate value of owner-occupied units), summed over each MHA's ZCTAs, gives an effective tax rate per MHA for B11.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -127,6 +177,7 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 - **Provider:** U.S. Department of the Treasury, Federal Insurance Office
 - **Link:** https://home.treasury.gov/system/files/311/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx · release: https://home.treasury.gov/news/press-releases/jy2791
 - **Artifact:** `data/raw/` under the vendor file name; 14.9 MB; SHA-256 `99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e` (copy downloaded 18 Oct 2026).
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A8/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx` (U.S. Government work).
 - **Acquisition:** direct — one Excel workbook. If home.treasury.gov refuses the script, save it from a browser under the same name and the fetcher checksums it.
 - **Layout:** sheet `Supporting Underlying Metrics`, one row per ZIP and year 2018–2022 (25,593 ZIPs each year); columns ZIP Code (stored as a number, leading zeros lost), Year, Policy Decile Grouping, Claim Frequency, Claim Severity, Loss Ratio, Premiums Per Policy, Nonrenewal Rate, Nonpayment Cancellation Rate, Other than Nonpayment Cancellation Rate. Two documentation sheets precede it.
 - **Role:** Premiums Per Policy (written premium ÷ policies in force at year end) for 2022, rolled up to the MHA median for B11; read by `pipeline/benchmarks/fio_insurance.py`. 2022 ZIP values run from $565 to $40,719 a year, median $1,551; 94 ZIPs exceed $10,000.
@@ -145,6 +196,7 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 - **Provider:** U.S. Census Bureau
 - **Link:** https://www.census.gov/data/developers/data-sets/acs-5year.html · query: `https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E&for=zip%20code%20tabulation%20area:*`
 - **Artifact:** `data/raw/acs5_2024_zcta.json` (Census API JSON: a header row, then one row per ZCTA); 33,772 ZCTAs, 1.2 MB, SHA-256 `51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30` (pulled 18 Oct 2026). 15,196 ZCTAs have usable tax and value estimates; every MHA has at least one.
+- **Archive:** in the [`sources/`](../sources/README.md) .zip volumes as `A9/acs5_2024_zcta.json` (U.S. Government work).
 - **Acquisition:** api — `make fetch` sends the pinned query above. **The API requires a key** (free, https://api.census.gov/data/key_signup.html): set `CENSUS_API_KEY` in the environment. The fetcher adds it to the request only; the manifest records the URL without it.
 - **Role:** Urbanicity for hypothesis H2: population and land area per ZCTA give population density per MHA (B24), one of three explanatory variables in the B19 spatial regression (reduced H2, decided 18 Oct 2026). Optional node, started 18 Oct.
 - **License:** U.S. Government work; not subject to domestic copyright.
@@ -158,7 +210,28 @@ Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B
 Third-party software the pipeline and project tooling run. None of it is redistributed
 with the project; each is installed separately (`requirements.txt` for the Python
 packages). Licenses were read from each project's license file or package metadata on
-2026-10-17.
+2026-10-17; the Python, NumPy, SciPy, spreg and PMTiles entries were added on 2026-10-18
+with B19 and the source archive.
+
+### Python  `[incorporated]`
+- **Provider:** Python Software Foundation — https://www.python.org
+- **Role:** Every pipeline stage, the tooling and the tests. The fetch layer, the handoff builders, the QA report, the delivery tool and the source archive use the standard library only, for supply-chain hygiene.
+- **License:** Python Software Foundation License (PSF-2.0).
+
+### NumPy  `[incorporated]`
+- **Provider:** NumPy developers — https://numpy.org
+- **Role:** Arrays for the spatial statistics (B16–B18) and the regression (B19); installed with pandas and PySAL.
+- **License:** BSD-3-Clause.
+
+### SciPy  `[incorporated]`
+- **Provider:** SciPy developers — https://scipy.org
+- **Role:** The two-sided Mann-Whitney U test in the B19 sample-selection check (`scipy.stats.mannwhitneyu`); also a dependency of libpysal and spreg.
+- **License:** BSD-3-Clause.
+
+### spreg (PySAL spatial regression)  `[incorporated]`
+- **Provider:** PySAL developers — https://pysal.org/spreg/
+- **Role:** B19 (`pipeline/spatial/regression.py`): OLS with the spatial diagnostics (LM-lag, LM-error, their robust forms, residual Moran's I), the variance inflation factors, and the maximum-likelihood spatial lag and spatial error models (`ML_Lag`, `ML_Error`). Pinned `spreg>=1.8` in `requirements.txt`; the 2026 run used 1.9.1.
+- **License:** BSD-3-Clause.
 
 ### pandas  `[incorporated]`
 - **Provider:** pandas development team — https://pandas.pydata.org
@@ -212,6 +285,11 @@ packages). Licenses were read from each project's license file or package metada
 - **Provider:** Matplotlib Development Team — https://matplotlib.org
 - **Role:** Draws the LISA cluster map of the primary 2.6 test (`mha_lisa_e5_dep_rent_map.png`) that `make evidence` copies into `docs/evidence/` for the progress notes. Optional: the pipeline skips the map without it.
 - **License:** Matplotlib License (based on the PSF license; OSI-approved).
+
+### PMTiles format  `[incorporated]`
+- **Provider:** Protomaps LLC — specification: https://github.com/protomaps/PMTiles
+- **Role:** Single-file tile archive for the area polygons (B7, `areas_2026.pmtiles`) and the basemap (A11); MapLibre reads it by HTTP range request, so the map never downloads the whole file (C1, C4).
+- **License:** BSD-3-Clause (specification and reference implementations).
 
 ### MapLibre GL JS  `[planned]`
 - **Provider:** MapLibre contributors — https://github.com/maplibre/maplibre-gl-js
@@ -289,9 +367,26 @@ packages). Licenses were read from each project's license file or package metada
 - **References:** Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B*, 57(1), 289–300. https://doi.org/10.1111/j.2517-6161.1995.tb02031.x · Caldas de Castro, M., & Singer, B. H. (2006). Controlling the false discovery rate: A new application to account for multiple and dependent tests in local statistics of spatial association. *Geographical Analysis*, 38(2), 180–208. https://doi.org/10.1111/j.0016-7363.2006.00682.x
 - **Role:** B18 tests about 290 MHAs at once, so roughly 5% would read as significant by chance at p < 0.05. The Benjamini-Hochberg step-up procedure is applied to each test's LISA p-values and reported as `lisa_fdr_significant`, beside the conventional p < 0.05 cluster class; Caldas de Castro & Singer apply it to local spatial statistics.
 
+### Spatial regression: model choice, estimation and impacts  `[incorporated]`
+- **References:** Anselin, L. (1988). *Spatial Econometrics: Methods and Models*. Kluwer Academic. https://doi.org/10.1007/978-94-015-7799-1 · Anselin, L., Bera, A. K., Florax, R., & Yoon, M. J. (1996). Simple diagnostic tests for spatial dependence. *Regional Science and Urban Economics*, 26(1), 77–104. https://doi.org/10.1016/0166-0462(95)02111-4 · Anselin, L. (2005). *Exploring Spatial Data with GeoDa: A Workbook*. Spatial Analysis Laboratory, University of Illinois, Urbana-Champaign; Center for Spatially Integrated Social Science. · LeSage, J., & Pace, R. K. (2009). *Introduction to Spatial Econometrics*. CRC Press. https://doi.org/10.1201/9781420064254
+- **Role:** B19 tests hypothesis H2. Anselin (1988) gives the spatial lag and spatial error models and their maximum-likelihood estimation; Anselin et al. (1996) the robust LM tests; Anselin (2005) the decision rule B19 applies to choose between OLS, lag and error. When the robust tests cannot separate the two forms (the 2026 primary run), both are fitted and reported. LeSage & Pace (2009) give the lag model's average total impact, β / (1 − ρ) with row-standardized weights, reported beside each lag coefficient.
+
+### Regression diagnostics  `[incorporated]`
+- **References:** Jarque, C. M., & Bera, A. K. (1980). Efficient tests for normality, homoscedasticity and serial independence of regression residuals. *Economics Letters*, 6(3), 255–259. https://doi.org/10.1016/0165-1765(80)90024-5 · Breusch, T. S., & Pagan, A. R. (1979). A simple test for heteroscedasticity and random coefficient variation. *Econometrica*, 47(5), 1287–1294. https://doi.org/10.2307/1911963 · Belsley, D. A., Kuh, E., & Welsch, R. E. (1980). *Regression Diagnostics: Identifying Influential Data and Sources of Collinearity*. Wiley. https://doi.org/10.1002/0471725153
+- **Role:** Reported for every B19 run: residual normality (Jarque-Bera), heteroskedasticity (Breusch-Pagan), and collinearity (variance inflation factors, warning above 5, and the condition number). The 2026 runs have VIFs of 1.0–1.3, so the three predictors are not collinear.
+
+### Mann-Whitney U test  `[incorporated]`
+- **Reference:** Mann, H. B., & Whitney, D. R. (1947). On a test of whether one of two random variables is stochastically larger than the other. *The Annals of Mathematical Statistics*, 18(1), 50–60. https://doi.org/10.1214/aoms/1177730491
+- **Role:** B19 sample-selection check: compares the MHAs modelled with those left out for want of 5-year rent growth on the adequacy gap, log density and log rent, without assuming normal distributions. In 2026 the 82 left out differ on all three (p < 0.001), so the 3-year run is reported beside the primary one.
+
+### Coordinate reference system: NAD83 / Conus Albers (EPSG:5070)  `[incorporated]`
+- **Provider:** IOGP EPSG Geodetic Parameter Dataset — https://epsg.org (code 5070)
+- **Role:** Equal-area projection in metres for the conterminous U.S., used to place MHA representative points and measure the k-nearest-neighbour distances (B16), and for the weights rebuilt in B17–B19. Polygons are stored and delivered in EPSG:4326.
+- **License:** EPSG Dataset terms of use (free use with attribution of the EPSG Dataset).
+
 ### PySAL  `[incorporated]`
 - **Reference:** Rey, S. J., Anselin, L., Amaral, P., Arribas-Bel, D., Cortes, R. X., Gaboardi, J. D., Kang, W., Knaap, E., Li, Z., Lumnitz, S., Oshan, T. M., Shao, H., & Wolf, L. J. (2022). The PySAL ecosystem: Philosophy and implementation. *Geographical Analysis*. https://doi.org/10.1111/gean.12276
-- **Role:** Citation for the libpysal and esda software used in 2.6.
+- **Role:** Citation for the libpysal, esda and spreg software used in 2.6 (B16–B19).
   
 
 *Still to add as they are adopted: the DoD BAH Primer and DTMO's BAH methodology, cited
