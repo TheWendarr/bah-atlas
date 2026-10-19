@@ -168,9 +168,13 @@ regression: density
 # against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
 # build is proven before B22 records it. A full rebuild from data/raw is
 # `make all handoff`. Afterwards run `make evidence verify` to record the B22 manifest.
+# Any earlier B23 output ($(QA)) is deleted first; rerun `make qa` after a handoff.
 HANDOFF ?= $(PROCESSED)/handoff
 HANDOFF_PY = $(PYTHON) pipeline/handoff
 handoff:
+	@# A new handoff makes any earlier B23 report stale: its manifest records the old files' hashes,
+	@# and `make evidence` would copy it beside the new B22 and fail `make verify`. Remove it first.
+	rm -rf $(QA) docs/evidence/qa_$(YEAR)_manifest.json
 	$(PYTHON) tools/collect_evidence.py --no-tests
 	$(PYTHON) tools/verify_hashes.py
 	mkdir -p $(HANDOFF)
