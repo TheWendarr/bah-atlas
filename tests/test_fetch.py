@@ -93,5 +93,36 @@ class ApiSourceTest(unittest.TestCase):
         self.assertFalse((self.dest / "acs_test.json").exists())
 
 
+
+class BrowserRecordTest(unittest.TestCase):
+    """A browser-download file already recorded keeps its original retrieval date, as cached
+    direct downloads do; a changed file gets a new record."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dest = Path(self.tmp.name)
+        self.a6 = next(s for s in fs.SOURCES if s.node_id == "A6")
+        pdf = self.dest / self.a6.filename
+        pdf.write_bytes(b"%PDF-1.7\n" + b"x" * 4096)
+        self.sha = fs.sha256_file(pdf)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_a6(self, prior_sha: str) -> dict:
+        (self.dest / "fetch_manifest.json").write_text(json.dumps({"A6": {
+            "filename": self.a6.filename, "sha256": prior_sha, "retrieved_at": "2026-10-03T19:28:11+00:00"}}))
+        with mock.patch.object(fs, "validate_file", return_value=(True, "")):
+            self.assertEqual(fs.main(["A6", "--dest", str(self.dest)]), 0)
+        return json.loads((self.dest / "fetch_manifest.json").read_text())["A6"]
+
+    def test_same_bytes_keep_the_recorded_date(self) -> None:
+        self.assertEqual(self.run_a6(self.sha)["retrieved_at"], "2026-10-03T19:28:11+00:00")
+
+    def test_changed_bytes_get_a_new_record(self) -> None:
+        rec = self.run_a6("0" * 64)
+        self.assertEqual(rec["sha256"], self.sha)
+        self.assertNotEqual(rec["retrieved_at"], "2026-10-03T19:28:11+00:00")
+
 if __name__ == "__main__":
     unittest.main()

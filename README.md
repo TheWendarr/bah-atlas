@@ -93,6 +93,9 @@ bah-atlas/
 
 ## Quickstart
 
+To rebuild everything on another machine, step by step (requirements, where each source
+file goes, how to check the result), follow [`docs/REPRODUCING.md`](docs/REPRODUCING.md).
+
 ```bash
 pip install -r requirements.txt
 

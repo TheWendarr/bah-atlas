@@ -516,7 +516,11 @@ def main(argv: list[str] | None = None) -> int:
             if rec is None:
                 action.append(s)
                 continue
-            manifest[s.node_id] = {k: v for k, v in rec.items() if k != "status"}
+            prior = manifest.get(s.node_id)
+            if not (prior and prior.get("sha256") == rec["sha256"] and prior.get("retrieved_at")):
+                # Keep an earlier record of the same bytes: a fresh clone's file times are the
+                # clone time, not the date the file was saved from the browser.
+                manifest[s.node_id] = {k: v for k, v in rec.items() if k != "status"}
             cached.append(s)
             print(f"  local {s.node_id}  {s.name}  {human(rec['bytes'])}  sha {rec['sha256'][:12]}…  (browser download, verified)")
             continue
