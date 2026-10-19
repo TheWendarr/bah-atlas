@@ -324,10 +324,13 @@ class TestStatsB17B18(SpatialFixture):
             import matplotlib  # noqa: F401
         except ImportError:
             self.skipTest("matplotlib not installed")
-        png = self.out / "mha_lisa_e5_dep_rent_map.png"
-        self.assertTrue(png.exists())
-        self.assertLess(png.stat().st_size, 1_000_000)                        # small enough for make evidence
-        self.assertIn(png.name, man["outputs"])
+        profiles = sorted({t["profile"] for t in man["tests"]})
+        self.assertIn("e5_dep", profiles)
+        for prof in profiles:                                                 # one map per profile
+            png = self.out / f"mha_lisa_{prof}_rent_map.png"
+            self.assertTrue(png.exists(), png.name)
+            self.assertLess(png.stat().st_size, 1_000_000)                    # small enough for make evidence
+            self.assertIn(png.name, man["outputs"])
 
     def test_buy_rows_not_ok_are_not_tested(self) -> None:
         """A PITI-only buy row (decision 2.4) has values but is not comparable, so it is not tested."""

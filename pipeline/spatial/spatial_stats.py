@@ -76,9 +76,11 @@ Output (written to --out)
                                  entry per test (global I, sensitivity, LISA
                                  and Gi* class counts, FDR cut-off), the
                                  headline result, warnings
-  mha_lisa_<profile>_rent_map.png  LISA cluster map of the primary test
-                                 (needs matplotlib; skipped with a warning
-                                 if it is missing, or with --no-map)
+  mha_lisa_<profile>_rent_map.png  LISA cluster map of the rent adequacy_gap
+                                 test, one per A12 profile (the primary
+                                 e5_dep map is the H1 test; o3_dep is the
+                                 contrast); needs matplotlib, skipped with a
+                                 warning if it is missing, or with --no-map
 
 ------------------------------------------------------------------------------
 Validation (loud)
@@ -260,7 +262,7 @@ def run_test(ids: list[str], y: "np.ndarray", gi_y: "np.ndarray", xy: "np.ndarra
 # --- map ------------------------------------------------------------------------
 
 def draw_map(path: Path, g_all, rows: list[dict], test: dict, label: str, classes: dict,
-             warnings: list[str]) -> bool:
+             warnings: list[str], role: str = "primary") -> bool:
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -289,7 +291,8 @@ def draw_map(path: Path, g_all, rows: list[dict], test: dict, label: str, classe
         handles.append(Patch(facecolor="none", edgecolor="#9a9a9a", hatch="////",
                              label=f"No value ({len(untested)})"))
     mo = test["moran"]
-    ax.set_title(f"LISA clusters of the adequacy gap: {label}, rent mode\n"
+    which = "primary test (H1)" if role == "primary" else f"{role} profile"
+    ax.set_title(f"LISA clusters of the adequacy gap: {label}, rent mode, {which}\n"
                  f"Global Moran's I = {mo['I']:.3f} (pseudo p = {mo['p_sim']:.4f}, n = {test['n']}), "
                  f"{test['weights']}, {test['permutations']} permutations, p < {test['alpha']}",
                  fontsize=11)
@@ -485,14 +488,22 @@ def main() -> None:
     # --- write ---
     agg.write_csv(args.out / "mha_spatial_stats.csv", FIELDS, out_rows)
     outputs = ["mha_spatial_stats.csv"]
-    if primary and not args.no_map:
-        map_name = f"mha_lisa_{primary_profile}_rent_map.png"
-        test_rows = [r for r in out_rows
-                     if (r["profile"], r["mode"], r["variable"]) == (primary_profile, "rent", "adequacy_gap")]
-        if draw_map(args.out / map_name, g_all, test_rows,
-                    {**primary, "permutations": args.permutations, "alpha": args.alpha},
-                    labels[primary_profile], classes, warnings):
-            outputs.append(map_name)
+    if not args.no_map:
+        # One map per profile for the rent adequacy_gap test: the primary profile (H1) and each
+        # contrast profile beside it, drawn the same way so the two can be compared directly.
+        for p in profiles:
+            t = find(p["id"], "rent", "adequacy_gap")
+            if not t:
+                continue
+            map_name = f"mha_lisa_{p['id']}_rent_map.png"
+            test_rows = [r for r in out_rows
+                         if (r["profile"], r["mode"], r["variable"]) == (p["id"], "rent", "adequacy_gap")]
+            if draw_map(args.out / map_name, g_all, test_rows,
+                        {**t, "permutations": args.permutations, "alpha": args.alpha},
+                        labels[p["id"]], classes, warnings, role=t["role"]):
+                outputs.append(map_name)
+            else:
+                break  # matplotlib missing: one warning is enough
 
     inputs = {"A12": args.profiles, "A13": args.classification, "B6": args.geometry,
               "B12": args.rent_metrics, "B16": args.weights_manifest}

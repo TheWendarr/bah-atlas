@@ -312,10 +312,12 @@ profile and mode, and the difference); and one entry per test. Each test entry h
 contiguity with islands dropped), `lisa` (cluster counts, FDR cut-off and counts),
 `gi_star` (hot, cold, and agreement with HH / LL), and `not_tested` counts.
 
-#### `mha_lisa_e5_dep_rent_map.png`
-LISA cluster map of the primary test, in A13 cluster colours, with the global
-result in the title. `make evidence` copies it to `docs/evidence/` and credits it to
-B17 and B18.
+#### `mha_lisa_e5_dep_rent_map.png`, `mha_lisa_o3_dep_rent_map.png`
+LISA cluster maps of the rent-mode `adequacy_gap` test, one per A12 profile, in A13
+cluster colours, with that test's global result in the title. The `e5_dep` map is
+the primary (H1) test; the `o3_dep` map is the contrast profile, drawn the same way
+so the two can be compared side by side. `make evidence` copies both to
+`docs/evidence/` and credits them to B17 and B18.
 
 ### B19 spatial regression (`regression.py`, `make regression`)
 

@@ -283,7 +283,7 @@ with B19.
 
 ### Matplotlib  `[incorporated]`
 - **Provider:** Matplotlib Development Team — https://matplotlib.org
-- **Role:** Draws the LISA cluster map of the primary 2.6 test (`mha_lisa_e5_dep_rent_map.png`) that `make evidence` copies into `docs/evidence/` for the progress notes. Optional: the pipeline skips the map without it.
+- **Role:** Draws the LISA cluster maps of the 2.6 rent adequacy_gap tests (`mha_lisa_e5_dep_rent_map.png`, primary; `mha_lisa_o3_dep_rent_map.png`, contrast) that `make evidence` copies into `docs/evidence/` for the progress notes. Optional: the pipeline skips the map without it.
 - **License:** Matplotlib License (based on the PSF license; OSI-approved).
 
 ### PMTiles format  `[incorporated]`
