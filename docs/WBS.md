@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 18 October 2026  
-**Nodes tracked:** 67  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 18  ·  🟣 In progress: 1  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 3
+**Nodes tracked:** 74  ·  ⚫ Complete (before this week): 21  ·  🟢 Completed this week: 18  ·  🟣 In progress: 1  ·  🔴 Not started: 31  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,8 +18,8 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 7 / 8 | `█████████░ 88%` | 🗓️ Upcoming |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 19 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 7 / 14 | `█████░░░░░ 50%` | 🗓️ Upcoming |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 20 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
@@ -47,6 +47,9 @@ flowchart LR
             A11["A11 Protomaps basemap source"]
             A12["A12 Profile definitions config"]
             A13["A13 Classification and color scheme config"]
+            A14["A14 DoD BAH housing standards by grade and dependency status"]
+            A15["A15 Zillow ZORI by home type"]
+            A16["A16 Zillow ZHVI by home type and bedroom count ZIP-level"]
         end
     end
     subgraph L2["Layer 2 — Data Processing"]
@@ -66,9 +69,11 @@ flowchart LR
             B8["B8 ZORI at MHA"]
             B9["B9 ZHVI at MHA"]
             B10["B10 FMR at MHA"]
+            B29["B29 Rent benchmark by home type at MHA"]
         end
         subgraph S2_4["2.4 Ownership Metrics"]
             B11["B11 Ownership monthly cost at MHA"]
+            B30["B30 Ownership cost by home type at MHA"]
         end
         subgraph S2_5["2.5 Computed Metrics"]
             B12["B12 Rent coverage ratio"]
@@ -87,6 +92,7 @@ flowchart LR
             B21["B21 UI metadata JSON"]
             B22["B22 Build manifest JSON"]
             B28["B28 CCG and territory polygons"]
+            B31["B31 Grid payload"]
             W2["W2 Data contract"]
         end
         subgraph S2_8["2.8 Writeup, QA and Enrichments"]
@@ -124,6 +130,7 @@ flowchart LR
             C19["C19 Data export"]
             C20["C20 Attribution + methodology"]
             C21["C21 About / data-caveats page"]
+            C25["C25 Authorized-standard notice"]
         end
         subgraph S3_3["3.3 Build and Delivery"]
             C22["C22 Build bundler"]
@@ -204,6 +211,18 @@ flowchart LR
     B6 --> B26
     B18 --> B27
     B22 --> B27
+    A15 --> B29
+    B8 --> B29
+    B10 --> B29
+    B1 --> B29
+    A16 --> B30
+    B9 --> B30
+    B11 --> B30
+    A14 --> B31
+    B4 --> B31
+    B29 --> B31
+    B30 --> B31
+    B22 --> B31
     B23 --> W1
     B7 --> C1
     B20 --> C2
@@ -237,6 +256,8 @@ flowchart LR
     B23 --> C21
     C22 --> C23
     C23 --> C24
+    C6 --> C25
+    C3 --> C25
     classDef done fill:#1f1f1f,stroke:#000,color:#ffffff
     classDef week fill:#2e7d32,stroke:#000,color:#ffffff
     classDef prog fill:#7b1fa2,stroke:#000,color:#ffffff
@@ -246,7 +267,7 @@ flowchart LR
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 done
     class A8,A9,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,W2 week
     class W1 prog
-    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24 todo
+    class A14,A15,A16,B29,B30,B31,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25 todo
     class A10,B25,B26 gone
     class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
 ```
@@ -272,8 +293,11 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | 🟢 | **A9** | Census ACS context | optional | — | Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax; completed 18 Oct |
 | ⚪ | **A10** | BEA Regional Price Parities | optional | — | Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable |
 | ⚫ | **A11** | Protomaps basemap source (OSM) | required | — | completed 03 Oct |
-| ⚫ | **A12** | Profile definitions config | required | — | completed 03 Oct |
+| ⚫ | **A12** | Profile definitions config | required | — | D18-D19 (18 Oct): research profiles stay e5_dep and o3_dep at their DoD standard; their benchmarks follow D19, so O-3 is recomputed and E-5 does not change; completed 03 Oct |
 | ⚫ | **A13** | Classification and color scheme config | required | — | config/ui_text.json (map wording, read only by B21) added 18 Oct (D12); completed 03 Oct |
+| 🔴 | **A14** | DoD BAH housing standards by grade and dependency status | required | — | D18 (18 Oct 2026): the DoD housing standard (one of six home types, or the published blend between two) for every pay grade E1-E9, W1-W5, O1-O9 with and without dependents, and each cell's member cost share from the 2026 out-of-pocket table; config/housing_standards.json. Source to settle first: the DoD BAH Primer or the CNA 2026 evaluation (the 2014 summary has no without-dependents or warrant-officer standards) |
+| 🔴 | **A15** | Zillow ZORI by home type (single-family, multifamily) ZIP-level | required | — | D19: building-type factor for the rent benchmark; third-party, listed by URL and SHA-256 and not redistributed; ZIP-level availability of each series confirmed on the first make fetch |
+| 🔴 | **A16** | Zillow ZHVI by home type and bedroom count ZIP-level | required | — | D19: single-family, condo/co-op and 1-4 bedroom series for the buy benchmark by home type; third-party, not redistributed |
 
 ### Layer 2 — Data Processing
 
@@ -303,18 +327,20 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 | completed 08 Oct |
 | ⚫ | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
 | ⚫ | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
+| 🔴 | **B29** | Rent benchmark by home type at MHA | required | A15, B8, B10, B1 | D19: utilities-adjusted ZORI for the building type (apartment = multifamily, townhouse = all homes, single-family = SFR) times the SAFMR bedroom ratio (n BR / 2 BR) within the MHA; the 2-bedroom townhouse equals B8, so E-5 is unchanged (tested); MHAs without the type's series get a status, not a value |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | ⚫ | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; completed 08 Oct |
+| 🔴 | **B30** | Ownership cost by home type at MHA | required | A16, B9, B11 | D19: home value for the type (ZHVI building-type ratio times the ZHVI bedroom ratio, n BR / 2 BR), then B11's VA PITI plus utilities for each type |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **B12** | Rent coverage ratio | required | A12, B4, B8, B10 | completed 17 Oct |
+| 🟢 | **B12** | Rent coverage ratio | required | A12, B4, B8, B10 | D19: the O-3 contrast is recomputed on the B29 benchmark for its standard (98% of the way from a 3 BR townhouse to a 3 BR single-family home); B12-B19 are rerun and stay complete; completed 17 Oct |
 | 🟢 | **B13** | Rent surplus/gap | required | A12, B4, B8, B10 | SAFMR cross-check at the profile's anchor bedrooms; completed 17 Oct |
 | 🟢 | **B14** | Buy coverage ratio | required | A12, B4, B11 | completed 17 Oct |
 | 🟢 | **B15** | Buy surplus/gap | required | A12, B4, B11 | completed 17 Oct |
@@ -336,13 +362,14 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟢 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12); completed 18 Oct |
 | 🟢 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py; completed 18 Oct |
 | 🟢 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
-| 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; completed 18 Oct |
+| 🔴 | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20 |
+| 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit; completed 18 Oct |
+| 🟢 | **B23** | QA / validation report | required | B20, B22 | Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit; D20: adds the grid formula check and two traces across the grid (E-1 in a 4 BR single-family home, O-9 in a 1 BR apartment); completed 18 Oct |
 | 🟢 | **B24** | ACS context join | optional | A9, A2, B1 | Reduced H2: population density per MHA from A9 (urbanicity); A2 ALAND20 gives land area; code ready 18 Oct: density_to_mha.py (make density), sum(pop)/sum(land) for B19 and population-weighted density for its sensitivity run; completed 18 Oct |
 | ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
@@ -368,14 +395,14 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 |:---:|---|---|---|---|---|
 | 🔴 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 |  |
 | 🔴 | **C6** | UI state object | required | C7, C13 |  |
-| 🔴 | **C7** | Control panel (dropdowns) | required | — |  |
+| 🔴 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown |
 | 🔴 | **C8** | Feature-state join | required | C14, C2 |  |
 | 🔴 | **C9** | Choropleth paint expression | required | C14, C3 |  |
 | 🔴 | **C10** | Legend | required | C14 |  |
 | 🔴 | **C11** | MHA detail popup/panel | required | C14 |  |
 | 🔴 | **C12** | A/B comparison panel | required | C14 |  |
 | 🔴 | **C13** | Rent/Buy toggle | required | — |  |
-| 🔴 | **C14** | Render function | required | C6, C2, C3 |  |
+| 🔴 | **C14** | Render function | required | C6, C2, C3 | D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles |
 | 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6 |  |
 | 🔴 | **C16** | Hotspot overlay toggle | optional | B27 |  |
 | 🔴 | **C17** | Shareable URL / permalink | optional | C6 |  |
@@ -383,6 +410,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🔴 | **C19** | Data export (CSV of view) | optional | C6, C2 |  |
 | 🔴 | **C20** | Attribution + methodology | required | C3 |  |
 | 🔴 | **C21** | About / data-caveats page | required | B23 |  |
+| 🔴 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default |
 
 #### 3.3 Build and Delivery — due 16 November 2026 (M7)
 

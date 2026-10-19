@@ -10,8 +10,11 @@ A8,1,Property tax and insurance reference,required,,complete,2026-10-18,"Made re
 A9,1,Census ACS context,optional,,complete,2026-10-18,"Reduced H2 (18 Oct): ZCTA population and land area for urbanicity; shares the Census API client and ZCTA geography with A8; code ready 18 Oct: pinned API query acs5_2024_zcta.json (needs CENSUS_API_KEY), also serves A8 tax"
 A10,1,BEA Regional Price Parities,optional,,scrapped,,"Scrapped 18 Oct 2026 (reduced H2): RPP exists only for states and metro areas, and its rent component repeats the rent-level variable"
 A11,1,Protomaps basemap source (OSM),required,,complete,2026-10-03,
-A12,1,Profile definitions config,required,,complete,2026-10-03,
+A12,1,Profile definitions config,required,,complete,2026-10-03,"D18-D19 (18 Oct): research profiles stay e5_dep and o3_dep at their DoD standard; their benchmarks follow D19, so O-3 is recomputed and E-5 does not change"
 A13,1,Classification and color scheme config,required,,complete,2026-10-03,"config/ui_text.json (map wording, read only by B21) added 18 Oct (D12)"
+A14,1,DoD BAH housing standards by grade and dependency status,required,,not_started,,"D18 (18 Oct 2026): the DoD housing standard (one of six home types, or the published blend between two) for every pay grade E1-E9, W1-W5, O1-O9 with and without dependents, and each cell's member cost share from the 2026 out-of-pocket table; config/housing_standards.json. Source to settle first: the DoD BAH Primer or the CNA 2026 evaluation (the 2014 summary has no without-dependents or warrant-officer standards)"
+A15,1,"Zillow ZORI by home type (single-family, multifamily) ZIP-level",required,,not_started,,"D19: building-type factor for the rent benchmark; third-party, listed by URL and SHA-256 and not redistributed; ZIP-level availability of each series confirmed on the first make fetch"
+A16,1,Zillow ZHVI by home type and bedroom count ZIP-level,required,,not_started,,"D19: single-family, condo/co-op and 1-4 bedroom series for the buy benchmark by home type; third-party, not redistributed"
 B1,2.1,zip_mha.csv - ZIP to MHA crosswalk,required,A1,complete,,
 B2,2.1,zip_mha_geo.csv - MHA geo metadata,required,A1,complete,,
 B3,2.1,mha_names.csv - MHA display names,required,A1,complete,,
@@ -23,7 +26,7 @@ B8,2.3,ZORI at MHA (utilities-adjusted),required,A3 B1 B5,complete,2026-10-08,
 B9,2.3,ZHVI at MHA,required,A4 B1,complete,2026-10-08,
 B10,2.3,FMR at MHA,required,A5 B1,complete,2026-10-08,
 B11,2.4,Ownership monthly cost at MHA,required,A7 A8 B8 B9,complete,2026-10-08,A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities
-B12,2.5,Rent coverage ratio,required,A12 B4 B8 B10,complete,2026-10-17,
+B12,2.5,Rent coverage ratio,required,A12 B4 B8 B10,complete,2026-10-17,D19: the O-3 contrast is recomputed on the B29 benchmark for its standard (98% of the way from a 3 BR townhouse to a 3 BR single-family home); B12-B19 are rerun and stay complete
 B13,2.5,Rent surplus/gap,required,A12 B4 B8 B10,complete,2026-10-17,SAFMR cross-check at the profile's anchor bedrooms
 B14,2.5,Buy coverage ratio,required,A12 B4 B11,complete,2026-10-17,
 B15,2.5,Buy surplus/gap,required,A12 B4 B11,complete,2026-10-17,
@@ -35,27 +38,30 @@ B20,2.7,Attribute payload JSON (data contract),required,B12 B13 B14 B15 B3 B4 A1
 B21,2.7,UI metadata JSON,required,A12 A13 B1 B3 B28 B22,complete,2026-10-18,Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12)
 B22,2.7,Build manifest JSON,required,B7 B28,complete,2026-10-18,"Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py"
 B28,2.7,"CCG and territory polygons (ZCTA dissolve, non-authoritative)",required,A2 B1,complete,2026-10-18,"DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`"
-B23,2.8,QA / validation report,required,B20 B22,complete,2026-10-18,"Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit"
+B23,2.8,QA / validation report,required,B20 B22,complete,2026-10-18,"Samples intermediate stages (B5-B18); code ready 18 Oct: pipeline/qa/qa_report.py (make qa) writes data/processed/qa/qa_2026.md (ICD checks 2, 4 and 9, provenance, three traced MHAs); the report enters the repository with the D10 delivery commit; D20: adds the grid formula check and two traces across the grid (E-1 in a 4 BR single-family home, O-9 in a 1 BR apartment)"
 B24,2.8,ACS context join,optional,A9 A2 B1,complete,2026-10-18,"Reduced H2: population density per MHA from A9 (urbanicity); A2 ALAND20 gives land area; code ready 18 Oct: density_to_mha.py (make density), sum(pop)/sum(land) for B19 and population-weighted density for its sensitivity run"
 B25,2.8,BEA RPP context join,optional,A10 B1,scrapped,,Scrapped 18 Oct 2026 with A10 (reduced H2)
 B26,2.8,H3 hex overlay (future),optional,B6,scrapped,,"Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field)"
 B27,2.8,Hotspot overlay payload,optional,B18 B22,complete,2026-10-18,Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C); code ready 18 Oct: build_hotspots.py; p-values to 5 decimals (ICD 1.0.2)
+B29,2.3,Rent benchmark by home type at MHA,required,A15 B8 B10 B1,not_started,,"D19: utilities-adjusted ZORI for the building type (apartment = multifamily, townhouse = all homes, single-family = SFR) times the SAFMR bedroom ratio (n BR / 2 BR) within the MHA; the 2-bedroom townhouse equals B8, so E-5 is unchanged (tested); MHAs without the type's series get a status, not a value"
+B30,2.4,Ownership cost by home type at MHA,required,A16 B9 B11,not_started,,"D19: home value for the type (ZHVI building-type ratio times the ZHVI bedroom ratio, n BR / 2 BR), then B11's VA PITI plus utilities for each type"
+B31,2.7,Grid payload (BAH by rank and dependents; benchmarks by home type),required,A14 B4 B29 B30 B22,not_started,,"D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20"
 W1,2.8,Layer 2 writeup (how Layer 1 becomes Layer 3),required,B23,in_progress,,"Deliverable rather than a pipeline node; author-written from the plan outline; scaffold 18 Oct: docs/layer2-writeup.md (headings, evidence, prompts; section 7 records actions and decisions per D10); completed in the delivery commit"
-W2,2.7,Data contract (Layer 2 to Layer 3 ICD),required,,complete,2026-10-18,"docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review"
+W2,2.7,Data contract (Layer 2 to Layer 3 ICD),required,,complete,2026-10-18,"docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21"
 C1,3.1,MHA PMTiles (served),required,B7,not_started,,
 C2,3.1,Attribute payload JSON (served),required,B20,not_started,,
 C3,3.1,UI metadata JSON (served),required,B21,not_started,,
 C4,3.1,Basemap PMTiles (served),required,A11,not_started,,
 C5,3.2,App bootstrap + MapLibre init,required,C1 C2 C3 C4,not_started,,
 C6,3.2,UI state object,required,C7 C13,not_started,,
-C7,3.2,Control panel (dropdowns),required,,not_started,,
+C7,3.2,Control panel (dropdowns),required,,not_started,,"D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown"
 C8,3.2,Feature-state join,required,C14 C2,not_started,,
 C9,3.2,Choropleth paint expression,required,C14 C3,not_started,,
 C10,3.2,Legend,required,C14,not_started,,
 C11,3.2,MHA detail popup/panel,required,C14,not_started,,
 C12,3.2,A/B comparison panel,required,C14,not_started,,
 C13,3.2,Rent/Buy toggle,required,,not_started,,
-C14,3.2,Render function,required,C6 C2 C3,not_started,,
+C14,3.2,Render function,required,C6 C2 C3,not_started,,D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles
 C15,3.2,ZIP search to highlight MHA,optional,C3 C6,not_started,,
 C16,3.2,Hotspot overlay toggle,optional,B27,not_started,,
 C17,3.2,Shareable URL / permalink,optional,C6,not_started,,
@@ -66,3 +72,4 @@ C21,3.2,About / data-caveats page,required,B23,not_started,,
 C22,3.3,Build bundler,required,,not_started,,
 C23,3.3,CI/CD (GitHub Actions),required,C22,not_started,,
 C24,3.3,CDN hosting + security headers,required,C23,not_started,,
+C25,3.2,Authorized-standard notice,required,C6 C3,not_started,,"D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default"
