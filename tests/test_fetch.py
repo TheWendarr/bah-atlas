@@ -126,3 +126,41 @@ class BrowserRecordTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MultiFileNodeTest(unittest.TestCase):
+    """A15 and A16 (D19) are several files each, keyed A15.sfr, A16.br3, ..."""
+
+    def test_registry_lists_the_grid_series(self) -> None:
+        ids = [s.node_id for s in fs.SOURCES]
+        self.assertEqual([i for i in ids if i.startswith("A15")], ["A15.sfr", "A15.mfr", "A15.all"])
+        self.assertEqual([i for i in ids if i.startswith("A16")],
+                         ["A16.sfr", "A16.condo", "A16.br1", "A16.br2", "A16.br3", "A16.br4"])
+        self.assertEqual(len(ids), len(set(ids)))
+        names = [s.filename for s in fs.SOURCES if s.filename.endswith(".csv")]
+        self.assertEqual(len(names), len(set(names)))
+        for s in fs.SOURCES:
+            if s.node_id.startswith("A15"):
+                self.assertTrue(s.filename.startswith("Metro_zori_"), s.filename)
+            if s.node_id.startswith("A16"):
+                self.assertTrue(s.filename.startswith("Zip_zhvi_") and s.url.endswith(s.filename), s.filename)
+
+    def test_node_id_selects_all_its_files(self) -> None:
+        seen: list[str] = []
+
+        def fake_download(source, dest_dir, **_kw):
+            seen.append(source.node_id)
+            return {"status": "cached", "node_id": source.node_id, "name": source.name,
+                    "filename": source.filename, "sha256": "0" * 64, "bytes": 1,
+                    "retrieved_at": "2026-10-24T00:00:00+00:00"}
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(fs, "download_direct", fake_download):
+            rc = fs.main(["A16", "A15.mfr", "--dest", tmp])
+            manifest = json.loads((Path(tmp) / fs.MANIFEST_NAME).read_text())
+        self.assertEqual(rc, 0)
+        self.assertEqual(seen, ["A15.mfr", "A16.sfr", "A16.condo", "A16.br1", "A16.br2", "A16.br3", "A16.br4"])
+        self.assertIn("A16.br3", manifest)
+
+    def test_unknown_node_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(fs.main(["A17", "--dest", tmp]), 2)

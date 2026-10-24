@@ -21,7 +21,7 @@ FIO_XLSX ?= data/raw/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_o
 WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
-.PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff \
+.PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff standards \
 	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa layer2 deliver-check deliver test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
@@ -30,7 +30,7 @@ all: check-config geometry non-mha components tiles benchmarks metrics spatial
 fetch:
 	$(PYTHON) pipeline/fetch/fetch_sources.py
 
-# Validate the authored config nodes A12 (profiles) and A13 (classification).
+# Validate the authored config nodes A12 (profiles), A13 (classification) and A14 (standards).
 check-config:
 	$(PYTHON) pipeline/check_config.py
 
@@ -77,6 +77,11 @@ tiles:
 # Override with e.g. `MAXZOOM=6 make basemap`; see the script header.
 basemap:
 	bash pipeline/tiles/build_basemap.sh
+
+# A14 evidence: the housing standards table reproduces the 2026 BAH rates (D18).
+# Reads B4 (`make ingest`); stops if any cell's share disagrees with the rates.
+standards:
+	$(PYTHON) pipeline/benchmarks/standards_check.py --bah-rates $(INTERIM)/bah_rates.csv --out $(BENCH)
 
 # --- 2.3 MHA benchmarks + 2.4 ownership metrics (B8-B11) ---------------------
 # Each reads a ZIP-level Layer 1 source and rolls it up to the MHA through the B1

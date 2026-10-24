@@ -53,6 +53,17 @@ URL verification log (2026-10-18):
           2026), ZCTA geography. The API now refuses requests without a key
           ("A valid key must be included with each data API request").
 
+URL verification log (2026-10-24):
+  A15     Zillow publishes single-family and multifamily ZORI at metro level only
+          (the ZIP folder holds the all-homes series alone), so A15 is three metro
+          files: SFR, MFR and the all-homes series they are divided by. B29 reaches a
+          ZIP's metro through the Metro column of the A4 ZIP file (proposed D21).
+  A16     ZIP-level ZHVI single-family, condo/co-op and 1-4 bedroom series, same
+          path and naming pattern as A4. Filenames from Zillow's published ZIP list;
+          the first `make fetch` on the workstation confirms each one.
+  Nodes with several files carry a suffix (A15.sfr, A16.br3); `fetch_sources.py
+  A15` selects every A15 file.
+
 Filenames follow the vendor's own name where one exists, so files downloaded by
 hand earlier are recognised and checksummed instead of downloaded a second time.
   A11     Protomaps daily builds at build.protomaps.com/YYYYMMDD.pmtiles
@@ -158,9 +169,8 @@ SOURCES: list[Source] = [
         landing_url="https://www.zillow.com/research/data/",
         license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
         min_bytes=1_000_000,
-        notes="Same wide layout as A3. Bedroom-count variants follow the pattern "
-              "Zip_zhvi_bdrmcnt_<N>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv if the "
-              "buy-mode anchor needs them later.",
+        notes="Same wide layout as A3. Its Metro column also maps each ZIP to the metro "
+              "names of the A15 files (B29). Type and bedroom variants are A16.",
     ),
     Source(
         node_id="A5",
@@ -249,6 +259,105 @@ SOURCES: list[Source] = [
               "units (A8 property tax: effective rate = taxes / value); B01003_001E total "
               "population (A9 urbanicity, B24). Free key: api.census.gov/data/key_signup.html; "
               "export CENSUS_API_KEY=... before `make fetch`.",
+    ),
+    Source(
+        node_id="A15.sfr",
+        name="Zillow ZORI, metro-level, single-family (smoothed)",
+        filename="Metro_zori_uc_sfr_sm_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=100_000,
+        notes="D19 building-type factor for single-family homes: metro SFR ZORI / metro all-homes ZORI (A15.all). Metro level only (see the 2026-10-24 log). Third-party: listed by URL and SHA-256, not redistributed.",
+    ),
+    Source(
+        node_id="A15.mfr",
+        name="Zillow ZORI, metro-level, multifamily (smoothed)",
+        filename="Metro_zori_uc_mfr_sm_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=100_000,
+        notes="D19 building-type factor for apartments: metro MFR ZORI / metro all-homes ZORI (A15.all). Metro level only. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A15.all",
+        name="Zillow ZORI, metro-level, all homes plus multifamily (smoothed)",
+        filename="Metro_zori_uc_sfrcondomfr_sm_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=100_000,
+        notes="Denominator of the A15 type ratios, at the same geography as A15.sfr and A15.mfr; the row RegionType 'country' is the national fallback. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.sfr",
+        name="Zillow ZHVI, ZIP-level, single-family (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode building-type factor: SFR ZHVI / all-homes ZHVI (A4) per ZIP. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.condo",
+        name="Zillow ZHVI, ZIP-level, condo/co-op (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode factor for apartments: condo/co-op ZHVI / all-homes ZHVI (A4) per ZIP. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.br1",
+        name="Zillow ZHVI, ZIP-level, 1 bedroom (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode bedroom ratio, n BR / 2 BR per ZIP. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.br2",
+        name="Zillow ZHVI, ZIP-level, 2 bedrooms (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode bedroom ratio denominator. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.br3",
+        name="Zillow ZHVI, ZIP-level, 3 bedrooms (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode bedroom ratio, n BR / 2 BR per ZIP. Third-party: not redistributed.",
+    ),
+    Source(
+        node_id="A16.br4",
+        name="Zillow ZHVI, ZIP-level, 4 bedrooms (mid-tier, smoothed, SA)",
+        filename="Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        acquisition="direct",
+        url="https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+        landing_url="https://www.zillow.com/research/data/",
+        license="Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+        min_bytes=1_000_000,
+        notes="D19 buy-mode bedroom ratio, n BR / 2 BR per ZIP. Third-party: not redistributed.",
     ),
     Source(
         node_id="A10",
@@ -468,12 +577,17 @@ def save_manifest(path: Path, manifest: dict) -> None:
 
 # --- cli ---------------------------------------------------------------------
 
+def node_of(node_id: str) -> str:
+    """'A16.br3' -> 'A16': the WBS node a registry entry belongs to."""
+    return node_id.split(".", 1)[0].upper()
+
+
 def print_registry() -> None:
-    print(f"{'NODE':4}  {'ACQ':7}  {'FILE':34}  SOURCE")
+    print(f"{'NODE':9}  {'ACQ':7}  {'FILE':34}  SOURCE")
     for s in SOURCES:
         where = s.url or (s.landing_url or "")
         auto = "auto" if (s.acquisition in ("direct", "api") and s.url) else s.acquisition
-        print(f"{s.node_id:4}  {auto:7}  {s.filename:34}  {where}")
+        print(f"{s.node_id:9}  {auto:7}  {s.filename:34}  {where}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -493,8 +607,8 @@ def main(argv: list[str] | None = None) -> int:
     selected = SOURCES
     if args.nodes:
         want = {n.upper() for n in args.nodes}
-        selected = [s for s in SOURCES if s.node_id.upper() in want]
-        missing = want - {s.node_id.upper() for s in selected}
+        selected = [s for s in SOURCES if s.node_id.upper() in want or node_of(s.node_id) in want]
+        missing = want - {s.node_id.upper() for s in selected} - {node_of(s.node_id) for s in selected}
         if missing:
             print(f"unknown node ids: {', '.join(sorted(missing))}", file=sys.stderr)
             return 2

@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 OUT = ROOT / "docs" / "evidence"
 MAX_BYTES = 1_000_000
-NODE_KEY = re.compile(r"^[ABCW]\d{1,2}$")
+NODE_KEY = re.compile(r"^[ABCW]\d{1,2}(\.[a-z0-9]+)?$")   # A16.br3: one file of a multi-file node
 
 
 def nodes_of(manifest: object) -> list[str]:
@@ -52,7 +52,8 @@ def nodes_of(manifest: object) -> list[str]:
     if isinstance(manifest.get("node"), str):
         return [manifest["node"]]
     # fetch_manifest.json is keyed by node id
-    return sorted((k for k in manifest if NODE_KEY.match(k)), key=lambda k: (k[0], int(k[1:])))
+    return sorted((k for k in manifest if NODE_KEY.match(k)),
+                  key=lambda k: (k[0], int(k[1:].split(".")[0]), k))
 
 
 def generated_at(manifest: object) -> str:

@@ -1,0 +1,460 @@
+{
+  "_doc": "A14. Field meanings, sources and the reasoning behind every value: docs/configuration.md#a14-housing-standards-confighousing_standardsjson. Validate with `make check-config`.",
+  "version": 1,
+  "bah_year": 2026,
+  "home_types": [
+    {
+      "id": "apt1",
+      "building": "apartment",
+      "bedrooms": 1
+    },
+    {
+      "id": "apt2",
+      "building": "apartment",
+      "bedrooms": 2
+    },
+    {
+      "id": "th2",
+      "building": "townhouse",
+      "bedrooms": 2
+    },
+    {
+      "id": "th3",
+      "building": "townhouse",
+      "bedrooms": 3
+    },
+    {
+      "id": "sfh3",
+      "building": "single_family",
+      "bedrooms": 3
+    },
+    {
+      "id": "sfh4",
+      "building": "single_family",
+      "bedrooms": 4
+    }
+  ],
+  "reference_type": "th2",
+  "grades": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "O1",
+    "O2",
+    "O3",
+    "O4",
+    "O5",
+    "O6",
+    "O7",
+    "O8",
+    "O9"
+  ],
+  "standards": {
+    "E1": {
+      "with": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.5
+      },
+      "without": {
+        "lower": "apt1",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "E2": {
+      "with": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.5
+      },
+      "without": {
+        "lower": "apt1",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "E3": {
+      "with": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.5
+      },
+      "without": {
+        "lower": "apt1",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "E4": {
+      "with": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.5
+      },
+      "without": {
+        "lower": "apt1",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "E5": {
+      "with": {
+        "lower": "th2",
+        "upper": null,
+        "share": 0
+      },
+      "without": {
+        "lower": "apt1",
+        "upper": "apt2",
+        "share": 0.67
+      }
+    },
+    "E6": {
+      "with": {
+        "lower": "th3",
+        "upper": null,
+        "share": 0
+      },
+      "without": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.07
+      }
+    },
+    "E7": {
+      "with": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.36
+      },
+      "without": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.53
+      }
+    },
+    "E8": {
+      "with": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.75
+      },
+      "without": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.2
+      }
+    },
+    "E9": {
+      "with": {
+        "lower": "sfh3",
+        "upper": "sfh4",
+        "share": 0.16
+      },
+      "without": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.51
+      }
+    },
+    "W1": {
+      "with": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.01
+      },
+      "without": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.31
+      }
+    },
+    "W2": {
+      "with": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.52
+      },
+      "without": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.19
+      }
+    },
+    "W3": {
+      "with": {
+        "lower": "sfh3",
+        "upper": null,
+        "share": 0
+      },
+      "without": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.54
+      }
+    },
+    "W4": {
+      "with": {
+        "lower": "sfh3",
+        "upper": "sfh4",
+        "share": 0.22
+      },
+      "without": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.09
+      }
+    },
+    "W5": {
+      "with": {
+        "lower": "sfh3",
+        "upper": "sfh4",
+        "share": 0.48
+      },
+      "without": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.45
+      }
+    },
+    "O1": {
+      "with": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.11
+      },
+      "without": {
+        "lower": "apt2",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "O2": {
+      "with": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.98
+      },
+      "without": {
+        "lower": "apt2",
+        "upper": "th2",
+        "share": 0.83
+      }
+    },
+    "O3": {
+      "with": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.98
+      },
+      "without": {
+        "lower": "th2",
+        "upper": "th3",
+        "share": 0.64
+      }
+    },
+    "O4": {
+      "with": {
+        "lower": "sfh3",
+        "upper": "sfh4",
+        "share": 0.58
+      },
+      "without": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.4
+      }
+    },
+    "O5": {
+      "with": {
+        "lower": "sfh4",
+        "upper": null,
+        "share": 0
+      },
+      "without": {
+        "lower": "th3",
+        "upper": "sfh3",
+        "share": 0.63
+      }
+    },
+    "O6": {
+      "with": {
+        "lower": "sfh4",
+        "upper": null,
+        "share": 0.01
+      },
+      "without": {
+        "lower": "sfh3",
+        "upper": null,
+        "share": 0
+      }
+    },
+    "O7": {
+      "with": {
+        "lower": "sfh4",
+        "upper": null,
+        "share": 0.02
+      },
+      "without": {
+        "lower": "sfh3",
+        "upper": null,
+        "share": 0.02
+      }
+    },
+    "O8": {
+      "with": {
+        "lower": "sfh4",
+        "upper": null,
+        "share": 0.02
+      },
+      "without": {
+        "lower": "sfh3",
+        "upper": null,
+        "share": 0.02
+      }
+    },
+    "O9": {
+      "with": {
+        "lower": "sfh4",
+        "upper": null,
+        "share": 0.02
+      },
+      "without": {
+        "lower": "sfh3",
+        "upper": null,
+        "share": 0.02
+      }
+    }
+  },
+  "cost_share_monthly": {
+    "E1": {
+      "with": 115,
+      "without": 93
+    },
+    "E2": {
+      "with": 115,
+      "without": 93
+    },
+    "E3": {
+      "with": 115,
+      "without": 93
+    },
+    "E4": {
+      "with": 115,
+      "without": 93
+    },
+    "E5": {
+      "with": 126,
+      "without": 110
+    },
+    "E6": {
+      "with": 141,
+      "without": 114
+    },
+    "E7": {
+      "with": 144,
+      "without": 120
+    },
+    "E8": {
+      "with": 151,
+      "without": 134
+    },
+    "E9": {
+      "with": 160,
+      "without": 139
+    },
+    "W1": {
+      "with": 123,
+      "without": 92
+    },
+    "W2": {
+      "with": 146,
+      "without": 123
+    },
+    "W3": {
+      "with": 154,
+      "without": 136
+    },
+    "W4": {
+      "with": 161,
+      "without": 147
+    },
+    "W5": {
+      "with": 166,
+      "without": 148
+    },
+    "O1": {
+      "with": 118,
+      "without": 104
+    },
+    "O2": {
+      "with": 134,
+      "without": 118
+    },
+    "O3": {
+      "with": 151,
+      "without": 138
+    },
+    "O4": {
+      "with": 176,
+      "without": 157
+    },
+    "O5": {
+      "with": 193,
+      "without": 164
+    },
+    "O6": {
+      "with": 201,
+      "without": 175
+    },
+    "O7": {
+      "with": 212,
+      "without": 187
+    },
+    "O8": {
+      "with": 212,
+      "without": 187
+    },
+    "O9": {
+      "with": 212,
+      "without": 187
+    }
+  },
+  "cost_share_derived": {
+    "O8": "O7",
+    "O9": "O7"
+  },
+  "sources": {
+    "standards": {
+      "title": "A Primer on the Basic Allowance for Housing (BAH) for the Uniformed Services",
+      "provider": "Defense Travel Management Office",
+      "edition": "January 2022",
+      "url": "https://www.barksdale.af.mil/Portals/52/Library/Forms%20and%20Documents/BAH-Primer2022.pdf",
+      "agrees_with": [
+        "BAH Primer 2018 edition",
+        "CNA, An Evaluation of BAH Adequacy Standards and Recipient Housing Choices (April 2026), Table 1 anchor points"
+      ],
+      "verified": "2026-10-24"
+    },
+    "cost_share": {
+      "title": "2026 BAH Out-of-Pocket Amounts",
+      "provider": "Defense Travel Management Office",
+      "url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
+      "artifact": "data/raw/2026-BAH_OOP_Amounts.pdf",
+      "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
+      "verified": "2026-10-24"
+    }
+  }
+}

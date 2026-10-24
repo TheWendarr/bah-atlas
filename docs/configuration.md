@@ -59,6 +59,63 @@ B12–B15 therefore test `adequacy_ratio` = (BAH + `cost_share_monthly`) ÷ benc
 
 **Cost share.** These are the member out-of-pocket (absorption) dollars per cell, read from DTMO's annual out-of-pocket table: the same amount at every duty station. The 2026 values are E-5 with dependents $126 and O-3 with dependents $151. See the A12 out-of-pocket entry in [SOURCES.md](SOURCES.md).
 
+## A14 housing standards (`config/housing_standards.json`)
+
+Decision D18 (18 Oct 2026) lets the map show any rank with or without dependents in any of DoD's six housing profiles. This file holds what DoD itself prescribes for each of those 46 cells: the housing standard BAH is built on, and the member cost share deducted from it. B29 and B30 read the home types, the coverage metrics (B12–B15) read the research profiles' standards, B23 checks the table, and B31 ships it to the map.
+
+| Field | Meaning |
+|---|---|
+| `_doc` | Pointer to this page. |
+| `version`, `bah_year` | Schema version of this file; the BAH year the cost shares belong to. |
+| `home_types[]` | DoD's six housing profiles, cheapest first: `id`, `building` (`apartment`, `townhouse`, `single_family`) and `bedrooms`. The order is the order standards interpolate in. |
+| `reference_type` | `th2`, the 2-bedroom townhouse. B8 (all-homes ZORI) and B9 (all-homes ZHVI) are taken to stand for this dwelling, so every other type is a ratio to it (D19). |
+| `grades` | The rank dropdown: E-1–E-9, W-1–W-5, O-1–O-9 (D18; O-1E–O-3E and O-10 left out). |
+| `standards.<grade>.with`, `.without` | `lower`, `upper`, `share`. Anchor: `upper` null and `share` 0, the cost of `lower`. Interpolated: `lower` + `share` × (`upper` − `lower`). Above the highest profile: `upper` null and `share` > 0, the cost of `lower` × (1 + `share`). |
+| `cost_share_monthly.<grade>.with`, `.without` | DTMO 2026 out-of-pocket dollars for the cell (5% of the national mean BAH for the grade). |
+| `cost_share_derived` | Grades whose values are copied from another grade: O-8 and O-9 from O-7 (below). |
+| `sources.*` | The standards source and the out-of-pocket table, with URL, the local artifact and SHA-256 where there is one, and the date verified. |
+
+**The standards (2026).**
+
+| Grade | With dependents | Cost share | Without dependents | Cost share |
+|---|---|---|---|---|
+| E-1 | 50% from 2 BR apartment to 2 BR townhouse | $115 | 1 BR apartment (anchor) | $93 |
+| E-2 | 50% from 2 BR apartment to 2 BR townhouse | $115 | 1 BR apartment (anchor) | $93 |
+| E-3 | 50% from 2 BR apartment to 2 BR townhouse | $115 | 1 BR apartment (anchor) | $93 |
+| E-4 | 50% from 2 BR apartment to 2 BR townhouse | $115 | 1 BR apartment (anchor) | $93 |
+| E-5 | 2 BR townhouse (anchor) | $126 | 67% from 1 BR apartment to 2 BR apartment | $110 |
+| E-6 | 3 BR townhouse (anchor) | $141 | 7% from 2 BR apartment to 2 BR townhouse | $114 |
+| E-7 | 36% from 3 BR townhouse to 3 BR single-family | $144 | 53% from 2 BR apartment to 2 BR townhouse | $120 |
+| E-8 | 75% from 3 BR townhouse to 3 BR single-family | $151 | 20% from 2 BR townhouse to 3 BR townhouse | $134 |
+| E-9 | 16% from 3 BR single-family to 4 BR single-family | $160 | 51% from 2 BR townhouse to 3 BR townhouse | $139 |
+| W-1 | 1% from 3 BR townhouse to 3 BR single-family | $123 | 31% from 2 BR apartment to 2 BR townhouse | $92 |
+| W-2 | 52% from 3 BR townhouse to 3 BR single-family | $146 | 19% from 2 BR townhouse to 3 BR townhouse | $123 |
+| W-3 | 3 BR single-family (anchor) | $154 | 54% from 2 BR townhouse to 3 BR townhouse | $136 |
+| W-4 | 22% from 3 BR single-family to 4 BR single-family | $161 | 9% from 3 BR townhouse to 3 BR single-family | $147 |
+| W-5 | 48% from 3 BR single-family to 4 BR single-family | $166 | 45% from 3 BR townhouse to 3 BR single-family | $148 |
+| O-1 | 11% from 2 BR townhouse to 3 BR townhouse | $118 | 2 BR apartment (anchor) | $104 |
+| O-2 | 98% from 2 BR townhouse to 3 BR townhouse | $134 | 83% from 2 BR apartment to 2 BR townhouse | $118 |
+| O-3 | 98% from 3 BR townhouse to 3 BR single-family | $151 | 64% from 2 BR townhouse to 3 BR townhouse | $138 |
+| O-4 | 58% from 3 BR single-family to 4 BR single-family | $176 | 40% from 3 BR townhouse to 3 BR single-family | $157 |
+| O-5 | 4 BR single-family (anchor) | $193 | 63% from 3 BR townhouse to 3 BR single-family | $164 |
+| O-6 | 4 BR single-family + 1% | $201 | 3 BR single-family (anchor) | $175 |
+| O-7 | 4 BR single-family + 2% | $212 | 3 BR single-family + 2% | $187 |
+| O-8 | 4 BR single-family + 2% | $212 | 3 BR single-family + 2% | $187 |
+| O-9 | 4 BR single-family + 2% | $212 | 3 BR single-family + 2% | $187 |
+
+**Source of the standards.** DTMO's *A Primer on the Basic Allowance for Housing* (January 2022) lists, for every grade, the housing profile it is anchored to or the percentage of the way between two profiles. The 2018 edition gives the same table, and CNA's April 2026 evaluation of BAH adequacy standards (Table 1) confirms the same anchor points: 1 BR apartment E-4 and 2 BR apartment O-1 without dependents; 2 BR townhouse E-5, 3 BR townhouse E-6, 3 BR single-family W-3 and 4 BR single-family O-5 with dependents. With-dependents E-1 to E-4 sit at the midpoint of a 2 BR apartment and a 2 BR townhouse; E-1 to E-3 take the E-4 standard, the minimum.
+
+**Checked against the 2026 rates (`make standards`).** DoD sets each grade's BAH as the local cost of its standard minus its cost share. The six anchor cells therefore give each profile's local cost in every MHA, and every other cell then predicts its own 2026 rate. `pipeline/benchmarks/standards_check.py` runs that prediction for all 46 cells in all 299 MHAs and records the share the rates imply beside the share in this file. On 24 Oct 2026 every cell passed: the median residual is $1–4 a month (the published rates are rounded), and the implied shares agree with the primer within 0.01 for 45 of the 46 cells. It also settled two readings the primer leaves open:
+
+- **Above the highest profile.** O-6 and O-7 with dependents (1%, 2%) and O-7 without (2%) are markups on the top anchor's cost: the rates imply 0.97%, 1.94% and 1.95%. They are not steps toward another profile.
+- **E-8 without dependents** is the one cell that drifts: the primer says 20% from a 2 BR to a 3 BR townhouse, the 2026 rates imply about 23%. The file keeps the published 20%; the gap is about $12 a month in a typical MHA and is recorded in the check's manifest.
+
+Without-dependents rates also have a floor at 75% of the with-dependents rate (since 2008). Where the floor sets the rate (766 MHA cells in 2026), the standard does not, so the check leaves those cells out. The floor changes BAH, not the housing standard, so the benchmark is unaffected.
+
+**O-8 and O-9.** BAH stops rising at O-7: the 2026 O-8 and O-9 rates equal O-7's in every MHA, and DTMO's out-of-pocket table stops at O-7. Both grades therefore take O-7's standard and cost share, listed in `cost_share_derived`.
+
+**What a standard means on the map.** With the home-type dropdown at *DoD standard for this grade* (the default), the map measures BAH against its statutory target. Any other home type measures how far BAH goes toward that home, which DoD does not promise; the map labels such views so (D18, C25).
+
 ---
 
 ## A13 classification (`config/classification.json`)
