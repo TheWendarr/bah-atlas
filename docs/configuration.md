@@ -39,9 +39,10 @@ Each profile selects one BAH cell (pay grade × dependency status from B4) and t
 | `profiles[].id`, `label` | Stable key and display name. |
 | `profiles[].role` | `primary` (the research profile) or `contrast`. Exactly one profile is primary. |
 | `profiles[].pay_grade`, `has_dependents` | The B4 cell this profile reads. |
-| `profiles[].anchor_dwelling`, `anchor_bedrooms` | The DoD housing standard for the grade, and the SAFMR bedroom count it maps to. |
-| `profiles[].cost_share_monthly` | DTMO member out-of-pocket dollars for the cell. |
-| `benchmarks.rent_primary` | `zori_utilities_adjusted`: B8 ZORI, grossed up to include utilities with the B5 split. |
+| `profiles[].anchor_dwelling`, `anchor_bedrooms` | The DoD housing standard for the grade in words (the values are in A14), and the SAFMR bedroom count used for the cross-check. |
+| `profiles[].cost_share_monthly` | DTMO member out-of-pocket dollars for the cell. Must equal the A14 cell (`make check-config`). |
+| `benchmarks.standard_source` | `A14`: each profile is measured against the cost of its DoD housing standard (D19). |
+| `benchmarks.rent_primary`, `buy_primary` | `b29_at_standard`, `b30_at_standard`: the standard blended from the B29 rent and B30 ownership benchmarks by home type. For E-5 that is the 2 BR townhouse, which equals B8 and B11. |
 | `benchmarks.rent_crosscheck`, `safmr_bedroom_field` | HUD SAFMR (B10) at the profile's `anchor_bedrooms`. |
 | `cost_share.*` | Where the cost-share dollars come from: method, year, source, URL, local artifact, SHA-256, the values read, and the date verified. `make verify` checks the SHA-256 against the fetch record. |
 
@@ -55,7 +56,7 @@ B12–B15 therefore test `adequacy_ratio` = (BAH + `cost_share_monthly`) ÷ benc
 - **O-3 with dependents** is the contrast profile. DoD's O-3 standard sits 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home. It therefore differs from the primary in grade band, bedroom count and dwelling type at once.
 - **Source:** DoD BAH housing standards by pay grade (BAH Primer; summarized at military.com, *Paycheck Chronicles*, 4 Dec 2014). This is listed in [SOURCES.md](SOURCES.md) under *Concepts & methods*.
 
-**Why one ZORI series serves both profiles.** ZORI has no bedroom breakdown, so one ZIP-level series applies to every profile, made utilities-inclusive with B5. The bedroom-specific comparison comes from the SAFMR cross-check.
+**Why each profile has its own benchmark (D19, 18 Oct 2026).** Until 18 Oct one all-homes ZORI series served both profiles, so the E-5 vs O-3 contrast came only from the BAH numerator. Since D19 each profile is measured against its DoD standard: B29 and B30 give every MHA a benchmark for each of the six housing profiles (building type from Zillow's type series, bedrooms from the SAFMR or ZHVI bedroom ratio), and the profile's standard is blended from them with the A14 formula. The all-homes series is taken to stand for a 2 BR townhouse, E-5's standard, so E-5 is unchanged; O-3 is recomputed. The SAFMR cross-check at `anchor_bedrooms` stays as it was.
 
 **Cost share.** These are the member out-of-pocket (absorption) dollars per cell, read from DTMO's annual out-of-pocket table: the same amount at every duty station. The 2026 values are E-5 with dependents $126 and O-3 with dependents $151. See the A12 out-of-pocket entry in [SOURCES.md](SOURCES.md).
 

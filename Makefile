@@ -150,13 +150,14 @@ density:
 
 # --- 2.5 computed metrics (B12-B15) ------------------------------------------
 # Adequacy ratio and gap vs the statutory design, coverage ratio, flat-95% sensitivity
-# gap, and dollar surplus for every A12 profile
-# x real MHA: rent (B8, with the B10 SAFMR cross-check) and buy (B11).
+# gap, and dollar surplus for every A12 profile x real MHA, each against the cost of
+# the profile's A14 housing standard (D19): rent (B29, with the B10 SAFMR cross-check)
+# and buy (B30). E-5's standard is the 2 BR townhouse, i.e. B8 and B11.
 # Needs `make benchmarks` first; stops if B8 and B9 cover different months.
 metrics:
 	$(PYTHON) pipeline/metrics/coverage_metrics.py --bah-rates $(INTERIM)/bah_rates.csv \
-		--zori $(BENCH)/mha_zori.csv --safmr $(BENCH)/mha_safmr.csv \
-		--ownership $(BENCH)/mha_ownership.csv --out $(METRICS)
+		--zori $(BENCH)/mha_zori.csv --safmr $(BENCH)/mha_safmr.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
+		--ownership $(BENCH)/mha_ownership.csv --own-by-type $(BENCH)/mha_ownership_by_type.csv --out $(METRICS)
 
 # --- 2.6 spatial statistics (B16-B18) ----------------------------------------
 # B6 -> B16: k-nearest-neighbour weights for the CONUS MHAs (AK, HI excluded), with

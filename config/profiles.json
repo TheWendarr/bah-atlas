@@ -21,13 +21,15 @@
       "role": "contrast",
       "pay_grade": "O3",
       "has_dependents": true,
-      "anchor_dwelling": "3-bedroom single-family home",
+      "anchor_dwelling": "98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home",
       "anchor_bedrooms": 3,
       "cost_share_monthly": 151
     }
   ],
   "benchmarks": {
-    "rent_primary": "zori_utilities_adjusted",
+    "standard_source": "A14",
+    "rent_primary": "b29_at_standard",
+    "buy_primary": "b30_at_standard",
     "rent_crosscheck": "safmr",
     "safmr_bedroom_field": "anchor_bedrooms"
   },
@@ -38,7 +40,7 @@
     "url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
     "artifact": "data/raw/2026-BAH_OOP_Amounts.pdf",
     "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
-    "values_read": "E05 with dependents $126 (without $110); O03 with dependents $151 (without $138)",
+    "values_read": "E05 with dependents $126 (without $110); O03 with dependents $151 (without $138); every cell in config/housing_standards.json",
     "verified": "2026-10-17"
   }
 }

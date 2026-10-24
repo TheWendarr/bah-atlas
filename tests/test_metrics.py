@@ -1,6 +1,8 @@
 """
 Tests for the 2.5 computed-metric nodes (B12-B15) against small synthetic
-benchmark tables shaped like the B4, B8, B10 and B11 outputs.
+benchmark tables shaped like the B4, B8, B10, B11, B29 and B30 outputs. Each
+profile's cost is its A14 standard (D19): E-5 the 2 BR townhouse (= B8, B11),
+O-3 98% of the way from a 3 BR townhouse to a 3 BR single-family home.
 
     python -m unittest discover -s tests -v        (or: make test)
 
@@ -22,6 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "pipeline" / "metrics" / "coverage_metrics.py"
 MONTHS = ["2026-01", "2026-02", "2026-03"]
+TYPES = ["apt1", "apt2", "th2", "th3", "sfh3", "sfh4"]
 
 
 def read(path: Path) -> list[dict]:
@@ -95,7 +98,26 @@ class Fixture(unittest.TestCase):
             ["AA002", "", "", "", ""],
             ["AA003", "150000.00", "1100.00", "", ""],
         ])
+        # A14 with the fixture's cost shares (the repository file holds the real $126 and $151).
+        std = json.loads((ROOT / "config" / "housing_standards.json").read_text())
+        std["cost_share_monthly"]["E5"]["with"], std["cost_share_monthly"]["O3"]["with"] = 100, 150
+        self.standards = self.d / "housing_standards.json"
+        self.standards.write_text(json.dumps(std))
+        # B29: the 2 BR townhouse is B8; AA001 th3 2548, sfh3 2940; AA002 th3 3900, sfh3 4500.
+        rent = {"AA001": {"th2": "1960.00", "th3": "2548.00", "sfh3": "2940.00"},
+                "AA002": {"th2": "3000.00", "th3": "3900.00", "sfh3": "4500.00"}, "AA003": {}}
+        self.rent_types = write(self.bench / "mha_rent_by_type.csv", [["mha", "home_type", "rent_monthly", "status"]] + [
+            [m, t, rent[m].get(t, "1000.00" if rent[m] else ""), "ok" if rent[m] else "no_zori"]
+            for m in rent for t in TYPES])
+        # B30: the 2 BR townhouse is B11; AA001 th3 total 3100 (PITI 2700), sfh3 3600 (3150); AA003 PITI only.
+        own = {"AA001": {"th2": ("2108.00", "2500.00"), "th3": ("2700.00", "3100.00"), "sfh3": ("3150.00", "3600.00")},
+               "AA002": {}, "AA003": {"th2": ("1100.00", ""), "th3": ("1300.00", ""), "sfh3": ("1500.00", "")}}
+        self.own_types = write(self.bench / "mha_ownership_by_type.csv",
+                               [["mha", "home_type", "own_housing_monthly", "own_total_monthly"]] + [
+            [m, t, *own[m].get(t, ("900.00", "1000.00" if m == "AA001" else "") if own[m] else ("", ""))]
+            for m in own for t in TYPES])
         self.write_manifests()
+        self.write_type_manifests()
 
     def write_manifests(self, b9_months: list[str] = MONTHS) -> None:
         (self.bench / "mha_zori_manifest.json").write_text(json.dumps({"window_months_used": MONTHS}))
@@ -104,9 +126,16 @@ class Fixture(unittest.TestCase):
             "rate": {"window": "2026-01:2026-03"},
             "input_sha256": {"B8": sha(self.zori), "B9": sha(self.zhvi)}}))
 
+    def write_type_manifests(self) -> None:
+        (self.bench / "mha_rent_by_type_manifest.json").write_text(json.dumps({"input_sha256": {"B8": sha(self.zori)}}))
+        (self.bench / "mha_ownership_by_type_manifest.json").write_text(
+            json.dumps({"input_sha256": {"B11": sha(self.own)}}))
+
     def run_metrics(self, *extra: str) -> subprocess.CompletedProcess:
         args = ["--bah-rates", str(self.bah), "--zori", str(self.zori), "--safmr", str(self.safmr),
-                "--ownership", str(self.own), "--out", str(self.out), "--profiles", str(self.profiles)]
+                "--rent-by-type", str(self.rent_types), "--ownership", str(self.own),
+                "--own-by-type", str(self.own_types), "--out", str(self.out), "--profiles", str(self.profiles),
+                "--standards", str(self.standards)]
         return subprocess.run([sys.executable, str(SCRIPT), *args, *extra], capture_output=True, text=True)
 
     def tearDown(self) -> None:
@@ -138,10 +167,12 @@ class TestMetrics(Fixture):
         c = rows[("e5_dep", "AA003")]
         self.assertEqual((c["status"], c["adequacy_ratio"]), ("no_zori", ""))
         self.assertEqual(c["safmr_adequacy_ratio"], "1.6000")                # (1500 + 100) / 1000
+        self.assertEqual(a["standard"], "th2")
         o = rows[("o3_dep", "AA001")]
-        # O-3 share 150, 3BR SAFMR: (2600 + 150) / 2400 = 1.1458; ZORI: 2750 / 1960 = 1.4031
-        self.assertEqual((o["cost_share_monthly"], o["adequacy_ratio"], o["safmr_bedrooms"],
-                          o["safmr_adequacy_ratio"]), ("150.00", "1.4031", "3", "1.1458"))
+        # O-3 standard: 2548 + 0.98 x (2940 - 2548) = 2932.16; (2600 + 150) / 2932.16 = 0.9379
+        # 3BR SAFMR cross-check: (2600 + 150) / 2400 = 1.1458
+        self.assertEqual((o["standard"], o["cost_monthly"], o["adequacy_ratio"], o["safmr_bedrooms"],
+                          o["safmr_adequacy_ratio"]), ("th3-sfh3 0.98", "2932.16", "0.9379", "3", "1.1458"))
 
     def test_buy_b14_b15(self) -> None:
         p = self.run_metrics()
@@ -156,6 +187,12 @@ class TestMetrics(Fixture):
         # Decision 2.4: no utilities estimate, so the cost is PITI alone: (1500 + 100) / 1100 = 1.4545
         self.assertEqual((c["status"], c["cost_monthly"], c["adequacy_ratio"], c["coverage_ratio"]),
                          ("piti_only_no_zori", "1100.00", "1.4545", "1.3636"))
+        o = rows[("o3_dep", "AA001")]
+        # 3100 + 0.98 x 500 = 3590 (PITI 2700 + 0.98 x 450 = 3141); (2600 + 150) / 3590 = 0.7660
+        self.assertEqual((o["cost_monthly"], o["own_housing_monthly"], o["adequacy_ratio"]),
+                         ("3590.00", "3141.00", "0.7660"))
+        o3 = rows[("o3_dep", "AA003")]                                       # PITI only: 1300 + 0.98 x 200
+        self.assertEqual((o3["status"], o3["cost_monthly"]), ("piti_only_no_zori", "1496.00"))
 
     def test_manifest_summary(self) -> None:
         p = self.run_metrics()
@@ -188,7 +225,8 @@ class TestMetrics(Fixture):
     def test_rent_only_mode(self) -> None:
         p = subprocess.run([sys.executable, str(SCRIPT), "--mode", "rent", "--bah-rates", str(self.bah),
                             "--zori", str(self.zori), "--safmr", str(self.safmr), "--out", str(self.out),
-                            "--profiles", str(self.profiles)], capture_output=True, text=True)
+                            "--rent-by-type", str(self.rent_types), "--profiles", str(self.profiles),
+                            "--standards", str(self.standards)], capture_output=True, text=True)
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertTrue((self.out / "mha_rent_metrics.csv").exists())
         self.assertFalse((self.out / "mha_buy_metrics.csv").exists())
@@ -232,7 +270,19 @@ class TestValidation(Fixture):
         rows = read(self.zori)                                              # B8 changes after B11 was built
         rows[0]["zori_utilities_adjusted"] = "2100.00"
         write(self.zori, [list(rows[0])] + [list(r.values()) for r in rows])
+        self.write_type_manifests()                                         # B29 rebuilt, B11 not
         self.assertFails("B11 was built from a different mha_zori.csv")
+
+    def test_stale_b29(self) -> None:
+        rows = read(self.zori)                                              # B8 changes after B29 was built
+        rows[1]["zori_utilities_adjusted"] = "3100.00"
+        write(self.zori, [list(rows[0])] + [list(r.values()) for r in rows])
+        self.assertFails("B29 was built from a different mha_zori.csv")
+
+    def test_profile_cost_share_must_match_a14(self) -> None:
+        self.profile_cfg["profiles"][0]["cost_share_monthly"] = 126
+        self.profiles.write_text(json.dumps(self.profile_cfg))
+        self.assertFails("profile e5_dep: cost_share_monthly 126 != A14 100")
 
     def test_zero_cost_fails(self) -> None:
         rows = read(self.safmr)

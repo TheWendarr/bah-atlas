@@ -2,16 +2,18 @@
 """
 coverage_metrics.py  (2.5 computed metrics: B12-B15)
 
-  B12  rent coverage ratio   A12 + B4 + B8   (+ B10 cross-check)
-  B13  rent surplus / gap    A12 + B4 + B8   (+ B10 cross-check)
-  B14  buy coverage ratio    A12 + B4 + B11
-  B15  buy surplus / gap     A12 + B4 + B11
+  B12  rent coverage ratio   A12 + A14 + B4 + B29   (+ B10 cross-check)
+  B13  rent surplus / gap    A12 + A14 + B4 + B29   (+ B10 cross-check)
+  B14  buy coverage ratio    A12 + A14 + B4 + B30
+  B15  buy surplus / gap     A12 + A14 + B4 + B30
 
     python pipeline/metrics/coverage_metrics.py \
         --bah-rates data/interim/bah_2026/bah_rates.csv \
         --zori data/interim/benchmarks_2026/mha_zori.csv \
         --safmr data/interim/benchmarks_2026/mha_safmr.csv \
+        --rent-by-type data/interim/benchmarks_2026/mha_rent_by_type.csv \
         --ownership data/interim/benchmarks_2026/mha_ownership.csv \
+        --own-by-type data/interim/benchmarks_2026/mha_ownership_by_type.csv \
         --out data/interim/metrics_2026
 
 ------------------------------------------------------------------------------
@@ -31,10 +33,14 @@ variable before 2.6 measures any.
 Metrics, per A12 profile p and real MHA m
 ------------------------------------------------------------------------------
   BAH = B4 monthly_rate for (m, p.pay_grade, p.has_dependents)
-  A   = p.cost_share_monthly (DTMO member cost share, A12)
-  C   = local monthly cost of the anchor dwelling
-          rent mode: B8 zori_utilities_adjusted   (A12 benchmarks.rent_primary)
-          buy mode:  B11 own_total_monthly        (PITI + B8 utilities)
+  A   = p.cost_share_monthly (DTMO member cost share, A12; equal to the A14 cell)
+  C   = local monthly cost of the profile's DoD housing standard (A14, decision D19),
+        blended from the six home-type benchmarks with home_types.blend():
+          rent mode: B29 rent_monthly             (utilities-inclusive)
+          buy mode:  B30 own_total_monthly        (PITI + utilities)
+        E-5's standard is the 2 BR townhouse, which B29 and B30 hold equal to B8 and
+        B11, so E-5 is unchanged by D19. O-3's is 98% of the way from a 3 BR
+        townhouse to a 3 BR single-family home.
 
   coverage_ratio   R = BAH / C               share of benchmark cost BAH pays (descriptive)
   design_coverage    = 1 - A / C             share BAH is designed to pay at this cost level
@@ -45,11 +51,9 @@ Metrics, per A12 profile p and real MHA m
   flat95_gap         = R - 0.95              sensitivity: the simple fixed-95% reading
 
 Rent cross-check (B10): coverage ratio, adequacy ratio and gap vs design against
-the HUD SAFMR median at the profile's anchor_bedrooms. ZORI has one series for
-every bedroom count, so without this the E-5 vs O-3 contrast in rent mode comes
-only from the BAH numerator. SAFMR is gross rent (utilities included) at HUD's
-40th percentile, so it sits below a median benchmark; it is reported beside the
-primary values and never replaces them.
+the HUD SAFMR median at the profile's anchor_bedrooms. SAFMR is gross rent
+(utilities included) at HUD's 40th percentile, so it sits below a median
+benchmark; it is reported beside the primary values and never replaces them.
 
 Every real MHA gets one row per profile, including MHAs with no benchmark. The
 `status` column says why a value is blank:
@@ -74,7 +78,8 @@ Validation (loud)
 ------------------------------------------------------------------------------
   * A12 profiles are well formed and each carries a cost_share_monthly
   * B4 has a positive rate for every real MHA x profile
-  * B8, B10 and B11 cover the same MHAs; B10 has the anchor bedroom row for each
+  * B8, B10, B11, B29 and B30 cover the same MHAs; B10 has the anchor bedroom row for each;
+    B29 and B30 were built from the B8 and B11 beside them (SHA-256 lineage)
   * every non-blank cost is a finite number > 0
   * B8 and B9 were built over the same months (temporal alignment); B11 was
     built from the same B8 and B9 files that sit beside it (SHA-256 lineage)
@@ -95,6 +100,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline" / "benchmarks"))
+import home_types as ht  # noqa: E402
 import mha_agg as agg  # noqa: E402
 
 TOOL = "coverage_metrics"
@@ -103,7 +109,7 @@ CLASSED = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
 
 METRIC_FIELDS = ["coverage_ratio", "design_coverage", "adequacy_ratio", "adequacy_gap",
                  "surplus_usd", "design_gap_usd", "flat95_gap"]
-BASE_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "bah_monthly", "cost_share_monthly",
+BASE_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "standard", "bah_monthly", "cost_share_monthly",
                "cost_monthly"]
 RENT_FIELDS = BASE_FIELDS + METRIC_FIELDS + [
     "zori_zip_coverage", "safmr_bedrooms", "safmr_monthly", "safmr_coverage_ratio",
@@ -207,6 +213,22 @@ def cost(raw: str | None, where: str, problems: list[str]) -> float | None:
     return v
 
 
+def standard_code(cell: dict) -> str:
+    """Compact A14 standard for the CSV: 'th2', 'th3-sfh3 0.98', 'sfh4 +0.02'."""
+    if cell["upper"]:
+        return f"{cell['lower']}-{cell['upper']} {cell['share']:g}"
+    return cell["lower"] + (f" +{cell['share']:g}" if cell["share"] else "")
+
+
+def by_type(rows: list[dict], field: str, where: str, problems: list[str]) -> dict[str, dict[str, float | None]]:
+    """{mha: {home_type: value}} from a B29/B30 long table."""
+    out: dict[str, dict[str, float | None]] = {}
+    for r in rows:
+        out.setdefault(r["mha"], {})[r["home_type"]] = cost(r.get(field), f"{where} {r['mha']} {r['home_type']} {field}",
+                                                            problems)
+    return out
+
+
 def manifest_beside(csv_path: Path, name: str) -> dict | None:
     p = csv_path.with_name(name)
     try:
@@ -293,7 +315,10 @@ def main() -> None:
     ap.add_argument("--bah-rates", type=Path, required=True, help="B4 bah_rates.csv")
     ap.add_argument("--zori", type=Path, required=True, help="B8 mha_zori.csv")
     ap.add_argument("--safmr", type=Path, help="B10 mha_safmr.csv (rent cross-check)")
+    ap.add_argument("--rent-by-type", type=Path, help="B29 mha_rent_by_type.csv (needed for rent mode)")
     ap.add_argument("--ownership", type=Path, help="B11 mha_ownership.csv (needed for buy mode)")
+    ap.add_argument("--own-by-type", type=Path, help="B30 mha_ownership_by_type.csv (needed for buy mode)")
+    ap.add_argument("--standards", type=Path, default=ht.STANDARDS)
     ap.add_argument("--out", type=Path, required=True, help="output folder")
     ap.add_argument("--mode", choices=["both", "rent", "buy"], default="both")
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
@@ -301,17 +326,29 @@ def main() -> None:
     args = ap.parse_args()
 
     do_rent, do_buy = args.mode in ("both", "rent"), args.mode in ("both", "buy")
-    if do_rent and not args.safmr:
-        agg.die(TOOL, "rent mode needs --safmr (B10) for the bedroom-matched cross-check")
-    if do_buy and not args.ownership:
-        agg.die(TOOL, "buy mode needs --ownership (B11 mha_ownership.csv)")
+    if do_rent and not (args.safmr and args.rent_by_type):
+        agg.die(TOOL, "rent mode needs --safmr (B10) and --rent-by-type (B29)")
+    if do_buy and not (args.ownership and args.own_by_type):
+        agg.die(TOOL, "buy mode needs --ownership (B11) and --own-by-type (B30)")
 
     profiles, target, cost_share_cfg = load_profiles(args.profiles)
+    std_cfg = ht.load(args.standards)
+    standards = {}
+    for p in profiles:
+        try:
+            standards[p["id"]] = ht.standard(std_cfg, p["pay_grade"], p["has_dependents"])
+            a14 = std_cfg["cost_share_monthly"][p["pay_grade"].upper()]["with" if p["has_dependents"] else "without"]
+        except KeyError:
+            agg.die(TOOL, f"A14 has no standard for profile {p['id']} ({p['pay_grade']})")
+        if a14 != p["cost_share_monthly"]:
+            agg.die(TOOL, f"profile {p['id']}: cost_share_monthly {p['cost_share_monthly']} != A14 {a14} "
+                          "(run `make check-config`)")
     classes = load_classes(args.classification)
     problems: list[str] = []
     warnings: list[str] = []
     print("2.5 computed metrics: adequacy = (BAH + member cost share) / benchmark, target 1.00")
-    print("  " + ", ".join(f"{p['id']} (cost share ${p['cost_share_monthly']:,.0f})" for p in profiles))
+    print("  " + ", ".join(f"{p['id']} (standard {standard_code(standards[p['id']])}, cost share "
+                           f"${p['cost_share_monthly']:,.0f})" for p in profiles))
 
     # B8 defines the MHA universe: every real MHA, one row each.
     zori = {r["mha"]: r for r in read_table(args.zori, {"mha", "zip_coverage", "zori_utilities_adjusted"}, "B8")}
@@ -337,6 +374,13 @@ def main() -> None:
             if gaps:
                 problems.append(f"B10 has no {p['anchor_bedrooms']}-bedroom row for {len(gaps)} MHA(s): "
                                 f"{', '.join(gaps[:10])}")
+        rent_types = by_type(read_table(args.rent_by_type, {"mha", "home_type", "rent_monthly"}, "B29"),
+                             "rent_monthly", "B29", problems)
+        if set(rent_types) != set(mhas) or any(set(v) != set(ht.TYPE_IDS) for v in rent_types.values()):
+            problems.append("B29 does not hold the six home types for exactly the B8 MHAs (run `make rent-types`)")
+        b29_man = manifest_beside(args.rent_by_type, "mha_rent_by_type_manifest.json") or {}
+        if b29_man.get("input_sha256", {}).get("B8") != agg.sha256(args.zori):
+            problems.append("B29 was built from a different mha_zori.csv than --zori. Run `make rent-types` again.")
 
     own: dict[str, dict] = {}
     if do_buy:
@@ -345,6 +389,15 @@ def main() -> None:
         if set(own) != set(mhas):
             diff = sorted(set(own) ^ set(mhas))
             problems.append(f"B8 and B11 cover different MHAs ({len(diff)}): {', '.join(diff[:10])}")
+        b30_rows = read_table(args.own_by_type, {"mha", "home_type", "own_housing_monthly", "own_total_monthly"}, "B30")
+        own_total = by_type(b30_rows, "own_total_monthly", "B30", problems)
+        own_housing = by_type(b30_rows, "own_housing_monthly", "B30", problems)
+        if set(own_total) != set(mhas) or any(set(v) != set(ht.TYPE_IDS) for v in own_total.values()):
+            problems.append("B30 does not hold the six home types for exactly the B8 MHAs (run `make own-types`)")
+        b30_man = manifest_beside(args.own_by_type, "mha_ownership_by_type_manifest.json") or {}
+        if b30_man.get("input_sha256", {}).get("B11") != agg.sha256(args.ownership):
+            problems.append("B30 was built from a different mha_ownership.csv than --ownership. "
+                            "Run `make own-types` again.")
     agg.fail_if(problems, TOOL)
 
     # Temporal alignment and lineage, read from the manifests the benchmark steps wrote.
@@ -381,12 +434,13 @@ def main() -> None:
     for p in profiles:
         grade, deps, beds = p["pay_grade"].upper(), p["has_dependents"], p["anchor_bedrooms"]
         share = float(p["cost_share_monthly"])
+        std = standards[p["id"]]
         for m in mhas:
             b = bah[(m, grade, deps)]
             base = {"profile": p["id"], "mha": m, "pay_grade": grade, "has_dependents": str(deps).lower(),
-                    "bah_monthly": agg.fmt(b), "cost_share_monthly": agg.fmt(share)}
+                    "standard": standard_code(std), "bah_monthly": agg.fmt(b), "cost_share_monthly": agg.fmt(share)}
             if do_rent:
-                c = cost(zori[m]["zori_utilities_adjusted"], f"B8 {m} zori_utilities_adjusted", problems)
+                c = ht.blend(rent_types[m], std)
                 s = cost(safmr[(m, beds)]["safmr_median"], f"B10 {m} {beds}BR safmr_median", problems)
                 cross = metrics(b, share, s, target)
                 rent_rows.append({
@@ -398,9 +452,8 @@ def main() -> None:
                     "status": "ok" if c is not None else "no_zori",
                 })
             if do_buy:
-                o = own[m]
-                c = cost(o["own_total_monthly"], f"B11 {m} own_total_monthly", problems)
-                housing = cost(o["own_housing_monthly"], f"B11 {m} own_housing_monthly", problems)
+                c = ht.blend(own_total[m], std)
+                housing = ht.blend(own_housing[m], std)
                 if c is not None:
                     status = "ok"
                 elif housing is not None:
@@ -432,7 +485,8 @@ def main() -> None:
     summaries: dict = {}
     for p in profiles:
         entry: dict = {"pay_grade": p["pay_grade"], "has_dependents": p["has_dependents"],
-                       "anchor_bedrooms": p["anchor_bedrooms"], "cost_share_monthly": p["cost_share_monthly"]}
+                       "standard": standards[p["id"]], "anchor_bedrooms": p["anchor_bedrooms"],
+                       "cost_share_monthly": p["cost_share_monthly"]}
         if do_rent:
             mine = [r for r in rent_rows if r["profile"] == p["id"]]
             entry["rent"] = summarize(mine, target, classes)
@@ -447,11 +501,14 @@ def main() -> None:
                                              for s in ("ok", "piti_only_no_zori", "no_home_value")}
         summaries[p["id"]] = entry
 
-    inputs = {"A12": args.profiles, "A13": args.classification, "B4": args.bah_rates, "B8": args.zori}
+    inputs = {"A12": args.profiles, "A13": args.classification, "A14": args.standards, "B4": args.bah_rates,
+              "B8": args.zori}
     if do_rent:
         inputs["B10"] = args.safmr
+        inputs["B29"] = args.rent_by_type
     if do_buy:
         inputs["B11"] = args.ownership
+        inputs["B30"] = args.own_by_type
     nodes = [n for n, on in (("B12", do_rent), ("B13", do_rent), ("B14", do_buy), ("B15", do_buy)) if on]
     manifest = {
         "nodes": nodes,
@@ -471,9 +528,11 @@ def main() -> None:
             "surplus_usd": "BAH - cost_monthly",
             "design_gap_usd": "BAH + cost_share_monthly - cost_monthly",
             "flat95_gap": "coverage_ratio - flat_95_sensitivity_target",
-            "rent_cost": "B8 zori_utilities_adjusted (ZORI grossed up to utilities-inclusive with B5)",
+            "standard": "A14 housing standard for the profile's grade and dependency status, blended from the "
+                        "six home-type benchmarks: lower, lower + share x (upper - lower), or lower x (1 + share)",
+            "rent_cost": "B29 rent_monthly at the profile's standard (B8 x building factor x bedroom ratio)",
             "rent_crosscheck_cost": "B10 safmr_median at the profile's anchor_bedrooms (gross rent, HUD 40th pct)",
-            "buy_cost": "B11 own_total_monthly (PITI + B8 utilities)",
+            "buy_cost": "B30 own_total_monthly at the profile's standard (PITI + B29 utilities)",
         },
         "windows": {**windows, "B10": "HUD FY2026 SAFMR (fixed vintage, no monthly window)"},
         "mhas": len(mhas),
