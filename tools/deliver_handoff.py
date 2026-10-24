@@ -19,7 +19,7 @@ Gates (all must pass; --check prints each and changes nothing)
   3  hashes      tools/verify_hashes.py passes (check 2)
   4  QA          the B23 manifest's verdict is PASS, its build_id is the
                  SHA-256 of the B22 file being delivered, it recorded the same
-                 SHA-256 for all five delivered files, and the report beside it
+                 SHA-256 for all six delivered files, and the report beside it
                  is the one it recorded (the report is not edited after it is
                  generated)
   5  provenance  the B22 commit is an ancestor of HEAD, and the pipeline code,
@@ -31,7 +31,7 @@ Gates (all must pass; --check prints each and changes nothing)
 ------------------------------------------------------------------------------
 Delivery
 ------------------------------------------------------------------------------
-  delivery/<year>/  the five delivered files, SHA256SUMS, qa_<year>.md and
+  delivery/<year>/  the six delivered files, SHA256SUMS, qa_<year>.md and
                     qa_<year>_manifest.json; each copy is re-hashed against
                     SHA256SUMS and the B23 manifest. An existing, non-empty
                     folder is replaced only with --replace (a re-delivery is a

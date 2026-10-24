@@ -195,8 +195,8 @@ regression: density
 		--growth-years $(GROWTH_YEARS) --sensitivity-growth-years $(SENS_GROWTH_YEARS) \
 		--seed $(SEED) --out $(SPATIAL)
 
-# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27; docs/data-contract.md) ---
-# Writes the five delivered files and SHA256SUMS into $(HANDOFF), then validates them
+# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31; docs/data-contract.md) ---
+# Writes the six delivered files and SHA256SUMS into $(HANDOFF), then validates them
 # against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
 # build is proven before B22 records it. A full rebuild from data/raw is
 # `make all handoff`. Afterwards run `make evidence verify` to record the B22 manifest.
@@ -224,8 +224,12 @@ handoff:
 	$(HANDOFF_PY)/build_hotspots.py --year $(YEAR) --spatial-stats $(SPATIAL)/mha_spatial_stats.csv \
 		--spatial-manifest $(SPATIAL)/spatial_stats_manifest.json --payload $(HANDOFF)/payload_$(YEAR).json \
 		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/hotspots_$(YEAR).json
+	$(HANDOFF_PY)/build_grid.py --year $(YEAR) --names $(INTERIM)/mha_names.csv \
+		--bah-rates $(INTERIM)/bah_rates.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
+		--own-by-type $(BENCH)/mha_ownership_by_type.csv --ownership $(BENCH)/mha_ownership.csv \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/grid_$(YEAR).json
 	cd $(HANDOFF) && sha256sum areas_$(YEAR).pmtiles payload_$(YEAR).json ui_metadata_$(YEAR).json \
-		hotspots_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
+		hotspots_$(YEAR).json grid_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
 	$(HANDOFF_PY)/validate_handoff.py --year $(YEAR) --handoff $(HANDOFF)
 
 # --- 2.8 QA / validation report (B23) ----------------------------------------

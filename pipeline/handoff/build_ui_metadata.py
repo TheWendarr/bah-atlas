@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-build_ui_metadata.py  (A12 + A13 + ui_text + B3 + stage manifests + B22 -> B21 UI metadata)
+build_ui_metadata.py  (A12 + A13 + A14 + ui_text + B3 + stage manifests + B22 -> B21 UI metadata)
 
 Everything the map needs to label and colour the B20 payload, so no wording or
 class break is hard-coded in Layer 3 (data contract section 6): profiles (A12),
 the seven map layers with their classes and colours and the cluster legend (A13),
 area names (B3), status and caveat texts and source attributions
-(config/ui_text.json), and the benchmark windows from the stage manifests.
+(config/ui_text.json), the benchmark windows from the stage manifests, and the
+grid block for the rank, dependents and home-type dropdowns with the plain-language
+DoD standard for each of the 46 cells (A14, decision D18, ICD 6.1).
 
     python pipeline/handoff/build_ui_metadata.py --year 2026 \
         --names data/interim/bah_2026/mha_names.csv \
@@ -22,12 +24,15 @@ not list, or if A13 lacks a field the contract requires. Stdlib only.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import contract as c
 
 TOOL = "build_ui_metadata"
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "pipeline" / "benchmarks"))
+import home_types as ht  # noqa: E402
 METRIC_KEYS = ("label", "short_label", "role", "modes", "format", "neutral", "breaks", "colors", "class_labels")
 PROFILE_KEYS = ("id", "label", "role", "pay_grade", "has_dependents", "anchor_dwelling", "anchor_bedrooms",
                 "cost_share_monthly")
@@ -43,6 +48,7 @@ def main() -> None:
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
     ap.add_argument("--classification", type=Path, default=ROOT / "config" / "classification.json")
     ap.add_argument("--ui-text", type=Path, default=ROOT / "config" / "ui_text.json")
+    ap.add_argument("--standards", type=Path, default=ht.STANDARDS)
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
 
@@ -63,6 +69,16 @@ def main() -> None:
             problems.append(f"ui_text.json caveat {cid} needs a title and a text")
     if set(text.get("modes", {})) != set(c.MODES):
         problems.append(f"ui_text.json modes must be exactly {c.MODES}")
+    gt = text.get("grid", {})
+    if set(gt.get("home_types", {})) != {c.STANDARD, *c.HOME_TYPES}:
+        problems.append(f"ui_text.json grid.home_types must label exactly {[c.STANDARD, *c.HOME_TYPES]}")
+    if set(gt.get("dependents", {})) != set(c.GRID_DEPENDENTS):
+        problems.append(f"ui_text.json grid.dependents must label exactly {c.GRID_DEPENDENTS}")
+    notice = gt.get("notice", {})
+    off = notice.get("off_standard", "")
+    if "{standard}" not in notice.get("standard", "") or "{standard}" not in off or "{home_type}" not in off:
+        problems.append("ui_text.json grid.notice needs a 'standard' text with {standard} and an 'off_standard' "
+                        "text with {standard} and {home_type}")
 
     metrics = {}
     for mid, m in cls_cfg.get("metrics", {}).items():
@@ -81,6 +97,25 @@ def main() -> None:
 
     def span(months: list[str]) -> str | None:
         return f"{months[0]} to {months[-1]}" if months else None
+
+    std = ht.load(args.standards)
+    labels = gt["home_types"]
+    primary = next(p for p in prof["profiles"] if p.get("role") == "primary")
+    grid = {
+        "ranks": [{"id": g, "label": f"{g[0]}-{g[1:]}"} for g in std["grades"]],
+        "dependents": [{"id": d, "label": gt["dependents"][d]} for d in c.GRID_DEPENDENTS],
+        "home_types": [{"id": c.STANDARD, "label": labels[c.STANDARD]}] +
+                      [{"id": t["id"], "label": labels[t["id"]], "building": t["building"], "bedrooms": t["bedrooms"]}
+                       for t in std["home_types"]],
+        "default_rank": primary["pay_grade"].upper(),
+        "default_dependents": "with" if primary["has_dependents"] else "without",
+        "default_home_type": c.STANDARD,
+        "metrics": list(c.GRID_METRICS),
+        "standards_text": {g: {d: ht.describe(std["standards"][g][d], labels) for d in c.GRID_DEPENDENTS}
+                           for g in std["grades"]},
+        "notice": notice,
+        "titles": {k: gt[k] for k in ("rank", "home_type")},
+    }
 
     meta = {
         **c.header(args.build_manifest, args.year),
@@ -107,6 +142,7 @@ def main() -> None:
         },
         "sources": text.get("sources", []),
         "geometry": text.get("geometry", {}),
+        "grid": grid,
     }
     c.write_json(args.out, meta)
     print(f"B21 UI metadata: {len(meta['profiles'])} profiles, {len(metrics)} map layers, "

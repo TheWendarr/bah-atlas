@@ -5,8 +5,8 @@ build_manifest.py  (every stage manifest + B7 -> B22 build manifest)
 Gathers the provenance of one build into a single file (data contract section 8):
 the raw inputs and their SHA-256, the configs, every stage manifest with its hash
 and warnings, the benchmark windows, software versions, the git commit, and the
-B7 tile archive. Its own SHA-256 is the `build_id` that B20, B21 and B27 carry,
-so it is written before them and does not list them; SHA256SUMS covers all five.
+B7 tile archive. Its own SHA-256 is the `build_id` that B20, B21, B27 and B31
+carry, so it is written before them and does not list them; SHA256SUMS covers all six.
 
     python pipeline/handoff/build_manifest.py --year 2026 \
         --out data/processed/handoff/build_manifest_2026.json
@@ -36,7 +36,7 @@ def stage_paths(data: Path, year: int) -> list[tuple[str, Path]]:
     metrics, spatial, processed = (data / "interim" / f"metrics_{year}", data / "interim" / f"spatial_{year}",
                                    data / "processed")
     return [
-        ("A1-A9 A12", data / "raw" / "fetch_manifest.json"),
+        ("A1-A9 A12 A15 A16", data / "raw" / "fetch_manifest.json"),
         ("B1-B4", interim / "manifest.json"),
         ("B5", interim / "rate_components_manifest.json"),
         ("B6", processed / f"mha_{year}_geometry_manifest.json"),
@@ -47,6 +47,9 @@ def stage_paths(data: Path, year: int) -> list[tuple[str, Path]]:
         ("B10", bench / "mha_safmr_manifest.json"),
         ("A8", bench / "mha_tax_insurance_manifest.json"),
         ("B11", bench / "mha_ownership_manifest.json"),
+        ("A14", bench / "standards_check_manifest.json"),
+        ("B29", bench / "mha_rent_by_type_manifest.json"),
+        ("B30", bench / "mha_ownership_by_type_manifest.json"),
         ("B12-B15", metrics / "coverage_metrics_manifest.json"),
         ("B16", spatial / "weights_manifest.json"),
         ("B17-B18", spatial / "spatial_stats_manifest.json"),
@@ -81,9 +84,11 @@ def main() -> None:
                        "generated_at": (m.get("generated_at") or m.get("ingested_at_utc")
                                         if isinstance(m, dict) else None),
                        "warnings": m.get("warnings", []) if isinstance(m, dict) else []})
+    if manifests.get("A14", {}).get("verdict") not in (None, "PASS"):
+        problems.append("A14: the standards check failed; rerun `make standards` and fix A14 first")
     c.fail_if(problems, TOOL)
 
-    fetch = manifests["A1-A9 A12"]
+    fetch = manifests["A1-A9 A12 A15 A16"]
     raw_inputs = {node: {k: rec.get(k) for k in ("filename", "sha256", "bytes", "source_url", "retrieved_at")}
                   for node, rec in sorted(fetch.items()) if isinstance(rec, dict) and rec.get("sha256")}
     configs = {p.name: c.sha256(p) for p in sorted(args.config_dir.glob("*.json"))}
@@ -117,7 +122,7 @@ def main() -> None:
         "spatial": {k: spatial.get("method", {}).get(k) for k in ("permutations", "seed", "alpha")},
         "outputs": {"B7": {"file": b7["output_file"], "sha256": b7["output_sha256"],
                            "features_by_class": b7.get("features_by_class")}},
-        "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27 -> SHA256SUMS",
+        "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31 -> SHA256SUMS",
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

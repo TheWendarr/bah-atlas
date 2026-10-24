@@ -71,6 +71,10 @@
     "lisa_exploratory": {
       "title": "Exploratory clusters",
       "text": "Local clusters are shown where a test is significant at p < 0.05 without correcting for testing every MHA at once, so some are expected by chance. Areas outlined in black stay significant after a false-discovery-rate correction."
+    },
+    "type_factor_national": {
+      "title": "National home-type adjustment",
+      "text": "No local Zillow series for this home type covers this area, so the difference between this home type and a typical home here uses the national ratio."
     }
   },
   "global_caveats": [
@@ -93,6 +97,11 @@
       "id": "zip_zcta_dropout",
       "title": "Boundaries are approximate",
       "text": "Area outlines are built from Census ZIP Code Tabulation Areas. PO-box and single-site ZIP codes have no tabulation area and are not drawn, although the areas they belong to still have outlines."
+    },
+    {
+      "id": "home_type_benchmarks",
+      "title": "How home types are priced",
+      "text": "Zillow's typical rent and home value for an area are taken to stand for a 2-bedroom townhouse. Other home types are scaled from it: by the area's HUD Fair Market Rent bedroom ratios (rent) or Zillow's bedroom-count home values (buy), and by Zillow's apartment, condo or single-family series against all homes. Zillow publishes single-family and multifamily rents only by metro area, so the rent adjustment for building type is a metro-wide ratio. Homeowners insurance is the area's average premium for every home type."
     }
   ],
   "geometry": {
@@ -100,16 +109,138 @@
     "authority": "DoD publishes no boundary layer for any of these areas. MHA outlines are a reconstruction from ZIP codes; County Cost Group and territory outlines are marked as approximate."
   },
   "sources": [
-    {"id": "A1", "title": "BAH rates and ZIP-to-MHA assignments, 2026", "provider": "Defense Travel Management Office", "url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/", "license": "U.S. Government work", "used_for": "BAH rates and the areas they apply to"},
-    {"id": "A12", "title": "BAH out-of-pocket amounts, 2026", "provider": "Defense Travel Management Office", "url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf", "license": "U.S. Government work", "used_for": "Member cost share"},
-    {"id": "A6", "title": "BAH rate component breakdown, 2026", "provider": "Defense Travel Management Office", "url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/", "license": "U.S. Government work", "used_for": "Rent and utilities split"},
-    {"id": "A2", "title": "2020 ZIP Code Tabulation Areas (1:500,000)", "provider": "U.S. Census Bureau", "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.2020.html", "license": "U.S. Government work", "used_for": "Area boundaries"},
-    {"id": "A3", "title": "Zillow Observed Rent Index (ZORI)", "provider": "Zillow Group", "url": "https://www.zillow.com/research/data/", "license": "Free use with attribution to Zillow", "used_for": "Local rent"},
-    {"id": "A4", "title": "Zillow Home Value Index (ZHVI)", "provider": "Zillow Group", "url": "https://www.zillow.com/research/data/", "license": "Free use with attribution to Zillow", "used_for": "Local home value"},
-    {"id": "A5", "title": "Small Area Fair Market Rents, FY2026 (revised)", "provider": "U.S. Department of Housing and Urban Development", "url": "https://www.huduser.gov/portal/datasets/fmr/smallarea/index.html", "license": "U.S. Government work", "used_for": "Rent cross-check"},
-    {"id": "A7", "title": "Primary Mortgage Market Survey, 30-year fixed", "provider": "Freddie Mac", "url": "https://www.freddiemac.com/pmms", "license": "Attribution to the Freddie Mac Primary Mortgage Market Survey", "used_for": "Mortgage rate"},
-    {"id": "A9", "title": "American Community Survey 5-year estimates, 2020-2024", "provider": "U.S. Census Bureau", "url": "https://www.census.gov/data/developers/data-sets/acs-5year.html", "license": "U.S. Government work", "used_for": "Property tax rate"},
-    {"id": "A8", "title": "Analyses of U.S. Homeowners Insurance Markets, 2018-2022: ZIP-level metrics", "provider": "U.S. Department of the Treasury, Federal Insurance Office", "url": "https://home.treasury.gov/news/press-releases/jy2791", "license": "U.S. Government work", "used_for": "Homeowners insurance premium"},
-    {"id": "A11", "title": "Protomaps basemap", "provider": "OpenStreetMap contributors and Protomaps", "url": "https://protomaps.com/", "license": "ODbL; attribution: © OpenStreetMap contributors", "used_for": "Basemap"}
-  ]
+    {
+      "id": "A1",
+      "title": "BAH rates and ZIP-to-MHA assignments, 2026",
+      "provider": "Defense Travel Management Office",
+      "url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/",
+      "license": "U.S. Government work",
+      "used_for": "BAH rates and the areas they apply to"
+    },
+    {
+      "id": "A12",
+      "title": "BAH out-of-pocket amounts, 2026",
+      "provider": "Defense Travel Management Office",
+      "url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
+      "license": "U.S. Government work",
+      "used_for": "Member cost share for every rank"
+    },
+    {
+      "id": "A6",
+      "title": "BAH rate component breakdown, 2026",
+      "provider": "Defense Travel Management Office",
+      "url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/",
+      "license": "U.S. Government work",
+      "used_for": "Rent and utilities split"
+    },
+    {
+      "id": "A2",
+      "title": "2020 ZIP Code Tabulation Areas (1:500,000)",
+      "provider": "U.S. Census Bureau",
+      "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.2020.html",
+      "license": "U.S. Government work",
+      "used_for": "Area boundaries"
+    },
+    {
+      "id": "A3",
+      "title": "Zillow Observed Rent Index (ZORI)",
+      "provider": "Zillow Group",
+      "url": "https://www.zillow.com/research/data/",
+      "license": "Free use with attribution to Zillow",
+      "used_for": "Local rent"
+    },
+    {
+      "id": "A4",
+      "title": "Zillow Home Value Index (ZHVI)",
+      "provider": "Zillow Group",
+      "url": "https://www.zillow.com/research/data/",
+      "license": "Free use with attribution to Zillow",
+      "used_for": "Local home value"
+    },
+    {
+      "id": "A5",
+      "title": "Small Area Fair Market Rents, FY2026 (revised)",
+      "provider": "U.S. Department of Housing and Urban Development",
+      "url": "https://www.huduser.gov/portal/datasets/fmr/smallarea/index.html",
+      "license": "U.S. Government work",
+      "used_for": "Rent cross-check"
+    },
+    {
+      "id": "A7",
+      "title": "Primary Mortgage Market Survey, 30-year fixed",
+      "provider": "Freddie Mac",
+      "url": "https://www.freddiemac.com/pmms",
+      "license": "Attribution to the Freddie Mac Primary Mortgage Market Survey",
+      "used_for": "Mortgage rate"
+    },
+    {
+      "id": "A9",
+      "title": "American Community Survey 5-year estimates, 2020-2024",
+      "provider": "U.S. Census Bureau",
+      "url": "https://www.census.gov/data/developers/data-sets/acs-5year.html",
+      "license": "U.S. Government work",
+      "used_for": "Property tax rate"
+    },
+    {
+      "id": "A8",
+      "title": "Analyses of U.S. Homeowners Insurance Markets, 2018-2022: ZIP-level metrics",
+      "provider": "U.S. Department of the Treasury, Federal Insurance Office",
+      "url": "https://home.treasury.gov/news/press-releases/jy2791",
+      "license": "U.S. Government work",
+      "used_for": "Homeowners insurance premium"
+    },
+    {
+      "id": "A11",
+      "title": "Protomaps basemap",
+      "provider": "OpenStreetMap contributors and Protomaps",
+      "url": "https://protomaps.com/",
+      "license": "ODbL; attribution: © OpenStreetMap contributors",
+      "used_for": "Basemap"
+    },
+    {
+      "id": "A14",
+      "title": "A Primer on the Basic Allowance for Housing (housing standards by pay grade)",
+      "provider": "Defense Travel Management Office",
+      "url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/",
+      "license": "U.S. Government work",
+      "used_for": "The home type DoD prescribes for each rank"
+    },
+    {
+      "id": "A15",
+      "title": "Zillow Observed Rent Index (ZORI), single-family and multifamily, by metro",
+      "provider": "Zillow Group",
+      "url": "https://www.zillow.com/research/data/",
+      "license": "Free use with attribution to Zillow",
+      "used_for": "Rent by building type"
+    },
+    {
+      "id": "A16",
+      "title": "Zillow Home Value Index (ZHVI), by home type and bedroom count",
+      "provider": "Zillow Group",
+      "url": "https://www.zillow.com/research/data/",
+      "license": "Free use with attribution to Zillow",
+      "used_for": "Home value by home type"
+    }
+  ],
+  "grid": {
+    "rank": "Rank",
+    "dependents": {
+      "with": "With dependents",
+      "without": "Without dependents"
+    },
+    "home_type": "Home type",
+    "home_types": {
+      "standard": "DoD standard for this rank",
+      "apt1": "1-bedroom apartment",
+      "apt2": "2-bedroom apartment",
+      "th2": "2-bedroom townhouse",
+      "th3": "3-bedroom townhouse",
+      "sfh3": "3-bedroom single-family home",
+      "sfh4": "4-bedroom single-family home"
+    },
+    "notice": {
+      "standard": "DoD's housing standard for this rank: {standard}. The map measures BAH against the local cost of that home, its statutory target.",
+      "off_standard": "DoD's housing standard for this rank is {standard}. This view shows how far BAH goes toward a {home_type} instead. DoD does not set BAH for that home, so this is not the statutory test."
+    }
+  }
 }

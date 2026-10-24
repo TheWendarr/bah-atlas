@@ -83,8 +83,8 @@ class TestBlend(unittest.TestCase):
                   "sfh4": "4 BR single-family home"}
         self.assertEqual(ht.describe(ht.standard(cfg, "O3", True), labels),
                          "98% of the way from a 3 BR townhouse to a 3 BR single-family home")
-        self.assertEqual(ht.describe(ht.standard(cfg, "E5", True), labels), "2 BR townhouse")
-        self.assertEqual(ht.describe(ht.standard(cfg, "O7", True), labels), "4 BR single-family home, plus 2%")
+        self.assertEqual(ht.describe(ht.standard(cfg, "E5", True), labels), "a 2 BR townhouse")
+        self.assertEqual(ht.describe(ht.standard(cfg, "O7", True), labels), "a 4 BR single-family home, plus 2%")
 
 
 class TestChain(unittest.TestCase):

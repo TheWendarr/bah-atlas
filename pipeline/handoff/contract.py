@@ -1,7 +1,7 @@
 """
 contract.py — the Layer 2 -> Layer 3 data contract (docs/data-contract.md) in code.
 
-Every handoff builder (B20, B21, B22, B27) and the validator import their names,
+Every handoff builder (B20, B21, B22, B27, B31) and the validator import their names,
 codes and rounding rules from here, so the files and the checks cannot drift
 apart. When the ICD changes, this module changes in the same commit, and
 SCHEMA_VERSION follows the ICD's versioning rules (section 10).
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 
-SCHEMA_VERSION = "1.0.3"
+SCHEMA_VERSION = "1.1.0"
 CODE = re.compile(r"^[A-Z]{2}[0-9]{3}$")
 CLASSES = ("mha", "ccg", "unknown")
 MODES = ("rent", "buy")
@@ -63,6 +63,7 @@ CAVEATS = {
     "tax_state_fallback": "row",
     "insurance_state_fallback": "row",
     "insurance_2022_dollars": "row",
+    "type_factor_national": "row",
     "lisa_exploratory": "overlay",
 }
 
@@ -74,10 +75,17 @@ B27_STATUSES = ("tested", "no_value")
 P_PLACES = 5          # p-values: the 99,999-permutation resolution is 0.00001 (ICD 1.0.2)
 RATIO_PLACES = 4
 
+# ICD 5b: the rank x dependents x home type grid (B31, decisions D18-D20).
+GRID_DEPENDENTS = ("with", "without")
+HOME_TYPES = ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")
+STANDARD = "standard"                      # the home-type dropdown's default: the grade's DoD standard
+GRID_METRICS = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
+GRID_CENTS = 2                             # B31 benchmark costs carry cents (ICD 5b.3)
+
 # ICD 2: the delivered files, by node.
 def file_names(year: int) -> dict[str, str]:
     return {"B7": f"areas_{year}.pmtiles", "B20": f"payload_{year}.json", "B21": f"ui_metadata_{year}.json",
-            "B27": f"hotspots_{year}.json", "B22": f"build_manifest_{year}.json"}
+            "B27": f"hotspots_{year}.json", "B31": f"grid_{year}.json", "B22": f"build_manifest_{year}.json"}
 
 
 # --- rounding (ICD 3) -------------------------------------------------------
@@ -106,12 +114,64 @@ def ratio(raw: object, places: int = RATIO_PLACES) -> float | None:
     return None if d is None else float(d.quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP))
 
 
+def cents(raw: object) -> float | None:
+    """Dollars and cents (B31 benchmark costs), half away from zero."""
+    return ratio(raw, GRID_CENTS)
+
+
 def decimals_of(x: float) -> int:
     """Decimal places in the shortest repr of a float (0.744 -> 3)."""
     s = repr(float(x))
     if "e" in s or "E" in s:
         return len(f"{x:.12f}".rstrip("0").split(".")[1])
     return len(s.split(".")[1].rstrip("0")) if "." in s else 0
+
+
+# --- the browser formula (ICD 5b.4), the reference the map's code mirrors -------
+
+def grid_view(grid: dict, code: str, rank: str, dependents: str, home_type: str, mode: str) -> dict:
+    """One map view computed from B31 alone, exactly as ICD 5b.4 prescribes.
+
+    Returns status, caveats, bah_monthly, cost_share_monthly, cost_monthly and the four
+    GRID_METRICS (ratios to 4 places, dollars whole), plus `standard_view`: true when the
+    home type is the grade's DoD standard, so the view is the statutory test.
+    """
+    area, i = grid["areas"][code], grid["ranks"].index(rank)
+    bah = area["bah"][dependents][i]
+    share = grid["cost_share_monthly"][dependents][i]
+    block = area[mode]
+    std = grid["standards"][dependents][i]
+    if home_type == STANDARD:
+        parts = [std["lower"]] + ([std["upper"]] if std["upper"] else [])
+    else:
+        parts = [home_type]
+    idx = [grid["home_types"].index(t) for t in parts]
+    statuses = [block["status"][j] for j in idx]
+    status = next((st for st in statuses if st != "ok"), "ok")
+    caveats = sorted({cv for j in idx for cv in block["caveats"][j]}, key=list(CAVEATS).index)
+    costs = [block["cost"][j] for j in idx]
+    if home_type != STANDARD:
+        cost = costs[0]
+    elif None in costs:
+        cost = None
+    elif std["upper"] is None:
+        cost = costs[0] * (1 + std["share"])
+    else:
+        cost = costs[0] + std["share"] * (costs[1] - costs[0])
+    if status == "no_rate":                # ICD 5.4: nothing is shown for an area without a rate
+        bah = share = None
+    lo_anchor = std["upper"] is None and not std["share"]
+    out = {"status": status, "caveats": caveats, "bah_monthly": bah, "cost_share_monthly": share,
+           "cost_monthly": dollars(Decimal(repr(cost))) if cost is not None else None,
+           "standard_view": home_type == STANDARD or (lo_anchor and home_type == std["lower"])}
+    if bah is None or cost is None:
+        out.update({m: None for m in GRID_METRICS})
+        return out
+    out.update({"adequacy_ratio": ratio(Decimal(repr((bah + share) / cost))),
+                "design_gap_usd": dollars(Decimal(repr(bah + share - cost))),
+                "coverage_ratio": ratio(Decimal(repr(bah / cost))),
+                "surplus_usd": dollars(Decimal(repr(bah - cost)))})
+    return out
 
 
 # --- small I/O helpers -------------------------------------------------------

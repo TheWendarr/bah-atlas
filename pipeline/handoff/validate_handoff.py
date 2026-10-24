@@ -6,13 +6,15 @@ Checks the delivered files against the contract and against the pipeline tables
 they were built from, independently of the builders:
 
   3  every JSON file has its required fields, types and closed-list values;
-     ratios have at most 4 decimals (p-values 5), dollars are whole
+     ratios have at most 4 decimals (p-values 5), dollars are whole (B31 benchmark
+     costs: cents)
   4  the area codes in B7 (the B6 and B28 polygons it was tiled from) match the
      codes in B20, apart from codes with no polygon, which B28 lists
-  5  every non-null B20 value equals its source row (B4, B12-B15) after rounding
-  6  every status code and caveat id in B20 and B27 has an entry in B21
-  7  B20, B21 and B27 carry one build_id, equal to the SHA-256 of B22
-  8  SHA256SUMS matches the five delivered files (skipped with --no-sums)
+  5  every non-null B20 value equals its source row (B4, B12-B15) after rounding,
+     and every B31 value its source (B4, A14, B29, B30)
+  6  every status code and caveat id in B20, B27 and B31 has an entry in B21
+  7  B20, B21, B27 and B31 carry one build_id, equal to the SHA-256 of B22
+  8  SHA256SUMS matches the six delivered files (skipped with --no-sums)
 
     python pipeline/handoff/validate_handoff.py --year 2026 --handoff data/processed/handoff
 
@@ -23,12 +25,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import contract as c
 
 TOOL = "validate_handoff"
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "pipeline" / "benchmarks"))
+import home_types as ht  # noqa: E402
 
 
 class Check:
@@ -161,6 +166,85 @@ def check_hotspots(ck: Check, h: dict, payload: dict) -> None:
                                                                  "gi_class")), f"{w}: untested area has values")
 
 
+def is_cents(v: object) -> bool:
+    return is_ratio(v, c.GRID_CENTS)
+
+
+def check_grid(ck: Check, g: dict, payload: dict, ui: dict, std: dict, s: dict) -> tuple[set[str], set[str]]:
+    """ICD 5b: B31's shape (check 3) and its values against B4, A14, B29 and B30 (check 5)."""
+    statuses, caveats = set(), set()
+    ranks = std["grades"]
+    ck.expect(3, g.get("ranks") == ranks, "B31: ranks are not the A14 grades in order")
+    ck.expect(3, g.get("dependents") == list(c.GRID_DEPENDENTS), "B31: dependents are not with, without")
+    ck.expect(3, g.get("home_types") == list(c.HOME_TYPES), f"B31: home_types are not {c.HOME_TYPES}")
+    ck.expect(3, g.get("modes") == list(c.MODES), "B31: modes are not rent, buy")
+    for d in c.GRID_DEPENDENTS:
+        ck.expect(5, (g.get("cost_share_monthly") or {}).get(d) == [std["cost_share_monthly"][r][d] for r in ranks],
+                  f"B31: cost_share_monthly[{d}] differs from A14")
+        ck.expect(5, (g.get("standards") or {}).get(d) == [std["standards"][r][d] for r in ranks],
+                  f"B31: standards[{d}] differ from A14")
+    codes = list(g.get("areas", {}))
+    ck.expect(3, codes == sorted(codes), "B31: areas are not sorted by code")
+    ck.expect(4, set(codes) == set(payload.get("areas", {})), "B31 and B20 hold different area codes")
+    n = len(c.HOME_TYPES)
+    for code, a in g.get("areas", {}).items():
+        w = f"B31 {code}"
+        cls = a.get("class")
+        ck.expect(3, cls == payload.get("areas", {}).get(code, {}).get("class"), f"{w}: class differs from B20")
+        for d in c.GRID_DEPENDENTS:
+            vals = (a.get("bah") or {}).get(d)
+            if not isinstance(vals, list) or len(vals) != len(ranks) or not all(map(is_dollar, vals)):
+                ck.fail(3, f"{w}: bah[{d}] must be {len(ranks)} whole dollars or nulls")
+                continue
+            for r, v in zip(ranks, vals):
+                src = c.dollars(s["bah"].get((code, r, "true" if d == "with" else "false")))
+                ck.expect(5, v == src, f"{w}: bah {r} {d} = {v}, B4 rounds to {src}")
+        for mode in c.MODES:
+            b = a.get(mode) or {}
+            keys = ["cost", "own_housing", "status", "caveats"] if mode == "buy" else ["cost", "status", "caveats"]
+            if list(b) != keys or any(not isinstance(b[k], list) or len(b[k]) != n for k in keys):
+                ck.fail(3, f"{w} {mode}: needs {keys}, each a list of {n}")
+                continue
+            for j, t in enumerate(c.HOME_TYPES):
+                st, cost, cvs = b["status"][j], b["cost"][j], b["caveats"][j]
+                statuses.add(st)
+                wt = f"{w} {mode} {t}"
+                if st not in c.STATUSES[mode]:
+                    ck.fail(3, f"{wt}: status {st!r} not in the contract")
+                    continue
+                valued = st in ("ok", "piti_only_no_zori")
+                ck.expect(3, is_cents(cost) and (cost is not None) == valued, f"{wt}: cost {cost!r} under {st}")
+                if mode == "buy":
+                    ck.expect(3, is_cents(b["own_housing"][j]) and (b["own_housing"][j] is not None) == valued,
+                              f"{wt}: own_housing {b['own_housing'][j]!r} under {st}")
+                for cv in cvs:
+                    caveats.add(cv)
+                    ck.expect(3, c.CAVEATS.get(cv) == "row", f"{wt}: {cv!r} is not a row-level caveat")
+                if cls != "mha":
+                    continue
+                row = s["rent_types" if mode == "rent" else "own_types"].get((code, t))
+                if row is None:
+                    ck.fail(5, f"{wt}: no source row in {'B29' if mode == 'rent' else 'B30'}")
+                    continue
+                ck.expect(5, row["status"] == st, f"{wt}: status {st} != source {row['status']}")
+                field = ("rent_monthly" if mode == "rent" else
+                         "own_total_monthly" if st == "ok" else "own_housing_monthly")
+                ck.expect(5, cost == (c.cents(row[field]) if valued else None),
+                          f"{wt}: cost {cost} != source {row.get(field)!r}")
+                if mode == "buy":
+                    ck.expect(5, b["own_housing"][j] == (c.cents(row["own_housing_monthly"]) if valued else None),
+                              f"{wt}: own_housing differs from B30")
+    gui = ui.get("grid") or {}
+    ck.expect(3, [r.get("id") for r in gui.get("ranks", [])] == ranks, "B21 grid: ranks differ from B31")
+    ck.expect(3, [h.get("id") for h in gui.get("home_types", [])] == [c.STANDARD, *c.HOME_TYPES],
+              "B21 grid: home types are not standard plus the six")
+    ck.expect(3, all(gui.get("standards_text", {}).get(r, {}).get(d) for r in ranks for d in c.GRID_DEPENDENTS),
+              "B21 grid: standards_text lacks a cell")
+    ck.expect(3, gui.get("metrics") == list(c.GRID_METRICS) and gui.get("default_home_type") == c.STANDARD,
+              "B21 grid: metrics or default home type differ from the contract")
+    return statuses, caveats
+
+
 def polygon_codes(path: Path) -> set[str]:
     data = c.read_json(path, TOOL)
     return {str(f["properties"]["mha"]) for f in data.get("features", [])}
@@ -172,6 +256,7 @@ def main() -> None:
     ap.add_argument("--handoff", type=Path, required=True, help="folder holding the delivered files")
     ap.add_argument("--data", type=Path, default=ROOT / "data")
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
+    ap.add_argument("--standards", type=Path, default=ht.STANDARDS)
     ap.add_argument("--no-sums", action="store_true", help="skip check 8 (before SHA256SUMS is written)")
     args = ap.parse_args()
 
@@ -183,13 +268,14 @@ def main() -> None:
         c.die(TOOL, f"delivered file(s) missing: {', '.join(missing)}")
     ck = Check()
     build_id = c.sha256(files["B22"])
-    payload, ui, hot = (c.read_json(files[n], TOOL) for n in ("B20", "B21", "B27"))
+    payload, ui, hot, grid = (c.read_json(files[n], TOOL) for n in ("B20", "B21", "B27", "B31"))
     b22 = c.read_json(files["B22"], TOOL)
     ck.expect(3, b22.get("node") == "B22" and b22.get("stages"), "B22: not a build manifest")
-    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot)):
+    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot), ("B31", grid)):
         check_header(ck, name, doc, y, build_id)
 
     interim, metrics = d / "interim" / f"bah_{y}", d / "interim" / f"metrics_{y}"
+    bench = d / "interim" / f"benchmarks_{y}"
     prof_cfg = c.read_json(args.profiles, TOOL)
     sources = {
         "rent": {(r["profile"], r["mha"]): r for r in c.read_csv(metrics / "mha_rent_metrics.csv", {"profile"}, TOOL)},
@@ -197,8 +283,16 @@ def main() -> None:
         "bah": {(r["mha"], r["pay_grade"].upper(), r["has_dependents"].strip().lower()): r["monthly_rate"]
                 for r in c.read_csv(interim / "bah_rates.csv", {"mha", "monthly_rate"}, TOOL)},
         "profiles": {p["id"]: p for p in prof_cfg["profiles"]},
+        "rent_types": {(r["mha"], r["home_type"]): r for r in c.read_csv(
+            bench / "mha_rent_by_type.csv", {"mha", "home_type", "rent_monthly", "status"}, TOOL)},
+        "own_types": {(r["mha"], r["home_type"]): r for r in c.read_csv(
+            bench / "mha_ownership_by_type.csv", {"mha", "home_type", "own_housing_monthly", "own_total_monthly",
+                                                  "status"}, TOOL)},
     }
     statuses, caveats = check_payload(ck, payload, sources)
+    g_statuses, g_caveats = check_grid(ck, grid, payload, ui, ht.load(args.standards), sources)
+    statuses |= g_statuses
+    caveats |= g_caveats
     check_ui(ck, ui)
     check_hotspots(ck, hot, payload)
 

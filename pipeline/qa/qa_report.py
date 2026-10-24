@@ -19,7 +19,7 @@ What it checks and reports
                    uncommitted now: the handoff was built from committed code.
                    B22's own `dirty` flag is shown but not judged, because a
                    rebuild rewrites the docs/evidence copies before B22 runs.
-  3  files         size, gzip size and SHA-256 of the five delivered files
+  3  files         size, gzip size and SHA-256 of the six delivered files
                    (check 9), and SHA256SUMS
   4  status        area counts by class, and value-block counts by profile,
                    mode and status (check 9)
@@ -36,6 +36,11 @@ What it checks and reports
                    and B20. Pick them with --trace CODE CODE CODE, or let the
                    script choose (stated in the report). The per-ZIP values are
                    listed so the median can be checked by hand.
+  9b grid         B31 (D20): the browser formula (ICD 5b.4) run on B31 alone must give
+                   B20's values for both research profiles in every area and mode;
+                   and two off-standard cells, E-1 with dependents in a 4 BR
+                   single-family home and O-9 with dependents in a 1 BR apartment,
+                   recomputed from B4, A14, B29 and B30 in one traced MHA
   10 ZORI vs SAFMR agreement of the primary benchmark with the HUD cross-check
   11 statistics    H1 (B17/B18: FDR result, permutation floor, k sensitivity,
                    scope) and H2 (B19: chosen model, collinearity, residual
@@ -47,7 +52,7 @@ Output (written to --out; data/processed/ is git-ignored, so the report enters
 the repository only with the D10 delivery commit)
 ------------------------------------------------------------------------------
   qa_<year>.md               the report
-  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the five delivered
+  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the six delivered
                              files among them), verdict per check, the counts,
                              class differences, traces, output SHA-256
 
@@ -69,10 +74,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline" / "handoff"))
+sys.path.insert(0, str(ROOT / "pipeline" / "benchmarks"))
 import contract as c  # noqa: E402
+import home_types as ht  # noqa: E402
 
 TOOL = "qa_report"
 CODE_PATHS = ["pipeline", "config", "tools", "Makefile", "requirements.txt"]
+GRID_TRACES = (("E1", "with", "sfh4"), ("O9", "with", "apt1"))     # D20: the two traced off-standard cells
+GRID_FIELDS = ("status", "cost_monthly", "adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
 TOLERANCE = 0.00005          # half a unit in the 4th decimal: the B20 ratio rounding
 
 
@@ -176,6 +185,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, required=True, help="output folder (data/processed/qa)")
     ap.add_argument("--data", type=Path, default=ROOT / "data")
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
+    ap.add_argument("--standards", type=Path, default=ht.STANDARDS)
     ap.add_argument("--trace", nargs=3, metavar="CODE", help="three MHA codes to trace (default: chosen)")
     ap.add_argument("--no-verify", action="store_true", help="skip tools/verify_hashes.py (tests)")
     ap.add_argument("--no-git", action="store_true", help="skip the provenance check (tests)")
@@ -197,7 +207,7 @@ def main() -> None:
     def judge(check: str, ok: bool, detail: str, note: bool = False) -> None:
         verdict.append((check, "NOTE" if note else ("PASS" if ok else "FAIL"), detail))
 
-    payload, ui, hot, b22 = (read_json(files[n]) for n in ("B20", "B21", "B27", "B22"))
+    payload, ui, hot, b22, grid = (read_json(files[n]) for n in ("B20", "B21", "B27", "B22", "B31"))
     build_id = c.sha256(files["B22"])
     prof_cfg = read_json(args.profiles)
     profiles = {p["id"]: p for p in prof_cfg["profiles"]}
@@ -308,9 +318,11 @@ def main() -> None:
         "B11": bench / "mha_ownership_manifest.json", "B12-B15": metrics_dir / "coverage_metrics_manifest.json",
         "B16": spatial / "weights_manifest.json", "B17-B18": spatial / "spatial_stats_manifest.json",
         "B24": context / "mha_density_manifest.json", "B19": spatial / "regression_manifest.json",
+        "A14": bench / "standards_check_manifest.json", "B29": bench / "mha_rent_by_type_manifest.json",
+        "B30": bench / "mha_ownership_by_type_manifest.json",
     }
     absent = [n for n, p in stage.items() if not p.exists()]
-    judge("Every Layer 2 stage manifest present (B6-B19, B24, B28)", not absent,
+    judge("Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, A14 check)", not absent,
           "all present" if not absent else f"missing: {', '.join(absent)}")
     man = {n: read_json(p) for n, p in stage.items() if p.exists()}
     cov_rows = []
@@ -341,6 +353,26 @@ def main() -> None:
                          f"{pt.get('mhas_locality')} locality; state fallback: {pt.get('mhas_state_fallback') or 'none'}"])
         cov_rows.append(["A8 insurance (FIO)", f"data year {ins.get('data_year')}, not scaled to {y} (N2)",
                          f"{ins.get('mhas_locality')} locality; state fallback: {ins.get('mhas_state_fallback') or 'none'}"])
+    a14 = man.get("A14") or {}
+    if a14:
+        cov_rows.append(["A14 standards vs the 2026 rates", f"{len(a14.get('cells') or [])} cells x {a14.get('mhas')} MHAs; "
+                         f"{a14.get('cells_at_75pct_floor')} MHA cells set by the 75% floor",
+                         f"{a14.get('verdict')}; noted: {'; '.join(a14.get('differences_of_0_02_or_more') or []) or 'none'}"])
+    b29 = man.get("B29") or {}
+    if b29:
+        bf = b29.get("building_factors") or {}
+        cov_rows.append(["B29 rent by home type (A15 metro ratios)",
+                         f"{(b29.get('metros') or {}).get('zip_metro_names_matched')} of "
+                         f"{(b29.get('metros') or {}).get('zip_metro_names')} metro names matched",
+                         "national fallback: " + ", ".join(f"{k} {v.get('mhas_national_fallback')} MHAs"
+                                                          for k, v in bf.items())])
+    b30 = man.get("B30") or {}
+    if b30:
+        cov_rows.append(["B30 ownership by home type (A16 ZIP ratios)",
+                         ", ".join(f"{k.replace('_', ' ')} {v.get('zips_with_both'):,} ZIPs"
+                                   for k, v in (b30.get("ratios") or {}).items()),
+                         "national fallback: " + ", ".join(f"{k.replace('_', ' ')} {v.get('mhas_national_fallback')}"
+                                                          for k, v in (b30.get("ratios") or {}).items())])
     b24 = man.get("B24") or {}
     if b24:
         cov_rows.append(["B24 density (ACS + A2)", f"{n_(b24.get('real_mha_zips_with_usable_zcta'))} real-MHA ZIPs "
@@ -450,7 +482,7 @@ def main() -> None:
                                   "cost_share": cs, "cost": cost, "adequacy_recomputed": recomputed,
                                   "adequacy_b12_b14": pipe, "adequacy_b20": sent, "agree": agree,
                                   "b27_cluster": hs.get("cluster")})
-        lines += ["", md_table(["profile", "mode", "status", "BAH (B4)", "cost share (A12)", "cost (B8/B11)",
+        lines += ["", md_table(["profile", "mode", "status", "BAH (B4)", "cost share (A12)", "cost (standard, B29/B30)",
                                 "(BAH + share) ÷ cost", "B12/B14", "B20", "agree", "B27 cluster", "FDR"], rows),
                   "", "- Hand-check against the raw files: record initials, date and result in the progress note's B23 "
                   "entry. This report is not edited, so its SHA-256 stays as B23 recorded it.", ""]
@@ -458,6 +490,52 @@ def main() -> None:
         trace_md += lines
     judge("Traces: three MHAs recomputed from inputs to B20", trace_ok and len(traces) == 3,
           ", ".join(f"{t['area']}" for t in traces) + (" agree at every step" if trace_ok else " — see section 9"))
+
+    # 9b. grid (B31) ------------------------------------------------------------------------
+    compared, grid_bad = 0, []
+    for code, a in areas.items():
+        for pid in payload.get("profiles", []):
+            p = profiles[pid]
+            dep = "with" if p["has_dependents"] else "without"
+            for mode in c.MODES:
+                v = c.grid_view(grid, code, p["pay_grade"].upper(), dep, c.STANDARD, mode)
+                b = a[pid][mode]
+                compared += 1
+                diff = [f for f in GRID_FIELDS if v.get(f) != b.get(f)]
+                if diff:
+                    grid_bad.append(f"{code} {pid} {mode}: {', '.join(f'{f} {v.get(f)} vs {b.get(f)}' for f in diff)}")
+    judge("Grid: the browser formula on B31 reproduces B20 for the research profiles", not grid_bad,
+          f"{compared - len(grid_bad)} of {compared} area x profile x mode views identical"
+          + (f"; differ: {'; '.join(grid_bad[:5])}" if grid_bad else ""))
+
+    std_cfg = ht.load(args.standards)
+    bah4 = {(r["mha"], r["pay_grade"].upper(), r["has_dependents"].strip().lower()): num(r["monthly_rate"])
+            for r in read_csv(interim / "bah_rates.csv")}
+    b29_rows = {(r["mha"], r["home_type"]): r for r in read_csv(bench / "mha_rent_by_type.csv")}
+    b30_rows = {(r["mha"], r["home_type"]): r for r in read_csv(bench / "mha_ownership_by_type.csv")}
+    grid_code = next((t["area"] for t in traces if areas.get(t["area"], {}).get("class") == "mha"
+                      and (b29_rows.get((t["area"], "th2")) or {}).get("status") == "ok"), None)
+    grid_rows, grid_trace, grid_ok = [], [], grid_code is not None
+    for rank, dep, home in GRID_TRACES if grid_code else ():
+        for mode in c.MODES:
+            src = (b29_rows if mode == "rent" else b30_rows).get((grid_code, home)) or {}
+            cost = num(src.get("rent_monthly") if mode == "rent" else
+                       src.get("own_total_monthly") or src.get("own_housing_monthly"))
+            bah_v = bah4.get((grid_code, rank, "true" if dep == "with" else "false"))
+            share = std_cfg["cost_share_monthly"][rank][dep]
+            recomputed = (bah_v + share) / cost if None not in (bah_v, cost) and cost else None
+            v = c.grid_view(grid, grid_code, rank, dep, home, mode)
+            agree = (recomputed is None and v["adequacy_ratio"] is None) or (
+                recomputed is not None and v["adequacy_ratio"] is not None
+                and abs(v["adequacy_ratio"] - recomputed) <= TOLERANCE + 1e-12)
+            grid_ok &= agree and not v["standard_view"]
+            grid_rows.append([f"{rank[0]}-{rank[1:]} {dep}", home, mode, v["status"], fmt(bah_v, 2), share,
+                              fmt(cost, 2), fmt(recomputed), fmt(v["adequacy_ratio"]), "yes" if agree else "**NO**"])
+            grid_trace.append({"area": grid_code, "rank": rank, "dependents": dep, "home_type": home, "mode": mode,
+                               "bah": bah_v, "cost_share": share, "cost": cost, "adequacy_recomputed": recomputed,
+                               "adequacy_b31_formula": v["adequacy_ratio"], "agree": agree})
+    judge("Grid traces: E-1 in a 4 BR single-family home and O-9 in a 1 BR apartment", grid_ok,
+          f"{grid_code}: recomputed from B4, A14, B29 and B30" if grid_code else "no traced MHA with rent values")
 
     # 10. ZORI vs SAFMR -------------------------------------------------------------------
     agree_rows = []
@@ -559,7 +637,7 @@ def main() -> None:
         "before B22 runs, so `dirty: true` alone does not mean code was uncommitted; the check above compares the "
         "code paths directly.", "",
         "## 3. Delivered files (check 9)", "", md_table(["Node", "File", "Bytes", "gzip bytes", "SHA-256"], file_rows), "",
-        f"`SHA256SUMS` matches all five: {'yes' if sums_ok else '**no**'}.", "",
+        f"`SHA256SUMS` matches all six: {'yes' if sums_ok else '**no**'}.", "",
         "## 4. Counts by status (check 9)", "",
         "Areas by class: " + ", ".join(f"{k} {v}" for k, v in sorted(by_class.items())) + ".", "",
         md_table(["Profile", "Mode", "Status", "Areas"], status_rows), "",
@@ -579,8 +657,18 @@ def main() -> None:
         "## 9. Traces: three MHAs from the ZIP values to B20", "",
         "Each adequacy ratio is recomputed from its inputs and compared with the pipeline table (B12/B14, "
         "tolerance 0.0001) and with B20 after the contract's rounding.", "", *trace_md,
+        "## 9b. The rank × dependents × home type grid (B31)", "",
+        "The map computes every grid view in the browser (ICD 5b.4). Run on B31 alone, that formula must give "
+        f"B20's values for both research profiles: {compared - len(grid_bad)} of {compared} views identical"
+        + (" (differences: " + "; ".join(grid_bad[:10]) + ")." if grid_bad else "."), "",
+        (f"Two off-standard cells in {grid_code} ({ui.get('areas', {}).get(grid_code, {}).get('name', '')}), "
+         "recomputed from B4 (BAH), A14 (cost share) and B29/B30 (cost):" if grid_code else
+         "No traced MHA has rent values, so the grid traces were not run."), "",
+        md_table(["Rank", "Home type", "Mode", "Status", "BAH (B4)", "Cost share (A14)", "Cost (B29/B30)",
+                  "(BAH + share) ÷ cost", "B31 formula", "agree"], grid_rows) if grid_rows else "", "",
         "## 10. ZORI against SAFMR (rent cross-check)", "",
-        "Cost = utilities-inclusive ZORI (B8); SAFMR = HUD FY2026 at the profile's anchor bedrooms (B10, gross "
+        "Cost = the profile's DoD standard from B29 (for E-5 the 2 BR townhouse, i.e. B8); SAFMR = HUD FY2026 at "
+        "the profile's anchor bedrooms (B10, gross "
         "rent at the 40th percentile, so expected to sit below a median benchmark).", "",
         md_table(["Profile", "Bedrooms", "MHAs", "Median ZORI ÷ SAFMR", "IQR", "Spearman ρ",
                   "Below design (ZORI)", "Below design (SAFMR)", "Same verdict"], agree_rows) if agree_rows else "No rows.", "",
@@ -593,7 +681,9 @@ def main() -> None:
     report.write_text("\n".join(lines), encoding="utf-8")
 
     inputs = {**{n: p for n, p in files.items()}, "B12": metrics_dir / "mha_rent_metrics.csv",
-              "B14": metrics_dir / "mha_buy_metrics.csv", "B8": bench / "mha_zori.csv", "B11": bench / "mha_ownership.csv"}
+              "B14": metrics_dir / "mha_buy_metrics.csv", "B8": bench / "mha_zori.csv", "B11": bench / "mha_ownership.csv",
+              "B29": bench / "mha_rent_by_type.csv", "B30": bench / "mha_ownership_by_type.csv",
+              "A14": args.standards}
     manifest = {
         "nodes": ["B23"],
         "generated_at": c.now_utc(),
@@ -611,6 +701,8 @@ def main() -> None:
         "values_near_a_break": near_break,
         "codes_without_polygon": no_polygon,
         "traces": traces,
+        "grid": {"views_compared": compared, "views_identical": compared - len(grid_bad), "differences": grid_bad,
+                 "traces": grid_trace},
         "outputs": [report.name, f"qa_{y}_manifest.json"],
         "output_sha256": {report.name: c.sha256(report)},
     }

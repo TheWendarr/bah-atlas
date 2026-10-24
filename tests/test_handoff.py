@@ -9,6 +9,10 @@ The fixture is a miniature data/ tree with five areas:
   AK400  MHA outside cluster scope (Alaska)
   ZZ001  County Cost Group (BAH rate only)
   XX001  territory bucket (no rate)
+B4 holds all 46 rank and dependents cells. B29 and B30 hold the six home types, and
+each research profile's B12-B15 cost is its A14 standard blended from them (D19):
+E-5 the 2 BR townhouse, O-3 98% of the way from th3 to sfh3, as B31's browser
+formula (ICD 5b.4) recomputes it.
 Every builder runs as a subprocess, as `make handoff` calls it, against the
 repository's own configs; then the validator checks the result. Each negative
 test breaks one link and checks that the right check fails. Stdlib only.
@@ -36,6 +40,25 @@ BUY_FIELDS = ["profile", "mha", "pay_grade", "has_dependents", "bah_monthly", "c
               "cost_monthly", "own_housing_monthly", "coverage_ratio", "design_coverage", "adequacy_ratio",
               "adequacy_gap", "surplus_usd", "design_gap_usd", "flat95_gap", "status"]
 PROFILES = {"e5_dep": ("E5", 126, 2112.0), "o3_dep": ("O3", 151, 2900.0)}
+GRADES = [f"E{i}" for i in range(1, 10)] + [f"W{i}" for i in range(1, 6)] + [f"O{i}" for i in range(1, 10)]
+TYPES = ["apt1", "apt2", "th2", "th3", "sfh3", "sfh4"]
+# B29 rent by home type (CO002 has no ZORI). O-3 = th3 + 0.98 x (sfh3 - th3): CO001 2990.00, AK400 3290.00
+RENT_TYPES = {"CO001": [1500.0, 1800.0, 2139.0, 2500.0, 3000.0, 3500.0],
+              "AK400": [1700.0, 2000.0, 2400.0, 2800.0, 3300.0, 3900.0]}
+# B30 totals (PITI + utilities) by home type; CO002 is PITI only. O-3: AK400 3990, CO001 3790, CO002 2490
+OWN_TYPES = {"AK400": [2300.0, 2600.0, 3100.0, 3500.0, 4000.0, 4600.0],
+             "CO001": [2100.0, 2400.0, 2905.0, 3300.0, 3800.0, 4400.0],
+             "CO002": [1300.0, 1500.0, 1850.5, 2000.0, 2500.0, 3000.0]}
+COSTS = {"e5_dep": {"AK400": (2400.0, 3100.0), "CO001": (2139.0, 2905.0), "CO002": (None, 1850.5)},
+         "o3_dep": {"AK400": (3290.0, 3990.0), "CO001": (2990.0, 3790.0), "CO002": (None, 2490.0)}}
+
+
+def rate(code: str, grade: str, deps: bool) -> float:
+    """Fixture BAH: the two research cells as in the README above, every other cell a simple rule."""
+    for g, _, r in PROFILES.values():
+        if (grade, deps) == (g, True):
+            return r
+    return 1500.0 + 40 * GRADES.index(grade) - (0 if deps else 200) + (300 if code == "AK400" else 0)
 
 
 def write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
@@ -77,15 +100,14 @@ class Fixture(unittest.TestCase):
             {"mha": "CO002", "name": "PUEBLO, CO", "mha_class": "mha"},
             {"mha": "XX001", "name": "TERRITORIES", "mha_class": "unknown"},
             {"mha": "ZZ001", "name": "COUNTY COST GROUP 1", "mha_class": "ccg"}])
-        bah_rows = [{"mha": code, "pay_grade": g, "has_dependents": "True", "monthly_rate": f"{rate:.1f}"}
-                    for code in ("AK400", "CO001", "CO002", "ZZ001") for g, _, rate in PROFILES.values()]
+        bah_rows = [{"mha": code, "pay_grade": g, "has_dependents": str(dep), "monthly_rate": f"{rate(code, g, dep):.1f}"}
+                    for code in ("AK400", "CO001", "CO002", "ZZ001") for g in GRADES for dep in (True, False)]
         write_csv(interim / "bah_rates.csv", ["mha", "pay_grade", "has_dependents", "monthly_rate"], bah_rows)
 
         rent, buy, own = [], [], []
         for pid, (grade, share, bah) in PROFILES.items():
-            for code, rent_cost, buy_cost, buy_status in (("AK400", 2400.0, 3100.0, "ok"),
-                                                          ("CO001", 2139.0, 2905.0, "ok"),
-                                                          ("CO002", None, 1850.5, "piti_only_no_zori")):
+            for code, buy_status in (("AK400", "ok"), ("CO001", "ok"), ("CO002", "piti_only_no_zori")):
+                rent_cost, buy_cost = COSTS[pid][code]
                 base = {"profile": pid, "mha": code, "pay_grade": grade, "has_dependents": "true",
                         "bah_monthly": f"{bah:.2f}", "cost_share_monthly": f"{share:.2f}"}
                 rent.append({**base, **metrics(bah, share, rent_cost), "zori_zip_coverage": "0.5000",
@@ -101,6 +123,20 @@ class Fixture(unittest.TestCase):
         write_csv(met / "mha_rent_metrics.csv", RENT_FIELDS, rent)
         write_csv(met / "mha_buy_metrics.csv", BUY_FIELDS, buy)
         write_csv(bench / "mha_ownership.csv", ["mha", "tax_source", "insurance_source"], own)
+        write_csv(bench / "mha_rent_by_type.csv", ["mha", "home_type", "rent_monthly", "factor_source", "status"], [
+            {"mha": code, "home_type": t, "rent_monthly": f"{RENT_TYPES[code][j]:.2f}" if code in RENT_TYPES else "",
+             "factor_source": "national" if (code, t) in (("AK400", "apt1"), ("AK400", "apt2"), ("CO001", "sfh4"))
+             else "reference" if t.startswith("th") else "metro",
+             "status": "ok" if code in RENT_TYPES else "no_zori"}
+            for code in ("AK400", "CO001", "CO002") for j, t in enumerate(TYPES)])
+        write_csv(bench / "mha_ownership_by_type.csv", ["mha", "home_type", "own_housing_monthly", "own_total_monthly",
+                                                         "building_source", "bedroom_source", "status"], [
+            {"mha": code, "home_type": t,
+             "own_housing_monthly": f"{(OWN_TYPES[code][j] if code == 'CO002' else OWN_TYPES[code][j] - 400):.2f}",
+             "own_total_monthly": "" if code == "CO002" else f"{OWN_TYPES[code][j]:.2f}",
+             "building_source": "zip", "bedroom_source": "national" if (code, t) == ("CO001", "apt1") else "zip",
+             "status": "piti_only_no_zori" if code == "CO002" else "ok"}
+            for code in ("AK400", "CO001", "CO002") for j, t in enumerate(TYPES)])
 
         stats, tests = [], []
         for pid in PROFILES:
@@ -142,8 +178,9 @@ class Fixture(unittest.TestCase):
         write_json(proc / f"mha_{y}_geometry_manifest.json", {"node": "B6"})
         write_json(interim / "manifest.json", {"nodes": ["B1", "B2", "B3", "B4"]})
         write_json(interim / "rate_components_manifest.json", {"node": "B5"})
-        for name in ("mha_zori", "mha_zhvi", "mha_safmr", "mha_ownership"):
+        for name in ("mha_zori", "mha_zhvi", "mha_safmr", "mha_ownership", "mha_rent_by_type", "mha_ownership_by_type"):
             write_json(bench / f"{name}_manifest.json", {"node": name})
+        write_json(bench / "standards_check_manifest.json", {"node": "A14", "verdict": "PASS"})
         write_json(bench / "mha_tax_insurance_manifest.json", {
             "nodes": ["A8"], "property_tax": {"acs_period": "2020-2024"}, "insurance": {"data_year": 2022}})
         write_json(met / "coverage_metrics_manifest.json", {"nodes": ["B12"], "windows": {
@@ -180,6 +217,10 @@ class Fixture(unittest.TestCase):
              "--spatial-manifest", str(spatial / "spatial_stats_manifest.json"),
              "--payload", str(o / f"payload_{y}.json"), "--build-manifest", str(b22),
              "--out", str(o / f"hotspots_{y}.json")),
+            ("build_grid.py", "--year", y, "--names", str(interim / "mha_names.csv"),
+             "--bah-rates", str(interim / "bah_rates.csv"), "--rent-by-type", str(bench / "mha_rent_by_type.csv"),
+             "--own-by-type", str(bench / "mha_ownership_by_type.csv"), "--ownership", str(bench / "mha_ownership.csv"),
+             "--build-manifest", str(b22), "--out", str(o / f"grid_{y}.json")),
         ]
         for script, *args in steps:
             p = self.run_py(script, *args)
@@ -190,7 +231,7 @@ class Fixture(unittest.TestCase):
         y = YEAR
         lines = [f"{hashlib.sha256((self.out / n).read_bytes()).hexdigest()}  {n}"
                  for n in (f"areas_{y}.pmtiles", f"payload_{y}.json", f"ui_metadata_{y}.json",
-                           f"hotspots_{y}.json", f"build_manifest_{y}.json")]
+                           f"hotspots_{y}.json", f"grid_{y}.json", f"build_manifest_{y}.json")]
         (self.out / "SHA256SUMS").write_text("\n".join(lines) + "\n")
 
     def validate(self) -> subprocess.CompletedProcess:
@@ -212,7 +253,7 @@ class TestHandoff(Fixture):
         self.build()
         pay = self.payload()
         b22 = hashlib.sha256((self.out / f"build_manifest_{YEAR}.json").read_bytes()).hexdigest()
-        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.0.3", 2026, b22))
+        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.1.0", 2026, b22))
         self.assertEqual(list(pay["areas"]), ["AK400", "CO001", "CO002", "XX001", "ZZ001"])
         co = pay["areas"]["CO001"]
         self.assertEqual((co["class"], co["cluster_scope"], co["caveats"]), ("mha", True, []))
@@ -295,6 +336,85 @@ class TestHandoff(Fixture):
         with self.assertRaises(AssertionError) as cm:
             self.build(ui_text=bad)
         self.assertIn("missing ['piti_only_no_zori']", str(cm.exception))
+
+    def grid(self) -> dict:
+        return json.loads((self.out / f"grid_{YEAR}.json").read_text())
+
+    def test_grid_contents(self) -> None:
+        self.build()
+        g = self.grid()
+        self.assertEqual((g["schema_version"], g["ranks"][:5], g["home_types"], g["dependents"]),
+                         ("1.1.0", GRADES[:5], TYPES, ["with", "without"]))
+        self.assertEqual((g["cost_share_monthly"]["with"][4], g["cost_share_monthly"]["without"][22]), (126, 187))
+        self.assertEqual(g["standards"]["with"][GRADES.index("O3")], {"lower": "th3", "upper": "sfh3", "share": 0.98})
+        co = g["areas"]["CO001"]
+        self.assertEqual(co["bah"]["with"][GRADES.index("E5")], 2112)
+        self.assertEqual(co["rent"]["cost"], RENT_TYPES["CO001"])                       # cents kept
+        self.assertEqual(co["rent"]["caveats"][5], ["utilities_grossed_up", "type_factor_national"])
+        self.assertEqual(co["buy"]["caveats"][0][-1], "type_factor_national")             # national bedroom ratio
+        c2 = g["areas"]["CO002"]
+        self.assertEqual((c2["rent"]["status"][0], c2["rent"]["cost"][0]), ("no_zori", None))
+        self.assertEqual((c2["buy"]["status"][3], c2["buy"]["cost"][3], c2["buy"]["caveats"][3][0]),
+                         ("piti_only_no_zori", 2000.0, "piti_only_no_zori"))
+        zz, xx = g["areas"]["ZZ001"], g["areas"]["XX001"]
+        self.assertEqual((zz["rent"]["status"], zz["rent"]["cost"]), (["ccg_no_benchmark"] * 6, [None] * 6))
+        self.assertEqual(zz["bah"]["without"][0], 1300)
+        self.assertEqual((xx["buy"]["status"][0], xx["bah"]["with"][0]), ("no_rate", None))
+        ui = json.loads((self.out / f"ui_metadata_{YEAR}.json").read_text())["grid"]
+        self.assertEqual((ui["default_rank"], ui["default_dependents"], ui["default_home_type"]), ("E5", "with", "standard"))
+        self.assertEqual(ui["standards_text"]["O3"]["with"],
+                         "98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home")
+        self.assertEqual(ui["standards_text"]["E1"]["without"], "a 1-bedroom apartment")
+
+    def test_browser_formula_reproduces_the_research_profiles(self) -> None:
+        """ICD 5b.4 on B31 alone gives B20's E-5 and O-3 values in every MHA and mode."""
+        self.build()
+        g, pay = self.grid(), self.payload()
+        sys.path.insert(0, str(HANDOFF))
+        import contract as c
+        checked = 0
+        for code, a in pay["areas"].items():
+            for pid, (grade, _, _) in PROFILES.items():
+                for mode in ("rent", "buy"):
+                    v = c.grid_view(g, code, grade, "with", "standard", mode)
+                    b = a[pid][mode]
+                    self.assertEqual(v["status"], b["status"], (code, pid, mode))
+                    for f in ("bah_monthly", "cost_share_monthly", "cost_monthly", "adequacy_ratio", "design_gap_usd",
+                              "coverage_ratio", "surplus_usd"):
+                        self.assertEqual(v[f], b[f], (code, pid, mode, f))
+                    self.assertTrue(v["standard_view"])
+                    checked += 1
+        self.assertEqual(checked, 5 * 2 * 2)
+
+    def test_browser_formula_off_standard_examples(self) -> None:
+        """ICD 5b.5 worked examples: E-1 in a 4 BR single-family home, O-9 in a 1 BR apartment (CO001, rent)."""
+        self.build()
+        sys.path.insert(0, str(HANDOFF))
+        import contract as c
+        g = self.grid()
+        e1 = c.grid_view(g, "CO001", "E1", "with", "sfh4", "rent")
+        # BAH 1500, cost share 115, cost 3500: (1500 + 115) / 3500 = 0.4614; 1615 - 3500 = -1885
+        self.assertEqual((e1["bah_monthly"], e1["cost_share_monthly"], e1["cost_monthly"], e1["adequacy_ratio"],
+                          e1["design_gap_usd"], e1["standard_view"]), (1500, 115, 3500, 0.4614, -1885, False))
+        self.assertEqual(e1["caveats"], ["utilities_grossed_up", "type_factor_national"])
+        o9 = c.grid_view(g, "CO001", "O9", "with", "apt1", "rent")
+        # BAH 1500 + 40 x 22 = 2380, share 212 (O-7's), cost 1500: 2592 / 1500 = 1.7280; surplus 880
+        self.assertEqual((o9["bah_monthly"], o9["cost_share_monthly"], o9["adequacy_ratio"], o9["surplus_usd"]),
+                         (2380, 212, 1.728, 880))
+        o7 = c.grid_view(g, "CO001", "O7", "with", "standard", "rent")
+        # O-7 with dependents: 4 BR single-family x 1.02 = 3570
+        self.assertEqual(o7["cost_monthly"], 3570)
+
+    def test_changed_grid_cost_fails_check_5(self) -> None:
+        self.build()
+        path = self.out / f"grid_{YEAR}.json"
+        g = self.grid()
+        g["areas"]["AK400"]["buy"]["cost"][2] = 3101.0
+        path.write_text(json.dumps(g))
+        self.write_sums()
+        p = self.validate()
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("[5] B31 AK400 buy th2: cost 3101.0", p.stdout)
 
     def test_missing_stage_manifest_stops_b22(self) -> None:
         (self.data / "interim" / f"spatial_{YEAR}" / "weights_manifest.json").unlink()

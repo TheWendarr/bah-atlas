@@ -99,9 +99,19 @@ class TestQA(QAFixture):
                                                                    "no_rate": 1})
         self.assertEqual((man["codes_without_polygon"], man["rounding_class_differences"]), ([], []))
         self.assertEqual(set(man["files"]), {f"areas_{Y}.pmtiles", f"payload_{Y}.json", f"ui_metadata_{Y}.json",
-                                             f"hotspots_{Y}.json", f"build_manifest_{Y}.json"})
+                                             f"hotspots_{Y}.json", f"grid_{Y}.json", f"build_manifest_{Y}.json"})
+        # 9b: the browser formula on B31 equals B20 for both profiles in all 5 areas x 2 modes
+        self.assertEqual((man["grid"]["views_compared"], man["grid"]["views_identical"]), (20, 20))
+        gt = man["grid"]["traces"]
+        self.assertEqual([(t["area"], t["rank"], t["home_type"], t["mode"]) for t in gt],
+                         [("CO001", "E1", "sfh4", "rent"), ("CO001", "E1", "sfh4", "buy"),
+                          ("CO001", "O9", "apt1", "rent"), ("CO001", "O9", "apt1", "buy")])
+        self.assertTrue(all(t["agree"] for t in gt))
+        # E-1 rent in CO001: (1500 + 115) / 3500 = 0.4614
+        self.assertEqual((gt[0]["bah"], gt[0]["cost_share"], gt[0]["cost"], gt[0]["adequacy_b31_formula"]),
+                         (1500.0, 115, 3500.0, 0.4614))
         report = (self.data / "processed" / "qa" / f"qa_{Y}.md").read_text()
-        for heading in ("## 0. Checks", "## 5. Classes changed by rounding", "## 9. Traces",
+        for heading in ("## 0. Checks", "## 5. Classes changed by rounding", "## 9. Traces", "## 9b. The rank",
                         "## 10. ZORI against SAFMR", "## 12. Limitations"):
             self.assertIn(heading, report)
         self.assertIn("VIF above 5 for ln_rent", report)          # stage warnings are carried
@@ -113,13 +123,21 @@ class TestQA(QAFixture):
         self.assertIn("Hand-check against the raw files", report)
 
     def test_value_at_a_break_is_reported(self) -> None:
-        # O-3 rent design gap 49.60 rounds to 50 in B20: below the $50 break unrounded, on it rounded.
+        # O-3 in CO001 with th3 2500.50 and sfh3 3011.50: cost 2500.50 + 0.98 x 511 = 3001.28, design gap
+        # 2900 + 151 - 3001.28 = 49.72, which rounds to 50 in B20: below the $50 break unrounded, on it rounded.
+        bench = self.data / "interim" / f"benchmarks_{Y}"
+        with (bench / "mha_rent_by_type.csv").open(newline="", encoding="utf-8") as fh:
+            types = list(csv.DictReader(fh))
+        for r in types:
+            if r["mha"] == "CO001" and r["home_type"] in ("th3", "sfh3"):
+                r["rent_monthly"] = {"th3": "2500.50", "sfh3": "3011.50"}[r["home_type"]]
+        th.write_csv(bench / "mha_rent_by_type.csv", list(types[0]), types)
         path = self.data / "interim" / f"metrics_{Y}" / "mha_rent_metrics.csv"
         with path.open(newline="", encoding="utf-8") as fh:
             rows = list(csv.DictReader(fh))
         for r in rows:
             if (r["profile"], r["mha"]) == ("o3_dep", "CO001"):
-                r["design_gap_usd"] = "49.60"
+                r.update(th.metrics(2900.0, 151, 3001.28))
         th.write_csv(path, th.RENT_FIELDS, rows)
         self.build()
         p = self.run_qa()

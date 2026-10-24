@@ -59,7 +59,7 @@ def describe(cell: dict, labels: dict[str, str]) -> str:
     """Plain-language statement of a standard, for the map's notice (C25)."""
     lo = labels[cell["lower"]]
     if cell["upper"] is None and not cell["share"]:
-        return lo
+        return f"a {lo}"
     if cell["upper"] is None:
-        return f"{lo}, plus {cell['share']:.0%}"
+        return f"a {lo}, plus {cell['share']:.0%}"
     return f"{cell['share']:.0%} of the way from a {lo} to a {labels[cell['upper']]}"
