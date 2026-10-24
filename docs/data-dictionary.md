@@ -122,6 +122,51 @@ including MHAs with no source data, whose value columns are blank.
 | utilities_usd        | float | from B8; blank where the MHA has no ZORI |
 | own_total_monthly    | float | `own_housing_monthly + utilities_usd`; the buy-mode benchmark |
 
+### `standards_check_manifest.json` (A14 evidence; `make standards`)
+The A14 housing standards checked against the 2026 BAH rates. `method` (the six
+anchor cells, the interpolation and markup formulas, the 75% without-dependents
+floor rule, tolerances); one entry in `cells` per rank and dependency status with
+`lower`, `upper`, `share`, `anchor`, `implied_share_median` and its IQR,
+`difference`, `median_abs_residual_usd`, `mhas_at_75pct_floor`; the total of MHA
+cells set by the floor; `differences_of_0_02_or_more`; `verdict` (PASS or FAIL;
+B22 stops on FAIL).
+
+### `mha_rent_by_type.csv` (B29, long: MHA x home type; `make rent-types`)
+| column          | type  | notes |
+|-----------------|-------|-------|
+| mha             | str   | real MHA code |
+| home_type       | str   | `apt1`, `apt2`, `th2`, `th3`, `sfh3`, `sfh4` (A14) |
+| building, bedrooms | str, int | the type's building and bedroom count |
+| building_factor | float | 1 for townhouses; metro MFR or SFR ZORI ÷ all-homes ZORI (A15), median over the MHA's ZIPs |
+| factor_source   | str   | `reference` (townhouse), `metro`, or `national` (no ZIP in a metro with the series) |
+| factor_zips     | int   | ZIPs whose metro gave a ratio |
+| bedroom_ratio   | float | B10 SAFMR n BR ÷ 2 BR in the MHA |
+| rent_monthly    | float | B8 `zori_utilities_adjusted` × building_factor × bedroom_ratio; the 2 BR townhouse equals B8 |
+| utilities_usd   | float | B8 `utilities_usd` × the same factors (B30 adds it to PITI) |
+| status          | str   | `ok` or `no_zori` |
+
+`mha_rent_by_type_manifest.json`: inputs and SHA-256 (B8, B10, A15.sfr, A15.mfr,
+A15.all, A4 for metro names, B1, A14), window, metro name matching, factor
+summaries and national fallback counts per building, coverage per type, the B8
+identity check, warnings.
+
+### `mha_ownership_by_type.csv` (B30, long: MHA x home type; `make own-types`)
+| column          | type  | notes |
+|-----------------|-------|-------|
+| mha, home_type  | str   | as B29 |
+| building_factor, building_source | float, str | 1 for townhouses; condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; `reference`, `zip` or `national` |
+| bedroom_ratio, bedroom_source | float, str | ZHVI n BR ÷ 2 BR per ZIP, MHA median; `reference`, `zip` or `national` |
+| home_value      | float | B9 `zhvi_median` × building_factor × bedroom_ratio |
+| rate_pct, pi_monthly, tax_monthly, tax_source, insurance_monthly, insurance_source, mi_monthly, own_housing_monthly | | B11's model on `home_value` (see `mha_ownership.csv`); the premium is the MHA average for every type |
+| utilities_usd   | float | B29 `utilities_usd` for the type |
+| own_total_monthly | float | `own_housing_monthly + utilities_usd`; the 2 BR townhouse equals B11 |
+| status          | str   | `ok`, `piti_only_no_zori` or `no_home_value` |
+
+`mha_ownership_by_type_manifest.json`: inputs and SHA-256 (B9, A4, the six A16
+files, B1, B29, A8 rollup, A7, B11, A14), config SHA-256, window and rate, the
+ratio statistics (ZIPs with both series, national median, MHAs on the national
+ratio), limitations, coverage per type, the B11 identity check, warnings.
+
 ### `mha_tax_insurance.csv` (A8 rollup for B11; `make taxins`)
 One row per real MHA, from `tax_insurance_to_mha.py`.
 
@@ -186,9 +231,10 @@ against 0.95.
 | profile            | str   | A12 profile id (`e5_dep`, `o3_dep`) |
 | mha                | str   | MHA code |
 | pay_grade, has_dependents | str | the B4 cell the profile selects |
+| standard           | str   | the cell's A14 standard: `th2` (anchor), `th3-sfh3 0.98` (interpolated), `sfh4 +0.02` (above the top profile) |
 | bah_monthly        | float | B4 monthly rate, USD |
 | cost_share_monthly | float | A (A12): DTMO member cost share for the cell, USD/month |
-| cost_monthly       | float | C: local monthly cost of the anchor dwelling (see each table) |
+| cost_monthly       | float | C: local monthly cost of the profile's A14 standard, blended from B29 or B30 (D19) |
 | coverage_ratio     | float | `BAH / C`: share of benchmark cost BAH pays (descriptive) |
 | design_coverage    | float | `1 - A / C`: share BAH is designed to pay at this cost level |
 | adequacy_ratio     | float | `(BAH + A) / C`: DoD's implied local cost vs the benchmark; target 1.00 |
@@ -199,7 +245,8 @@ against 0.95.
 | status             | str   | why a value is blank (see each table) |
 
 ### `mha_rent_metrics.csv` (B12 coverage ratio, B13 surplus/gap)
-`cost_monthly` = B8 `zori_utilities_adjusted`. Extra columns:
+`cost_monthly` = B29 `rent_monthly` at the profile's standard (for E-5 the 2 BR
+townhouse, i.e. B8 `zori_utilities_adjusted`). Extra columns:
 
 | column                | type  | notes |
 |-----------------------|-------|-------|
@@ -210,8 +257,9 @@ against 0.95.
 | status                | str   | `ok` or `no_zori` |
 
 ### `mha_buy_metrics.csv` (B14 coverage ratio, B15 surplus/gap)
-`cost_monthly` = B11 `own_total_monthly` (PITI + utilities). Extra column
-`own_housing_monthly` (PITI only, from B11). `status` is `ok`, `no_home_value`
+`cost_monthly` = B30 `own_total_monthly` at the profile's standard (PITI +
+utilities; for E-5 the 2 BR townhouse, i.e. B11). Extra column
+`own_housing_monthly` (PITI only, the same blend of B30). `status` is `ok`, `no_home_value`
 (no ZHVI) or `piti_only_no_zori` (home value but no ZORI, so no utilities
 estimate: the metrics are computed against PITI alone, decision 2.4; these rows
 are mapped but left out of the manifest's buy summaries and the 2.6 tests).
@@ -365,13 +413,15 @@ growth check. Then the headline H2 reading, output SHA-256, and warnings (VIF ab
 ## Front-end payload (2.7, in progress)
 
 The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI
-metadata, B22 build manifest, B27 hotspot overlay) are specified field by field in
+metadata, B22 build manifest, B27 hotspot overlay, B31 rank × dependents × home
+type grid) are specified field by field in
 the [data contract (Layer 2 → Layer 3 ICD)](data-contract.md), which governs
 them. `make handoff` writes them, with `SHA256SUMS`, to `data/processed/handoff/`
 (`pipeline/handoff/`: `build_manifest.py` B22, `build_payload.py` B20,
-`build_ui_metadata.py` B21, `build_hotspots.py` B27) and then runs
+`build_ui_metadata.py` B21, `build_hotspots.py` B27, `build_grid.py` B31) and then runs
 `validate_handoff.py`, which applies contract checks 3–8. The names, codes and
-rounding rules all builders share are in `pipeline/handoff/contract.py`. B28 (County Cost Group and territory polygons) is merged into B7 under
+rounding rules all builders share are in `pipeline/handoff/contract.py`, with
+`grid_view`, the reference implementation of the browser formula for B31 (ICD 5b.4). B28 (County Cost Group and territory polygons) is merged into B7 under
 decision D9. The decisions behind the contract are in the
 [M6 plan](plans/m6-plan.md).
 
@@ -384,18 +434,21 @@ delivered files with sizes and SHA-256, counts by status, classes changed by
 rounding, codes without a polygon, join coverage, stage warnings, the three MHA
 traces (per-ZIP ZORI values, the median and utilities gross-up recomputed, and
 every profile × mode ratio recomputed against B12/B14 and B20, with a line for the
-author's hand-check), ZORI against SAFMR, the H1 and H2 caveats, and the caveat
-texts from B21. Git-ignored until the D10 delivery commit copies it to `delivery/`.
+author's hand-check), the grid check (the browser formula on B31 against B20 for
+both research profiles, and two off-standard cells recomputed from B4, A14, B29
+and B30), ZORI against SAFMR, the H1 and H2 caveats, and the caveat texts from B21. Git-ignored until the D10 delivery commit copies it to `delivery/`.
 
 ### `qa_YYYY_manifest.json` (node B23)
-The five delivered files and the B8, B11, B12 and B14 tables with SHA-256; the
+The six delivered files and the B8, B11, B12, B14, B29 and B30 tables and A14 with SHA-256; the
 `build_id`; `verdict` and one entry per check; provenance (B22 commit, `dirty`
 flag, result of the committed-code check); file sizes; areas by class; status
-counts; `rounding_class_differences`; `codes_without_polygon`; the traces; output
+counts; `rounding_class_differences`; `codes_without_polygon`; the traces; `grid`
+(views compared and identical, differences, the two grid traces); output
 SHA-256. `make evidence` copies it to `docs/evidence/` like every other manifest.
 
 ## Configuration
 
 The authored configs (`config/profiles.json` A12, `config/classification.json`
-A13, `config/ownership.json` B11) are documented field by field in
+A13, `config/housing_standards.json` A14, `config/ownership.json` B11,
+`config/ui_text.json`) are documented field by field in
 [`configuration.md`](configuration.md).

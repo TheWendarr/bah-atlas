@@ -17,7 +17,7 @@ Fields per entry: **Provider · Link · Artifact · Archive · Acquisition · Ro
 (A1, A2, A5, A6, A8, A9, A12) are committed in [`data/raw/`](../data/raw/README.md)
 exactly as downloaded, file by file, so a fresh clone holds the build's inputs;
 `make verify` checks each against the SHA-256 recorded when it was pulled. Third-party
-data (Zillow A3, A4; Freddie Mac A7) is **not** re-posted, because the providers' terms
+data (Zillow A3, A4, A15, A16; Freddie Mac A7) is **not** re-posted, because the providers' terms
 do not clearly allow it: each entry below gives the SHA-256 a fresh download must match
 to be byte-identical to the copy the build used.
 
@@ -39,7 +39,10 @@ config" are the files that read or cite it (documentation is not listed).
 | A4 Zillow ZHVI | incorporated | listed only | B9 → B11, B14–B15 | `benchmarks/zillow_to_mha.py`, `benchmarks/ownership_cost.py` |
 | A5 HUD SAFMR FY2026 | incorporated | `data/raw/` | B10 → B12–B13 cross-check | `benchmarks/safmr_to_mha.py` |
 | A6 DTMO rate components | incorporated | `data/raw/` | B5 → B8 | `ingest/ingest_rate_components.py` |
-| A12 DTMO out-of-pocket amounts | incorporated | `data/raw/` | A12 → B12–B15, B20 | `config/profiles.json` |
+| A12 DTMO out-of-pocket amounts | incorporated | `data/raw/` | A12, A14 → B12–B15, B20, B31 | `config/profiles.json`, `config/housing_standards.json` |
+| A14 DTMO BAH Primer (housing standards) | incorporated | — (values in A14) | A14 → B12–B15, B31, B21 | `config/housing_standards.json`, `benchmarks/standards_check.py`, `benchmarks/home_types.py` |
+| A15 Zillow ZORI by building type (metro) | incorporated | listed only | B29 → B12–B13, B30 utilities, B31 | `benchmarks/rent_by_type.py` |
+| A16 Zillow ZHVI by home type and bedrooms (ZIP) | incorporated | listed only | B30 → B14–B15, B31 | `benchmarks/ownership_by_type.py` |
 | A7 Freddie Mac PMMS | incorporated | listed only | B11 | `benchmarks/ownership_cost.py`, `config/ownership.json` |
 | A11 Protomaps basemap | incorporated | not archived | C4 (Layer 3) | `tiles/build_basemap.sh`, `config/ui_text.json` |
 | A8 property tax (Census ACS) | incorporated | `data/raw/` (as A9) | B11 | `benchmarks/tax_insurance_to_mha.py` |
@@ -48,7 +51,8 @@ config" are the files that read or cite it (documentation is not listed).
 | A10 BEA RPP | not used | — | (B25, scrapped) | — |
 | Software (Python and packages, tippecanoe, pmtiles, gh, MapLibre) | incorporated / planned | not redistributed | all | `requirements.txt`, `Makefile` |
 | 37 U.S.C. § 403 | incorporated | — | B12–B15, D1 | `metrics/coverage_metrics.py` |
-| DoD housing standards | incorporated | — | A12 profiles | `config/profiles.json` |
+| DoD housing standards | incorporated | — | A12 profiles, A14 | `config/profiles.json`, `config/housing_standards.json` |
+| CNA 2026 BAH adequacy evaluation | reference | — | A14 (confirms the anchor points) | — |
 | ColorBrewer RdBu | incorporated | — | A13, B21 | `config/classification.json` |
 | VA funding fee | incorporated | — | B11 | `config/ownership.json`, `benchmarks/ownership_cost.py` |
 | NAHB tax rate, NAIC premium | reference | — | former B11 placeholders | — |
@@ -102,7 +106,7 @@ config" are the files that read or cite it (documentation is not listed).
 - **Acquisition:** auto
 - **Role:** Independent home-value benchmark for buy mode (via B9 → B11).
 - **License:** Free for public use; **attribution to Zillow required** (per Zillow terms of use).
-- **Notes:** Same layout, download-path, and coverage caveats as ZORI. Bedroom-count variants follow `Zip_zhvi_bdrmcnt_<N>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` if buy mode needs a bedroom-matched anchor. Buy-vs-rent construct-validity limits already documented in the research framing.
+- **Notes:** Same layout, download-path, and coverage caveats as ZORI. Its `Metro` column also names each ZIP's metro for B29 (A15). The type and bedroom-count series are A16. Buy-vs-rent construct-validity limits already documented in the research framing.
 - **Verified:** 2026-10-03 — URL live, serves CSV text.
 
 ### A5 · HUD Small Area Fair Market Rents (SAFMR) FY2026, revised  `[incorporated]`
@@ -159,6 +163,37 @@ config" are the files that read or cite it (documentation is not listed).
 - **License:** Open Database License (ODbL) Produced Work. **Attribution required on the map:** "© OpenStreetMap contributors" and Protomaps.
 - **Notes:** Daily builds are retained for about a week, so the provenance JSON records exactly which build was cut.
 - **Verified:** 2026-10-03 — build `20261002` available.
+
+### A14 · DoD BAH housing standards by pay grade and dependency status  `[incorporated]`
+- **Provider:** Defense Travel Management Office, *A Primer on the Basic Allowance for Housing (BAH) for the Uniformed Services*, January 2022 edition (copy used: https://www.barksdale.af.mil/Portals/52/Library/Forms%20and%20Documents/BAH-Primer2022.pdf; the 2018 edition at https://www.grandforks.af.mil/Portals/24/documents/GFAFB_BAH_2018.pdf gives the same table). The anchor points are confirmed by CNA, *An Evaluation of Basic Allowance for Housing (BAH) Adequacy Standards and Recipient Housing Choices* (April 2026), Table 1: https://www.cna.org/analyses/2026/04/an-evaluation-of-basic-allowance-for-housing-adequacy-standards
+- **Artifact:** none; the 46 standards are values in `config/housing_standards.json`, with the cost shares from the A12 out-of-pocket PDF.
+- **Acquisition:** manual (read from the primer; checked by `make standards`)
+- **Role:** The housing profile, or blend of two, behind BAH for every rank shown on the map (D18): the default home type in the grid (B31), and each research profile's benchmark (B12–B15, D19).
+- **License:** U.S. Government work (public domain).
+- **Notes:** `make standards` rebuilds every 2026 rate from the six anchor cells and this table. On 24 Oct 2026 all 46 cells passed in all 299 MHAs (median residual $1–4). It settled the cells above the highest profile (a markup on that profile's cost) and recorded one drift: E-8 without dependents, primer 20%, 2026 rates about 23% (kept at the published 20%). O-8 and O-9 take O-7's values (BAH is capped at O-7). Reasoning in [`configuration.md`](configuration.md#a14-housing-standards-confighousing_standardsjson).
+- **Verified:** 2026-10-24.
+
+### A15 · Zillow ZORI by building type (single-family, multifamily) — metro level  `[incorporated]`
+- **Provider:** Zillow (Zillow Group, Inc.)
+- **Link:** https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv, `…/Metro_zori_uc_mfr_sm_month.csv`, `…/Metro_zori_uc_sfrcondomfr_sm_month.csv` · landing: https://www.zillow.com/research/data/
+- **Artifact:** the three files in `data/raw/` under those vendor names (registry ids A15.sfr, A15.mfr, A15.all)
+- **Archive:** not committed (third-party terms; `make fetch` downloads them). Size and SHA-256 of the copies the build uses are recorded in the fetch manifest at the first pull. <!-- TODO (after the workstation pull): bytes, date, SHA-256 for each file -->
+- **Acquisition:** auto
+- **Role:** Building-type factor for the rent benchmark by home type (B29, D19): multifamily ÷ all-homes for apartments, single-family ÷ all-homes for single-family homes, each ZIP taking its metro's ratio. The `country` row is the national fallback.
+- **License:** Free for public use; **attribution to Zillow required**.
+- **Notes:** Zillow publishes the single-family and multifamily ZORI series by metro only; the ZIP folder holds the all-homes series alone (checked 24 Oct 2026). The plan's ZIP-level A15 is therefore metro-level (proposed D21). A metro-wide ratio cannot see a type premium that differs within a metro.
+- **Verified:** 2026-10-24 — filenames from Zillow's published file list; the first `make fetch` confirms each URL.
+
+### A16 · Zillow ZHVI by home type and bedroom count — ZIP level  `[incorporated]`
+- **Provider:** Zillow (Zillow Group, Inc.)
+- **Link:** https://files.zillowstatic.com/research/public_csvs/zhvi/ — `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv`, `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv`, `Zip_zhvi_bdrmcnt_<1–4>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` · landing: https://www.zillow.com/research/data/
+- **Artifact:** the six files in `data/raw/` under those vendor names (registry ids A16.sfr, A16.condo, A16.br1–A16.br4)
+- **Archive:** not committed (third-party terms; `make fetch` downloads them). <!-- TODO (after the workstation pull): bytes, date, SHA-256 for each file -->
+- **Acquisition:** auto
+- **Role:** Building-type and bedroom ratios for the ownership cost by home type (B30, D19): condo/co-op or single-family ÷ all homes (A4), and n BR ÷ 2 BR, each per ZIP and the MHA median, with the national median as fallback.
+- **License:** Free for public use; **attribution to Zillow required**.
+- **Notes:** Same layout as A4. Condo/co-op stands for an apartment in buy mode. Type and bedroom series cover fewer ZIPs than the all-homes series; the B30 manifest counts the MHAs on the national ratio.
+- **Verified:** 2026-10-24 — filenames from Zillow's published ZIP file list; the first `make fetch` confirms each URL.
 
 ### A8 · Property tax and homeowners insurance by locality  `[incorporated]`
 Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B18 are rebuilt on it before the front-end payload. Replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).
@@ -319,7 +354,7 @@ with B19.
 ### DoD BAH housing standards by pay grade  `[incorporated]`
 - **Provider:** U.S. Department of Defense (BAH Primer); summarized at https://www.military.com/paycheck-chronicles/2014/12/04/much-house-rate
 - **Role:** Basis for the anchor dwelling and bedroom count of each housing profile in `config/profiles.json` (A12): E-5 → 2-bedroom townhouse; O-3 → 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home. Reasoning in [`configuration.md`](configuration.md#a12-profiles-configprofilesjson).
-- **Notes:** Cite the DoD BAH Primer directly in the formal write-up.
+- **Notes:** Since 24 Oct 2026 the full table for all 46 cells is a source node of its own, **A14** above, cited to the primer directly.
 
 ### ColorBrewer colour schemes  `[incorporated]`
 - **Provider:** Cynthia A. Brewer, Pennsylvania State University — https://colorbrewer2.org

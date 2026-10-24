@@ -77,12 +77,12 @@ MIN_METRO_MATCH = 0.5            # share of metro-named MHA ZIPs whose metro mus
 def read_metro(path: Path, window: tuple[str, str], min_months: int) -> tuple[dict[str, float], float | None, int]:
     """Window mean per metro name, the national ('country') value, and rows read."""
     if not path.exists():
-        agg.die(TOOL, f"A15 file not found: {path} (run `make fetch A15`)")
+        agg.die(TOOL, f"A15 file not found: {path} (run `make fetch`)")
     with path.open(newline="", encoding="utf-8-sig") as fh:
         reader = csv.reader(fh)
         header = next(reader, [])
         if header and header[0].lstrip().startswith("<"):
-            agg.die(TOOL, f"{path.name} looks like HTML, not a Zillow CSV (re-run `make fetch A15`)")
+            agg.die(TOOL, f"{path.name} looks like HTML, not a Zillow CSV (re-run `make fetch`)")
         if not {"RegionName", "RegionType"} <= set(header):
             agg.die(TOOL, f"{path.name} lacks RegionName/RegionType; header starts {header[:8]}")
         cols = [i for i, h in enumerate(header) if MONTH_COL.match(h) and window[0] <= h[:7] <= window[1]]

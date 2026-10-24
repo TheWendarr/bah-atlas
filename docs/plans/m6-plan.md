@@ -14,6 +14,7 @@ The exact shape of every one of these files is fixed in the **[data contract (La
 
 **In progress (18 Oct):** A8, B20, B21, B22, B23, B28, W1, W2 (required); A9, B24, B19, B27 (optional). B19 is tracked under M6 from 18 Oct (D15).
 **Planned (18 Oct, D18–D20):** A14, A15, A16, B29, B30, B31 (required), tracked under M6 so the grid is in the handoff before delivery; C25 under M7. See [the grid plan](#rank--dependents--home-type-grid-d18d20--planned-18-oct).
+**Grid code complete (24 Oct):** A14 complete (checked against the 2026 rates); A15, A16, B29, B30, B31 written and tested on fixtures, waiting for `make fetch` and `make layer2` on the workstation. ICD 1.1.0 written. D21 proposed (A15 at metro level).
 **Code complete (18 Oct):** every Layer 2 node except the grid. What remains is the end-to-end run (`make layer2`), the author's review of the B23 report, W1, and the D10 delivery (`make deliver`).
 **Scrapped:** B26, A10, B25.
 **Layer 3 (C1–C24):** not started until this handoff exists.
@@ -47,6 +48,7 @@ The exact shape of every one of these files is fixed in the **[data contract (La
 | D17 | **Processed data enters the repository only after Layers 1–2 are complete and validated (restates D10 as gates, 18 Oct).** | `make deliver` refuses unless every Layer 1–2 node is complete or scrapped (W1 aside), the contract checks and `make verify` pass, the B23 verdict is PASS for this exact build, the build came from committed code, and W1 is written. The B23 report is written to the git-ignored `data/processed/qa/` and travels with the delivery. |
 | D18 | **Three independent dropdowns: rank, dependents, home type (decided 18 Oct).** Rank lists E-1–E-9, W-1–W-5 and O-1–O-9 (23 grades; O-1E–O-3E and O-10 left out); dependents is with or without; home type lists DoD's six types (1 BR apartment, 2 BR apartment, 2 BR townhouse, 3 BR townhouse, 3 BR single-family, 4 BR single-family) plus *DoD standard for this grade*, the default. Any combination can be shown, e.g. an E-1 in a 4 BR single-family home or an O-9 in a 1 BR apartment; a notice states what DoD authorizes for the selected rank and dependents (C25). | 23 × 2 × 7 = 322 views per mode. Off-standard views measure affordability of that home, not BAH against its statutory target; the map labels them so. New nodes A14, C25; notes on C7. |
 | D19 | **Benchmark by home type: option B (decided 18 Oct).** Building type from Zillow's type series (apartment = multifamily ZORI, townhouse = all-homes ZORI as now, single-family = SFR ZORI); bedrooms from the HUD SAFMR ratio n BR ÷ 2 BR within the MHA, blended for grades between two types. Buy mode does the same with ZHVI (single-family and condo series for building type, the 1–4 bedroom series for the ratio), then B11's VA PITI. Option A (one benchmark for every rank) would overstate adequacy for senior grades; option C (SAFMR as the benchmark) changes the level to HUD's 40th percentile. | The 2 BR townhouse benchmark equals B8, so **E-5, H1 and H2 do not change** (tested). The O-3 contrast moves to its own standard and is recomputed (B12–B19 rerun). New nodes A15, A16, B29, B30. Assumes all-homes ZORI stands for a 2 BR unit; W1 states it. |
+| D21 | **A15 at metro level (proposed 24 Oct, author to decide).** Zillow publishes single-family and multifamily ZORI only by metro; the ZIP folder has the all-homes series alone. Proposed: each ZIP takes its metro's type ratio (type ZORI ÷ all-homes ZORI, both metro-level), the MHA the median over its ZIPs, and the national ratio where no ZIP lies in a metro with the series (flagged per MHA, caveat `type_factor_national`), the same pattern as the D11 insurance fallback. Alternatives: the ZHVI type ratio (A16, ZIP level) as a stand-in for rent; or drop the building-type factor in rent mode and vary rent by bedrooms only. | A15 is three metro files; B29 reads each ZIP's metro from the A4 `Metro` column and stops if fewer than half the names match. A metro-wide ratio cannot see a type premium that differs within a metro; W1 states it. |
 | D20 | **Factored grid payload, ratio computed in the browser (decided 18 Oct).** B31 carries, per area, BAH for the 46 rank and dependents cells, each cell's cost share, the six benchmarks per mode and the standards table (about 250 KB), instead of 644 precomputed layers (about 60 MB). The browser divides (BAH + cost share) by the benchmark and classifies with A13. Hotspots (B27) stay on the two research profiles. | ICD 1.1.0 (additive): the formula, rounding and worked examples; B21 adds the dropdown lists. B23 recomputes E-5 and O-3 with the browser formula and checks them against B20, and traces two grid cells. New node B31; notes on W2, B23, C14. |
 
 **Config text (COA 2, decided 18 Oct):** A12 and A13 now hold values only, and their explanations live in [`docs/configuration.md`](../configuration.md). The D2 cluster fields and the D3 sensitivity layers are in A13. The whole pipeline is rerun once so every recorded hash matches (`make verify`). `config/ownership.json` follows the same split when A8 rewrites it.
@@ -200,8 +202,20 @@ Approved 18 Oct as five patches, all before `make deliver`, so the first deliver
 | 4. Handoff | B31, B21, B23, W2 | ICD 1.1.0; B31 grid file; dropdown lists, home-type labels and the standards table in B21; validator checks; B23 formula check and the two grid traces. | `make layer2` passes; B23 PASS |
 | 5. Docs | — | `configuration.md`, data dictionary, `SOURCES.md`, `REPRODUCING.md` (new files and sizes), progress note | `make deliver-check` passes every gate but W1 |
 
-**Open before patch 1:** DoD's current standards table. The 2014 summary on record covers only members with dependents and no warrant grades.
-**Known limits:** Zillow's type series cover fewer ZIPs than the all-homes series, so some MHAs have no value for some home types. SAFMR has no townhouse/single-family split, so within a building type only the bedroom count changes the cost.
+**Open before patch 1 (resolved 24 Oct):** DoD's current standards table. Source: the DTMO BAH Primer (January 2022; the 2018 edition agrees; CNA's April 2026 evaluation confirms the anchor points). `make standards` rebuilds every 2026 rate from it: all 46 cells pass (A14 in [configuration.md](../configuration.md#a14-housing-standards-confighousing_standardsjson)).
+**Known limits:** Zillow's type series cover fewer ZIPs than the all-homes series, and the rent type series exist only by metro (D21), so some MHAs take the national ratio for some home types; they keep a value and carry `type_factor_national`. SAFMR has no townhouse/single-family split, so within a building type only the bedroom count changes the rent. The homeowners premium is the MHA average for every home type.
+
+**Status 24 Oct (all five patches written; commits A14-A16, B29/B30, B12-B15, B31, and the docs patch):**
+
+| Patch | Status | Evidence |
+|---|---|---|
+| 1 | A14 complete; A15, A16 in the fetcher | `make check-config` passes; `make standards` PASS on the 2026 rates; fetch tests |
+| 2 | B29, B30 code ready | `tests/test_home_types.py`: 2 BR townhouse = B8 and = B11 to the cent (also checked by both scripts on every run) |
+| 3 | B12–B15 on the standards | `tests/test_metrics.py`: O-3 worked by hand on the blend; E-5 unchanged by construction |
+| 4 | B31, ICD 1.1.0, B21 grid block, validator, B23 section 9b | `tests/test_handoff.py`, `tests/test_qa.py`: the browser formula on B31 equals B20 in every fixture view |
+| 5 | Docs | this page, configuration.md, data dictionary, SOURCES.md, REPRODUCING.md, the 24 Oct note |
+
+Workstation run still to do: `make fetch`, `make layer2`, review the B23 report (section 9b), `make done N="A15 A16 B29-B31"`, then record the A15/A16 SHA-256 in SOURCES.md and REPRODUCING.md.
 
 ### B22 · build manifest — target Thu 29 Oct
 
@@ -254,9 +268,8 @@ Wendell writes this; the outline points to the evidence each part draws on. **Sc
 | Sun 18 Oct | B24, B19 (D15), B23 code; `make layer2`, `make deliver` and its gates (D16, D17); ICD 1.0.3 (wording) |
 | Sun 18 Oct | First `make layer2` on the 2026 data: handoff validated, B23 PASS. B19 sample and model-form findings; patch for both. Stale B23 output fixed in `make handoff` |
 | Workstation, next | `make layer2` again with the B19 changes; review the B23 report and hand-check its three traces; `make done N="B19 B20-B22 B23 B24 B27"` |
-| Wed 21 Oct (proposed) | Grid patch 1 (A14–A16): standards table, cost shares, Zillow series; `make fetch` on the workstation |
-| Sat 24 Oct (proposed) | Grid patches 2–3 (B29, B30; O-3 rerun) |
-| Tue 27 Oct (proposed) | Grid patches 4–5 (B31, ICD 1.1.0, B23 checks, docs); `make layer2`; `make done N="A14-A16 B29-B31"` |
+| Sat 24 Oct | Grid patches 1–5 written and tested on fixtures (A14 complete; A15, A16, B29–B31 code ready; ICD 1.1.0; D21 proposed) |
+| Workstation, next | `make fetch`; `make layer2`; review the B23 report including section 9b; `make done N="A15 A16 B29-B31"`; approve ICD 1.1.0 and decide D21 |
 | Fri 30 Oct | W1; `make deliver`; `make done N=W1`; one commit with `delivery/2026/`, W1 and the tracker; close M6 |
 
 ---

@@ -67,12 +67,24 @@ go to `data/interim/benchmarks_YYYY/`.
   Parameters are in `config/ownership.json`, explained in
   `docs/configuration.md`.
 
+- `standards_check.py` — A14 evidence (`make standards`): rebuilds every 2026 BAH
+  rate from the six anchor cells and `config/housing_standards.json`, and stops
+  if any cell's interpolation share disagrees with the rates.
+- `home_types.py` — the six DoD home types and the one blend formula (anchor,
+  interpolated, markup above the top profile) shared by B12-B15, B23 and the map.
+- `rent_by_type.py` — B29 (`make rent-types`): rent for each home type =
+  B8 × the A15 metro building-type ratio × the B10 SAFMR bedroom ratio; the
+  2 BR townhouse equals B8 (checked on every run).
+- `ownership_by_type.py` — B30 (`make own-types`): home value for each type =
+  B9 × the A16 ZIP building-type and bedroom ratios, then B11's own model and
+  B29 utilities; the 2 BR townhouse equals B11 (checked on every run).
+
 - `density_to_mha.py` — B24: population density per MHA (urbanicity for the
   B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,
   as sum(population) / sum(land) and population-weighted (`make density`, output in
   `data/interim/context_YYYY/`). Reads the ZCTA file's attribute table only.
 
-Tests for all six run on synthetic fixtures with `make test`.
+Tests for all of them run on synthetic fixtures with `make test`.
 
 ## `metrics/` — 2.5 computed metrics
 
@@ -81,9 +93,11 @@ Tests for all six run on synthetic fixtures with `make test`.
   statutory design (37 U.S.C. 403(b)(3): local cost minus 5% of the *national*
   average for the grade): adequacy ratio = (BAH + member cost share) / cost,
   target 1.00, plus the dollar gap vs design, the plain coverage ratio, and a
-  fixed-95% sensitivity column. Rent mode uses B8 utilities-adjusted ZORI with a
-  bedroom-matched B10 SAFMR cross-check; buy mode uses B11 ownership cost. Stops if B8 and B9 cover different months or if B11
-  was built from different B8/B9 files than the ones beside it. Outputs go to
+  fixed-95% sensitivity column. The cost is the profile's A14 standard blended
+  from B29 (rent, with a bedroom-matched B10 SAFMR cross-check) or B30 (buy); for
+  E-5 that is the 2 BR townhouse, i.e. B8 and B11 (D19). Stops if B8 and B9 cover
+  different months, if B11 was built from different B8/B9 files than the ones
+  beside it, or if B29/B30 were built from a different B8/B11. Outputs go to
   `data/interim/metrics_YYYY/`. Stdlib only.
 
 ## `spatial/` — 2.6 spatial statistics
@@ -138,8 +152,11 @@ Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
 - `build_ui_metadata.py` (B21) — labels, classes, colours, area names, and the
   status, caveat and source texts from `config/ui_text.json`.
 - `build_hotspots.py` (B27) — the exploratory cluster overlay for `adequacy_gap`.
+- `build_grid.py` (B31) — the rank × dependents × home type grid: BAH for 46
+  cells and six benchmarks per mode per area, plus the A14 cost shares and
+  standards; the browser computes each view (ICD 5b.4, `contract.grid_view`).
 - `validate_handoff.py` — contract checks 3-8, independent of the builders: types
-  and rounding, B7 codes against B20, every value against its source row,
+  and rounding, B7 codes against B20, every B20 and B31 value against its source,
   references into B21, one `build_id`, and `SHA256SUMS`.
 
 ## `qa/` — 2.8 QA / validation report
@@ -149,7 +166,8 @@ Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
   committed code, and records file sizes, counts by status, values whose map class
   changes with rounding (contract check 9), codes without a polygon (check 4), join
   coverage at every step, every stage warning, three MHAs traced from their ZIP
-  values to B20 with each ratio recomputed, ZORI against SAFMR, the H1 and H2
+  values to B20 with each ratio recomputed, the grid formula on B31 against B20
+  and two off-standard grid cells recomputed, ZORI against SAFMR, the H1 and H2
   statistical caveats, and every caveat text the map shows. Writes
   `data/processed/qa/qa_YYYY.md` and its manifest; exit 1 if a check fails.
 
@@ -168,7 +186,7 @@ handoff, B23 and the evidence and hash checks (data contract check 1).
 `make deliver-check` runs the six D10 gates in `tools/deliver_handoff.py`: every
 Layer 1–2 node complete or scrapped (W1 aside), contract checks 3–8, `make verify`,
 a passing B23 for this exact build, a build from committed code, and a written W1.
-`make deliver` runs them and only then copies the five files, `SHA256SUMS` and the
+`make deliver` runs them and only then copies the six files, `SHA256SUMS` and the
 B23 report into `delivery/YYYY/`, the one place processed data enters the
 repository (data contract section 12).
 

@@ -16,17 +16,17 @@ handoff files contain: [data contract](data-contract.md) · table layouts:
 
 - MHA, County Cost Group and territory polygons, and one vector tile archive (B6, B28, B7)
 - the rent and home-value benchmarks, ownership cost and adequacy metrics for every
-  MHA (B8–B15)
+  MHA (B8–B15), and the benchmarks for each of DoD's six home types (B29, B30)
 - the spatial statistics (B16–B18), population density (B24) and the H2 regression (B19)
-- the five handoff files for Layer 3, validated against the data contract (B20–B22, B27)
+- the six handoff files for Layer 3, validated against the data contract (B20–B22, B27, B31)
 - the QA report (B23), which re-checks every recorded hash and traces three MHAs by hand
 
 Two levels of replication are possible:
 
 | Level | What it needs | Result |
 |---|---|---|
-| **Exact** | Byte-identical copies of all ten source files (section 4) | The published 2026 numbers, digit for digit |
-| **Current data** | The government files in the repository plus fresh downloads of the three third-party files | The same pipeline and checks; numbers differ slightly, because Zillow and Freddie Mac republish their files at the same URL |
+| **Exact** | Byte-identical copies of all nineteen source files (section 4) | The published 2026 numbers, digit for digit |
+| **Current data** | The government files in the repository plus fresh downloads of the twelve third-party files | The same pipeline and checks; numbers differ slightly, because Zillow and Freddie Mac republish their files at the same URL |
 
 ---
 
@@ -43,7 +43,7 @@ Two levels of replication are possible:
 | pmtiles CLI | optional | the basemap only (`make basemap`, Layer 3) | https://github.com/protomaps/go-pmtiles/releases |
 | GitHub CLI `gh` | optional | mirroring the tracker to GitHub (`make wbs-sync`) | https://cli.github.com |
 
-Disk: 1–2 GB free (sources 221 MB; intermediate files and tiles the rest).
+Disk: 2–3 GB free (sources about 221 MB before the grid and several hundred MB more with the A16 ZIP files; intermediate files and tiles the rest).
 A Census API key is **not** needed: the Census query result (A9) is in the repository.
 
 ### Install tippecanoe
@@ -110,6 +110,20 @@ downloaded.
 | A4 | `Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv | `50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719` (retrieved 2026-09-07) |
 | A7 | `PMMS_history.csv` | https://www.freddiemac.com/pmms/docs/PMMS_history.csv | `d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f` (retrieved 2026-10-03) |
 
+Added 24 Oct 2026 for the rank × dependents × home type grid (A15, A16; decisions D18–D19):
+
+| Node | File | Download URL | SHA-256 of the copy the 2026 build used |
+|---|---|---|---|
+| A15.sfr | `Metro_zori_uc_sfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv | <!-- TODO (after the workstation pull) --> |
+| A15.mfr | `Metro_zori_uc_mfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv | <!-- TODO --> |
+| A15.all | `Metro_zori_uc_sfrcondomfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv | <!-- TODO --> |
+| A16.sfr | `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv | <!-- TODO --> |
+| A16.condo | `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv | <!-- TODO --> |
+| A16.br1–br4 | `Zip_zhvi_bdrmcnt_<1–4>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/ + the file name | <!-- TODO, one line each --> |
+
+The ZIP-level ZHVI files are each roughly the size of A4 (about 50–120 MB), so the
+grid adds several hundred MB to `data/raw/`.
+
 Zillow data must be attributed to Zillow, and PMMS data to Freddie Mac
 ([SOURCES.md](SOURCES.md) has the terms).
 
@@ -120,17 +134,17 @@ Zillow data must be attributed to Zillow, and PMMS data to Freddie Mac
 #    keep their original retrieval dates (data/raw/fetch_manifest.json is gitignored).
 cp docs/evidence/fetch_manifest.json data/raw/fetch_manifest.json
 
-# 2. Download the three third-party files; the seven committed ones are checked, not re-downloaded.
+# 2. Download the twelve third-party files; the seven committed ones are checked, not re-downloaded.
 make fetch
 
 # 3. Compare every file with the 2026 build's copy.
 sha256sum data/raw/*.zip data/raw/*.csv data/raw/*.xlsx data/raw/*.json data/raw/*.pdf
 ```
 
-The seven government files must match the first table exactly. For the three
+The seven government files must match the first table exactly. For the twelve
 third-party files:
 
-- **All three match:** you have the exact inputs; continue to section 5.
+- **All match:** you have the exact inputs; continue to section 5.
 - **Any differs:** Zillow and Freddie Mac have published a newer file since. The build
   still runs and passes every check, but it describes the newer data. For an exact
   replication, put byte-identical copies of those files in `data/raw/` under the same
@@ -149,8 +163,8 @@ make layer2
 ```
 
 This runs, in order: `make all` (configs, ingest, geometry, tiles, benchmarks, metrics,
-spatial statistics), `make regression` (B24 and B19), `make handoff` (the five Layer 3
-files, validated), `make evidence` and `make verify`, `make qa` (B23), and
+spatial statistics; `make benchmarks` includes the A14 standards check and B29, B30),
+`make regression` (B24 and B19), `make handoff` (the six Layer 3 files, validated), `make evidence` and `make verify`, `make qa` (B23), and
 `make evidence` and `make verify` again. It stops at the first failure.
 
 The slowest step is the spatial statistics: 99,999 permutations per test (the
@@ -168,7 +182,7 @@ commit, software versions and the test log; any changed SHA-256 or count means a
 ```bash
 make verify                                        # every recorded SHA-256 agrees
 less data/processed/qa/qa_2026.md                  # the QA report: verdict at the top
-cat data/processed/handoff/SHA256SUMS              # the five handoff files
+cat data/processed/handoff/SHA256SUMS              # the six handoff files
 ```
 
 With exact inputs:
@@ -184,7 +198,7 @@ With exact inputs:
 
 The handoff files themselves are not byte-identical between machines: the build
 manifest (B22) records the build time, the git commit and software versions, and the
-other three JSON files carry its SHA-256 as their `build_id`. The values inside them
+other four JSON files carry its SHA-256 as their `build_id`. The values inside them
 are identical with exact inputs; `make qa` checks every value against its source table.
 
 ---
@@ -194,7 +208,7 @@ are identical with exact inputs; `make qa` checks every value against its source
 ```
 bah-atlas/
 ├── config/                       authored settings (committed): profiles.json (A12), classification.json
-│                                 and ui_text.json (A13), ownership.json (B11)
+│                                 and ui_text.json (A13), housing_standards.json (A14), ownership.json (B11)
 ├── data/
 │   ├── raw/                      Layer 1 sources (section 4); government files committed, third-party
 │   │                             files and fetch_manifest.json gitignored

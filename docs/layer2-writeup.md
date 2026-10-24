@@ -35,7 +35,7 @@ Evidence: [weights](evidence/weights_manifest.json) · [B17/B18](evidence/spatia
 
 ## 5. The handoff
 
-> ✎ AUTHOR: The five delivered files and what each is for, the conventions (one file keyed by area code, null plus status, caveat ids), what the map must and must not do with them, and how a reader can verify the delivery (SHA256SUMS, build_id, `make deliver-check`).
+> ✎ AUTHOR: The six delivered files and what each is for, the conventions (one file keyed by area code, null plus status, caveat ids), what the map must and must not do with them, and how a reader can verify the delivery (SHA256SUMS, build_id, `make deliver-check`).
 
 Evidence: [data contract, sections 2–9 and 12](data-contract.md) · [`delivery/2026/`](../delivery/2026/) · B23 report, sections 1–6
 

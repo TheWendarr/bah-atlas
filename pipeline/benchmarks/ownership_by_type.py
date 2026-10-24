@@ -71,7 +71,7 @@ ZHVI_RANGE = zm.SERIES["zhvi"]["range"]
 
 def zip_series(path: Path, window: tuple[str, str], min_months: int, node: str) -> dict[str, float]:
     if not path.exists():
-        agg.die(TOOL, f"{node} not found: {path} (run `make fetch {node.split('.')[0]}`)")
+        agg.die(TOOL, f"{node} not found: {path} (run `make fetch`)")
     values, _, _, problems, _, _ = zm.read_zillow(path, window, min_months, *ZHVI_RANGE)
     agg.fail_if([f"{path.name}: {p}" for p in problems[:25]], TOOL)
     return values
