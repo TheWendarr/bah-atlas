@@ -13,6 +13,12 @@ SPATIAL  ?= data/interim/spatial_$(YEAR)
 KNN_K    ?= 6
 ZORI_CSV ?= data/raw/Zip_zori_uc_sfrcondomfr_sm_month.csv
 ZHVI_CSV ?= data/raw/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
+# A15 (metro ZORI by building type) and A16 (ZIP ZHVI by building type and bedrooms), decision D19.
+ZORI_METRO = data/raw/Metro_zori_uc
+ZHVI_ZIP   = data/raw/Zip_zhvi
+A16_ARGS = --zhvi-sfr $(ZHVI_ZIP)_uc_sfr_tier_0.33_0.67_sm_sa_month.csv \
+	--zhvi-condo $(ZHVI_ZIP)_uc_condo_tier_0.33_0.67_sm_sa_month.csv \
+	$(foreach n,1 2 3 4,--zhvi-br$(n) $(ZHVI_ZIP)_bdrmcnt_$(n)_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv)
 SAFMR_XLSX ?= data/raw/fy2026_safmrs_revised.xlsx
 PMMS_CSV ?= data/raw/PMMS_history.csv
 ACS_JSON ?= data/raw/acs5_2024_zcta.json
@@ -22,7 +28,7 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff standards \
-	benchmarks zori zhvi safmr taxins ownership metrics weights spatial density regression qa layer2 deliver-check deliver test clean
+	benchmarks zori zhvi safmr taxins ownership rent-types own-types metrics weights spatial density regression qa layer2 deliver-check deliver test clean
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -87,7 +93,7 @@ standards:
 # Each reads a ZIP-level Layer 1 source and rolls it up to the MHA through the B1
 # crosswalk. Needs `make ingest` and `make components` first (B1, B5).
 # Override the window with e.g. `make benchmarks WINDOW=2026-01:2026-06`.
-benchmarks: zori zhvi safmr taxins ownership
+benchmarks: zori zhvi safmr taxins ownership standards rent-types own-types
 
 # A3 + B5 -> B8: ZORI at MHA, grossed up to utilities-inclusive.
 zori:
@@ -117,6 +123,22 @@ ownership: zori zhvi taxins
 	$(PYTHON) pipeline/benchmarks/ownership_cost.py --zhvi $(BENCH)/mha_zhvi.csv \
 		--zori $(BENCH)/mha_zori.csv --tax-insurance $(BENCH)/mha_tax_insurance.csv \
 		--pmms $(PMMS_CSV) --out $(BENCH) $(WINDOW_ARG)
+
+# B8 + B10 + A15 (+ A4 metro names) -> B29: rent for each of DoD's six home types (D19).
+# The 2 BR townhouse equals B8 (checked). Needs `make zori safmr` first.
+rent-types:
+	$(PYTHON) pipeline/benchmarks/rent_by_type.py --zori $(BENCH)/mha_zori.csv --safmr $(BENCH)/mha_safmr.csv \
+		--metro-sfr $(ZORI_METRO)_sfr_sm_month.csv --metro-mfr $(ZORI_METRO)_mfr_sm_month.csv \
+		--metro-all $(ZORI_METRO)_sfrcondomfr_sm_month.csv --zip-metro $(ZHVI_CSV) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
+
+# B9 + A16 + B29 utilities + B11's model -> B30: ownership cost for each home type (D19).
+# The 2 BR townhouse equals B11 (checked). Needs `make ownership rent-types` first.
+own-types:
+	$(PYTHON) pipeline/benchmarks/ownership_by_type.py --zhvi $(BENCH)/mha_zhvi.csv --zhvi-all $(ZHVI_CSV) \
+		$(A16_ARGS) --crosswalk $(INTERIM)/zip_mha.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
+		--tax-insurance $(BENCH)/mha_tax_insurance.csv --pmms $(PMMS_CSV) \
+		--ownership $(BENCH)/mha_ownership.csv --out $(BENCH) $(WINDOW_ARG)
 
 # --- 2.8 context joins (B24) ------------------------------------------------
 # A9 population + A2 ZCTA land area -> B24: population density per MHA, the
