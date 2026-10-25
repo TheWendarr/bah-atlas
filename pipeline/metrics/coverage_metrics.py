@@ -94,6 +94,7 @@ import bisect
 import csv
 import json
 import math
+from decimal import ROUND_HALF_UP, Decimal
 import statistics
 import sys
 from pathlib import Path
@@ -240,8 +241,10 @@ def manifest_beside(csv_path: Path, name: str) -> dict | None:
 # --- metric arithmetic ----------------------------------------------------------
 
 def num(v: float, places: int) -> str:
-    """Fixed decimals, never '-0.00' (float noise around an exact zero)."""
-    return f"{round(v, places) + 0.0:.{places}f}"
+    """Fixed decimals, half away from zero on the exact binary value (the contract's rule,
+    ICD 3, which the map's toFixed also follows), never '-0.00'."""
+    d = Decimal(v).quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP)
+    return f"{abs(d) if d == 0 else d:.{places}f}"
 
 
 def metrics(bah: float, share: float, c: float | None, target: float) -> dict:

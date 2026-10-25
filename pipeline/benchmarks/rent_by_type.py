@@ -27,7 +27,11 @@ Method (per MHA m and home type t = building b, n bedrooms)
        single-family ZORI to its all-homes ZORI, both over B8's months:
          Zillow publishes those two series at metro level only (A15), so each ZIP
          takes the ratio of its metro (the Metro column of the A4 ZIP file names
-         it), and the MHA takes the median over its ZIPs (mha_agg rule). An MHA
+         it), and the MHA takes the median over its ZIPs (mha_agg rule). The ZIP
+         files use the full census name ("Atlanta-Sandy Springs-Alpharetta, GA")
+         and the metro files a short one ("Atlanta, GA"), so a name that does not
+         match exactly is matched on its principal city and first state; a key
+         shared by two A15 metros is never used. An MHA
          with no ZIP in a metro that has the series takes the national ratio
          (the A15 row with RegionType "country"); factor_source says which.
   s_n  bedroom ratio: HUD SAFMR n BR / 2 BR within the MHA (B10 medians).
@@ -104,6 +108,34 @@ def read_metro(path: Path, window: tuple[str, str], min_months: int) -> tuple[di
             elif kind == "msa":
                 metros[row[i_name].strip()] = mean
     return metros, national, n
+
+
+def metro_key(name: str) -> tuple[str, str]:
+    """Principal city and first state: 'Atlanta-Sandy Springs-Alpharetta, GA' and
+    'Atlanta, GA' both give ('atlanta', 'GA'); 'Washington-Arlington-Alexandria,
+    DC-VA-MD-WV' gives ('washington', 'DC'). Both files go through this one function."""
+    city, _, states = name.strip().rpartition(", ")
+    return (city.split("-")[0].split("/")[0].strip().lower(), states.split("-")[0].strip().upper())
+
+
+def match_metros(names: set[str], a15: set[str]) -> tuple[dict[str, str], dict]:
+    """{ZIP-file metro name: A15 metro name}, exact first, then by principal city and state."""
+    by_key: dict[tuple[str, str], list[str]] = {}
+    for n in a15:
+        by_key.setdefault(metro_key(n), []).append(n)
+    out, exact, by_city, ambiguous = {}, 0, 0, set()
+    for n in names:
+        if n in a15:
+            out[n], exact = n, exact + 1
+            continue
+        hits = by_key.get(metro_key(n), [])
+        if len(hits) == 1:
+            out[n], by_city = hits[0], by_city + 1
+        elif len(hits) > 1:
+            ambiguous.add(n)
+    stats = {"zip_metro_names": len(names), "matched_exact": exact, "matched_by_principal_city": by_city,
+             "ambiguous": sorted(ambiguous), "unmatched": sorted(names - set(out) - ambiguous)}
+    return out, stats
 
 
 def read_zip_metro(path: Path, crosswalk: dict[str, str]) -> dict[str, str]:
@@ -193,13 +225,15 @@ def main() -> None:
            if not FACTOR_RANGE[0] <= v <= FACTOR_RANGE[1]]
     agg.fail_if([f"type ratio outside {FACTOR_RANGE}: {', '.join(bad[:10])}"] if bad else [], TOOL)
 
-    zip_metro = read_zip_metro(args.zip_metro, crosswalk)
-    named = set(zip_metro.values())
-    matched = {name for name in named if name in all_m}
+    zip_metro_full = read_zip_metro(args.zip_metro, crosswalk)
+    named = set(zip_metro_full.values())
+    name_map, match_stats = match_metros(named, set(all_m))
+    zip_metro = {z: name_map[n] for z, n in zip_metro_full.items() if n in name_map}
+    matched = set(name_map)
     match_share = len(matched) / len(named) if named else 0.0
     if match_share < MIN_METRO_MATCH:
-        agg.die(TOOL, f"only {len(matched)} of {len(named)} metro names in {args.zip_metro.name} appear in "
-                      f"{args.metro_all.name}; the two files name metros differently")
+        agg.die(TOOL, f"only {len(matched)} of {len(named)} metro names in {args.zip_metro.name} match "
+                      f"{args.metro_all.name}, even by principal city; the two files name metros differently")
 
     members: dict[str, list[str]] = {}
     for z, m in crosswalk.items():
@@ -260,10 +294,13 @@ def main() -> None:
         if sm["mhas_national_fallback"]:
             warnings.append(f"{sm['mhas_national_fallback']} MHA(s) take the national {building} factor "
                             f"({sm['national']}): none of their ZIPs lies in a metro with the A15 series")
-    unmatched = sorted(named - matched)
+    unmatched = match_stats["unmatched"]
     if unmatched:
-        warnings.append(f"{len(unmatched)} metro name(s) in the ZIP file have no A15 all-homes row: "
-                        f"{', '.join(unmatched[:8])}")
+        warnings.append(f"{len(unmatched)} metro name(s) in the ZIP file have no A15 all-homes row, even by "
+                        f"principal city (mostly micropolitan areas Zillow does not cover): {', '.join(unmatched[:8])}")
+    if match_stats["ambiguous"]:
+        warnings.append(f"{len(match_stats['ambiguous'])} metro name(s) match two A15 metros by principal city "
+                        f"and were left unmatched: {', '.join(match_stats['ambiguous'][:8])}")
 
     inputs = {"B8": args.zori, "B10": args.safmr, "A15.sfr": args.metro_sfr, "A15.mfr": args.metro_mfr,
               "A15.all": args.metro_all, "A4": args.zip_metro, "B1": args.crosswalk, "A14": args.standards}
@@ -284,7 +321,8 @@ def main() -> None:
         "crosswalk": cw_stats,
         "metros": {"A15.all_with_value": len(all_m), **{f"A15.{k}": v for k, v in series_rows.items()},
                    "zip_metro_names": len(named), "zip_metro_names_matched": len(matched),
-                   "mha_zips_with_metro": len(zip_metro)},
+                   "matching": {k: v for k, v in match_stats.items() if k != "zip_metro_names"},
+                   "mha_zips_with_metro": len(zip_metro_full), "mha_zips_with_a15_metro": len(zip_metro)},
         "building_factors": fac_summary,
         "coverage": coverage,
         "reference_identity": "2 BR townhouse = B8 in every MHA (checked)",
@@ -294,7 +332,9 @@ def main() -> None:
     }
     agg.write_manifest(args.out / "mha_rent_by_type_manifest.json", manifest)
 
-    print(f"  {len(matched)} of {len(named)} metro names matched A15; {len(zip_metro):,} MHA ZIPs have a metro")
+    print(f"  {len(matched)} of {len(named)} metro names matched A15 ({match_stats['matched_exact']} exactly, "
+          f"{match_stats['matched_by_principal_city']} by principal city); {len(zip_metro):,} of "
+          f"{len(zip_metro_full):,} metro-named MHA ZIPs have an A15 metro")
     for building, sm in fac_summary.items():
         print(f"  {building} factor: median {sm['median']} (min {sm['min']}, max {sm['max']}); national "
               f"{sm['national']} used by {sm['mhas_national_fallback']} MHA(s)")

@@ -45,7 +45,7 @@ These follow decision D6 (18 Oct 2026).
 | Build link | B20, B21, B27 and B31 carry `build_id`, the SHA-256 of the B22 file. All four must carry the same value (section 8). |
 | Area code | `^[A-Z]{2}[0-9]{3}$`, exactly as DTMO publishes it (`CO018`, `ZZ001`; the territory bucket follows the same `XX###` form). It is the only join key across files. |
 | Ordering | Area entries are sorted by code; profiles follow A12 order; modes are `rent`, `buy`. |
-| Ratios | Plain decimals (1.0463 means 104.63%), rounded to 4 decimal places. Never pre-multiplied to percent. p-values (B27) are rounded to 5 decimal places, the resolution of 99,999 permutations. |
+| Ratios | Plain decimals (1.0463 means 104.63%), rounded to 4 decimal places, half away from zero. Never pre-multiplied to percent. p-values (B27) are rounded to 5 decimal places, the resolution of 99,999 permutations. |
 | Dollars | US dollars per month, rounded to whole dollars, half away from zero. **Exception:** the B31 benchmark costs (`cost`, `own_housing`) carry cents, because the browser computes ratios from them (section 5b.3). |
 | Missing values | The field is present and `null`, and the row's `status` says why (section 5.3). A field is never omitted to mean "missing". |
 | Caveats | Arrays of caveat ids. The text for each id lives in B21 (section 6.4). |
@@ -255,7 +255,7 @@ County Cost Groups carry their BAH and `ccg_no_benchmark` for every home type; t
 
 ### 5b.3 Why the costs carry cents
 
-The research profiles' B20 values are computed from B29 and B30 values held to the cent. Carrying the same cents lets the browser formula reproduce B20 exactly (B23 checks this), so an E-5 or O-3 view on the grid never differs from the research layer by a rounding step. The map still displays whole dollars.
+The research profiles' B20 values are computed from B29 and B30 values held to the cent, and a blended standard is itself rounded to cents (5b.4, step 4) before any metric. Carrying the same cents and applying the same rule lets the browser formula reproduce B20 exactly (B23 checks this), so an E-5 or O-3 view on the grid never differs from the research layer by a rounding step. The map still displays whole dollars.
 
 ### 5b.4 The browser formula
 
@@ -269,6 +269,7 @@ For a selection of area `a`, rank `r` (index `i` in `ranks`), dependents `d`, ho
    - *DoD standard*, `upper` null: `C = cost[lower] × (1 + share)` (an anchor when `share` is 0; above the highest profile otherwise)
    - *DoD standard*, interpolated: `C = cost[lower] + share × (cost[upper] − cost[lower])`
    - `C` is `null` if any cost it needs is `null`
+   - a blended `C` (the two *DoD standard* cases) is then **rounded to cents**, half away from zero, before step 5. A single home type's cost is already in cents.
 5. If `BAH` or `C` is `null`, every metric is `null` and the status text explains why. Otherwise:
 
    | Metric | Formula | Rounding |
@@ -278,7 +279,7 @@ For a selection of area `a`, rank `r` (index `i` in `ranks`), dependents `d`, ho
    | `coverage_ratio` | BAH ÷ C | 4 decimals |
    | `surplus_usd` | BAH − C | whole dollars |
 
-   Rounding is half away from zero, on the full-precision result, then classified with the B21 `metrics` breaks.
+   Rounding is half away from zero, on the full-precision result (the exact binary value, which is what JavaScript's `Number.prototype.toFixed` rounds), then classified with the B21 `metrics` breaks. The pipeline writes B12–B15 by the same rule, so the two agree even at exact ties such as a 50% blend landing on $613.125.
 6. The view is the **statutory test** when `h` is *DoD standard*, or `h` is the rank's anchor type. Every other view measures how far BAH goes toward a home DoD does not prescribe for that rank, and the map says so (C25, B21 `grid.notice`).
 
 `pipeline/handoff/contract.py` (`grid_view`) is the reference implementation; the map's code must give the same results.
@@ -455,7 +456,7 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 | Version | Date | Change |
 |---|---|---|
-| 1.1.0 | 24 Oct 2026 | Additive (D18–D20). New delivered file B31 `grid_2026.json` (section 5b): BAH for 23 ranks × 2 dependency statuses, benchmarks for the six DoD home types, cost shares and standards, with the browser formula, its rounding and worked examples. B21 gains `grid` (section 6.1). New caveat id `type_factor_national`. B20 `cost_monthly` now comes from B29/B30 at each research profile's DoD standard: E-5 is unchanged, O-3 is recomputed (values change, interface unchanged). Consumer obligations 8–9 and the must-not exception for the grid formula; conformance check 10; six delivered files. Made before any delivery, so no consumer is affected. |
+| 1.1.0 | 24 Oct 2026 | Revised the same evening, before approval or delivery, after the first real run: a blended standard is rounded to cents before its metrics (5b.4 step 4), and all rounding is half away from zero on the exact value (sections 3, 5b.4). B23 had found 3 of 1,356 views a dollar apart. Additive (D18–D20). New delivered file B31 `grid_2026.json` (section 5b): BAH for 23 ranks × 2 dependency statuses, benchmarks for the six DoD home types, cost shares and standards, with the browser formula, its rounding and worked examples. B21 gains `grid` (section 6.1). New caveat id `type_factor_national`. B20 `cost_monthly` now comes from B29/B30 at each research profile's DoD standard: E-5 is unchanged, O-3 is recomputed (values change, interface unchanged). Consumer obligations 8–9 and the must-not exception for the grid formula; conformance check 10; six delivered files. Made before any delivery, so no consumer is affected. |
 | 1.0.3 | 18 Oct 2026 | Wording only. Section 5.5: `insurance_state_fallback` describes the D11 fallback (FIO state median), not the NAIC average it replaced. Section 11, check 1: `make layer2` is the end-to-end run. Section 12: delivery location `delivery/2026/` (option B, a frozen copy) and the six `make deliver` gates. Made before any delivery, so no consumer is affected. |
 | 1.0.2 | 18 Oct 2026 | p-values in B27 rounded to 5 decimal places instead of 4: at 99,999 permutations the smallest p is 0.00002, which 4 places would show as 0. Section 8 lists the fields B22 carries; section 6 names the window keys; section 12 names the handoff folder. Made before any file was produced under 1.0.x, so no consumer is affected. |
 | 1.0.1 | 18 Oct 2026 | Section 4: the 2026 feature count (339) and the territory bucket's extent, from the first B28/B7 run. No interface change. |

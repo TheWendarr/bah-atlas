@@ -166,6 +166,15 @@ def main() -> None:
     for n in (1, 3, 4):
         bedroom[n], _, stats[f"bedrooms_{n}"] = ratio_by_mha(series[f"br{n}"], series["br2"], members, f"{n} BR")
 
+    # Diagnostic for the D19 assumption that the all-homes ZHVI (B9) stands for a 2 BR townhouse:
+    # which bedroom series does the all-homes value sit closest to, ZIP by ZIP? Evidence only.
+    reference_check = {}
+    for n in (2, 3, 4):
+        both = [series["all"][z] / series[f"br{n}"][z] for z in series["all"]
+                if z in series[f"br{n}"] and series[f"br{n}"][z] > 0]
+        reference_check[f"all_homes_over_{n}br"] = ({"zips": len(both), "median": round(statistics.median(both), 4)}
+                                                    if both else None)
+
     rate, weeks, rates = oc.read_pmms(args.pmms, window)
     n_months = int(loan["term_years"] * 12)
     fee_mult = (1 + loan["funding_fee_share"]) if loan["funding_fee_financed"] else 1.0
@@ -227,6 +236,12 @@ def main() -> None:
                                                 "max": round(max(vals), 2)} if vals else None)}
     warnings = [f"{s['mhas_national_fallback']} MHA(s) take the national {k.replace('_', ' ')} ratio "
                 f"({s['national_median']})" for k, s in stats.items() if s["mhas_national_fallback"]]
+    medians = {t: (cv["own_housing_monthly"] or {}).get("median") for t, cv in coverage.items()}
+    for cheaper, dearer in (("apt1", "apt2"), ("apt2", "th2"), ("th2", "th3"), ("th3", "sfh3"), ("sfh3", "sfh4")):
+        if None not in (medians[cheaper], medians[dearer]) and medians[dearer] < medians[cheaper]:
+            warnings.append(f"median PITI of {dearer} ({medians[dearer]:,.0f}) is below {cheaper} "
+                            f"({medians[cheaper]:,.0f}): the home types are out of DoD's order in buy mode "
+                            "(see reference_check)")
     warnings += [f"{s['zips_outside_range']} ZIP {k.replace('_', ' ')} ratio(s) outside {FACTOR_RANGE}; kept, "
                  "the MHA median limits their pull" for k, s in stats.items() if s["zips_outside_range"]]
 
@@ -251,6 +266,9 @@ def main() -> None:
             "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities",
         },
         "ratios": stats,
+        "reference_check": {**reference_check,
+                            "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom "
+                                       "count the all-homes value resembles. D19 takes it to be a 2 BR townhouse."},
         "limitations": ["the homeowners premium is the MHA average for every home type (FIO has no premium by "
                         "dwelling type), so it is overstated for apartments and understated for 4 BR homes",
                         "a condo/co-op value stands for an apartment in buy mode"],
@@ -263,6 +281,8 @@ def main() -> None:
     }
     agg.write_manifest(args.out / "mha_ownership_by_type_manifest.json", manifest)
 
+    rc = ", ".join(f"{k.replace('all_homes_over_', '')} {v['median']}" for k, v in reference_check.items() if v)
+    print(f"  all-homes ZHVI / n-bedroom ZHVI (median per ZIP): {rc}")
     for k, s in stats.items():
         print(f"  {k:24} national median {s['national_median']}; {s['zips_with_both']:,} ZIPs; "
               f"{s['mhas_national_fallback']} MHA(s) on the national ratio")

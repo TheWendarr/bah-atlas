@@ -87,6 +87,25 @@ class TestBlend(unittest.TestCase):
         self.assertEqual(ht.describe(ht.standard(cfg, "O7", True), labels), "a 4 BR single-family home, plus 2%")
 
 
+class TestMetroNames(unittest.TestCase):
+    def test_principal_city_keys(self) -> None:
+        import rent_by_type as rb
+        self.assertEqual(rb.metro_key("Atlanta-Sandy Springs-Alpharetta, GA"), ("atlanta", "GA"))
+        self.assertEqual(rb.metro_key("Washington-Arlington-Alexandria, DC-VA-MD-WV"), ("washington", "DC"))
+        self.assertEqual(rb.metro_key("Louisville/Jefferson County, KY-IN"), ("louisville", "KY"))
+        names = {"Atlanta-Sandy Springs-Alpharetta, GA", "Colorado Springs, CO", "Albany-Lebanon, OR",
+                 "Albany-Schenectady-Troy, NY", "Alice, TX", "Portland-Vancouver-Hillsboro, OR-WA"}
+        a15 = {"Atlanta, GA", "Colorado Springs, CO", "Albany, OR", "Albany, NY", "Portland, OR", "Portland, ME"}
+        out, stats = rb.match_metros(names, a15)
+        self.assertEqual(out["Atlanta-Sandy Springs-Alpharetta, GA"], "Atlanta, GA")
+        self.assertEqual(out["Albany-Schenectady-Troy, NY"], "Albany, NY")       # the state decides
+        self.assertEqual(out["Portland-Vancouver-Hillsboro, OR-WA"], "Portland, OR")
+        self.assertEqual((stats["matched_exact"], stats["matched_by_principal_city"], stats["unmatched"]),
+                         (1, 4, ["Alice, TX"]))
+        _, amb = rb.match_metros({"Springfield-X, MA"}, {"Springfield, MA", "Springfield-Y, MA"})
+        self.assertEqual(amb["ambiguous"], ["Springfield-X, MA"])               # never guessed
+
+
 class TestChain(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
@@ -98,7 +117,9 @@ class TestChain(unittest.TestCase):
             ["30001", "ZZ001", "ccg"]])
         components = write(d / "rate_components.csv", [
             ["mha", "rent_share"], ["AA001", "0.8000"], ["AA002", "0.7500"], ["AA003", "0.8500"]])
-        metros = {"00501": "Alpha, NY", "00502": "Alpha, NY", "10001": "Beta, NY", "10002": "Beta, NY"}
+        # The ZIP files carry full census metro names; Alpha's matches A15 by principal city, Beta's exactly.
+        metros = {"00501": "Alpha-Gamma-Delta, NY-NJ", "00502": "Alpha-Gamma-Delta, NY-NJ",
+                  "10001": "Beta, NY", "10002": "Beta, NY"}
         # B8: AA001 median(1000, 2000) = 1500 / 0.80 = 1875.00 (utilities 375.00);
         #     AA002 median(3000, 1600) = 2300 / 0.75 = 3066.67 (utilities 766.67); AA003 none
         zori = zip_file(d / "Zip_zori.csv", {"00501": 1000, "00502": 2000, "10001": 3000, "10002": 1600}, metros)
@@ -152,6 +173,8 @@ class TestChain(unittest.TestCase):
         man = json.loads((self.out / "mha_rent_by_type_manifest.json").read_text())
         self.assertEqual(man["building_factors"]["single_family"]["mhas_national_fallback"], 2)
         self.assertEqual(man["metros"]["zip_metro_names_matched"], 2)
+        self.assertEqual((man["metros"]["matching"]["matched_exact"],
+                          man["metros"]["matching"]["matched_by_principal_city"]), (1, 1))
         self.assertEqual(set(man["inputs"]), {"B8", "B10", "A15.sfr", "A15.mfr", "A15.all", "A4", "B1", "A14"})
 
     def test_b29_stops_when_metro_names_do_not_match(self) -> None:
@@ -210,6 +233,9 @@ class TestChain(unittest.TestCase):
         man = json.loads((self.out / "mha_ownership_by_type_manifest.json").read_text())
         self.assertEqual(man["ratios"]["building_apartment"]["mhas_national_fallback"], 2)
         self.assertEqual(man["coverage"]["sfh4"]["status"], {"ok": 2, "piti_only_no_zori": 1, "no_home_value": 0})
+        # The fixture's all-homes values equal its 2 BR values ZIP by ZIP, so the D19 reference holds there
+        self.assertEqual(man["reference_check"]["all_homes_over_2br"]["median"], 1.0)
+        self.assertEqual(man["reference_check"]["all_homes_over_3br"]["median"], 0.8)
 
 
 if __name__ == "__main__":

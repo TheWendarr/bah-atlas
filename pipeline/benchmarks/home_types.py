@@ -10,12 +10,16 @@ and the browser cannot disagree about what a grade's standard costs.
                   = cost(lower) + share x (cost(upper) - cost(lower))   interpolated
                   = cost(lower) x (1 + share)                    above the highest profile
 
-A null cost on either side makes the standard null. Stdlib only.
+then rounded to cents, like every benchmark cost (B29, B30, B31), so the metrics
+tables, B20 and the browser all start from the same cent value (ICD 5b.4). An anchor
+passes through unchanged. A null cost on either side makes the standard null.
+Stdlib only.
 """
 
 from __future__ import annotations
 
 import json
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -42,17 +46,27 @@ def standard(cfg: dict, grade: str, has_dependents: bool) -> dict:
     return cfg["standards"][grade.upper()]["with" if has_dependents else "without"]
 
 
+def to_cents(x: float) -> float:
+    """Round to cents, half away from zero, on the exact binary value (ICD 3 and 5b.4).
+
+    Python's round() sends exact binary ties to the even digit; a 50% blend of two cent
+    values can land exactly on one ($613.125), where the contract and JavaScript's
+    toFixed round away from zero ($613.13).
+    """
+    return float(Decimal(x).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 def blend(costs: dict[str, float | None], cell: dict) -> float | None:
     """Cost of a standard from the six home-type costs of one area."""
     lo = costs.get(cell["lower"])
     if lo is None:
         return None
     if cell["upper"] is None:
-        return lo * (1 + cell["share"])
+        return lo if not cell["share"] else to_cents(lo * (1 + cell["share"]))
     up = costs.get(cell["upper"])
     if up is None:
         return None
-    return lo + cell["share"] * (up - lo)
+    return to_cents(lo + cell["share"] * (up - lo))
 
 
 def describe(cell: dict, labels: dict[str, str]) -> str:

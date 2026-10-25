@@ -135,6 +135,10 @@ def grid_view(grid: dict, code: str, rank: str, dependents: str, home_type: str,
     Returns status, caveats, bah_monthly, cost_share_monthly, cost_monthly and the four
     GRID_METRICS (ratios to 4 places, dollars whole), plus `standard_view`: true when the
     home type is the grade's DoD standard, so the view is the statutory test.
+
+    Rounding follows ICD 5b.4: a blended cost is first rounded to cents; every result is
+    rounded from its exact binary value (Decimal(x), not repr), as JavaScript's
+    Number.prototype.toFixed and Python's round() do.
     """
     area, i = grid["areas"][code], grid["ranks"].index(rank)
     bah = area["bah"][dependents][i]
@@ -155,22 +159,22 @@ def grid_view(grid: dict, code: str, rank: str, dependents: str, home_type: str,
     elif None in costs:
         cost = None
     elif std["upper"] is None:
-        cost = costs[0] * (1 + std["share"])
+        cost = cents(Decimal(costs[0] * (1 + std["share"])))
     else:
-        cost = costs[0] + std["share"] * (costs[1] - costs[0])
+        cost = cents(Decimal(costs[0] + std["share"] * (costs[1] - costs[0])))
     if status == "no_rate":                # ICD 5.4: nothing is shown for an area without a rate
         bah = share = None
     lo_anchor = std["upper"] is None and not std["share"]
     out = {"status": status, "caveats": caveats, "bah_monthly": bah, "cost_share_monthly": share,
-           "cost_monthly": dollars(Decimal(repr(cost))) if cost is not None else None,
+           "cost_monthly": dollars(Decimal(cost)) if cost is not None else None,
            "standard_view": home_type == STANDARD or (lo_anchor and home_type == std["lower"])}
     if bah is None or cost is None:
         out.update({m: None for m in GRID_METRICS})
         return out
-    out.update({"adequacy_ratio": ratio(Decimal(repr((bah + share) / cost))),
-                "design_gap_usd": dollars(Decimal(repr(bah + share - cost))),
-                "coverage_ratio": ratio(Decimal(repr(bah / cost))),
-                "surplus_usd": dollars(Decimal(repr(bah - cost)))})
+    out.update({"adequacy_ratio": ratio(Decimal((bah + share) / cost)),
+                "design_gap_usd": dollars(Decimal(bah + share - cost)),
+                "coverage_ratio": ratio(Decimal(bah / cost)),
+                "surplus_usd": dollars(Decimal(bah - cost))})
     return out
 
 
