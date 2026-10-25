@@ -1,10 +1,10 @@
 {
   "node": "B22",
-  "schema_version": "1.0.3",
+  "schema_version": "1.1.0",
   "bah_year": 2026,
-  "generated_at": "2026-10-19T01:01:14+00:00",
+  "generated_at": "2026-10-25T02:27:29+00:00",
   "git": {
-    "commit": "518cc2fa8f2d45e1ca167b4c5d1cefa7cc66a8f4",
+    "commit": "1502e53a724fca353606e070a1912694fd7be28b",
     "dirty": true
   },
   "software": {
@@ -28,6 +28,69 @@
       "bytes": 266626,
       "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
       "retrieved_at": "2026-10-17T22:21:01+00:00"
+    },
+    "A15.all": {
+      "filename": "Metro_zori_uc_sfrcondomfr_sm_month.csv",
+      "sha256": "1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a",
+      "bytes": 1075563,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:33+00:00"
+    },
+    "A15.mfr": {
+      "filename": "Metro_zori_uc_mfr_sm_month.csv",
+      "sha256": "b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d",
+      "bytes": 778812,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:33+00:00"
+    },
+    "A15.sfr": {
+      "filename": "Metro_zori_uc_sfr_sm_month.csv",
+      "sha256": "8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6",
+      "bytes": 851561,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:32+00:00"
+    },
+    "A16.br1": {
+      "filename": "Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93",
+      "bytes": 18497319,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:37+00:00"
+    },
+    "A16.br2": {
+      "filename": "Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658",
+      "bytes": 76719366,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:38+00:00"
+    },
+    "A16.br3": {
+      "filename": "Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6",
+      "bytes": 101523975,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:40+00:00"
+    },
+    "A16.br4": {
+      "filename": "Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1",
+      "bytes": 77302808,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:41+00:00"
+    },
+    "A16.condo": {
+      "filename": "Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892",
+      "bytes": 31187042,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:36+00:00"
+    },
+    "A16.sfr": {
+      "filename": "Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639",
+      "bytes": 123302173,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:35+00:00"
     },
     "A2": {
       "filename": "cb_2020_us_zcta520_500k.zip",
@@ -88,30 +151,31 @@
   },
   "configs": {
     "classification.json": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
+    "housing_standards.json": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4",
     "ownership.json": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
-    "profiles.json": "a92559c9d6a1a96eece241fc21fcb3a888d8d4d0ffd833f44885058089d2e3f3",
-    "ui_text.json": "8950aea467f975fd15d548649efc029b93f947f2dd7c41bb33147a93706d9580"
+    "profiles.json": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
+    "ui_text.json": "9a83c6f3eb05b823a11f246a4466a1d6ddd04290cc7f7ec2bd554ac8bd7a07c1"
   },
   "stages": [
     {
-      "nodes": "A1-A9 A12",
+      "nodes": "A1-A9 A12 A15 A16",
       "file": "fetch_manifest.json",
-      "sha256": "3187e1beb0c90e8ae45724b6410324351d2428a99b604f2288b94f7641c9427e",
+      "sha256": "f583fa4ac92bf826bf7c4f84ee1fdce6bebf26222cd981a7a5aa9f77c6273f58",
       "generated_at": null,
       "warnings": []
     },
     {
       "nodes": "B1-B4",
       "file": "manifest.json",
-      "sha256": "2a7322265b3e3a3231c21caade3036950526a885110c7044f345f10c7e69509f",
-      "generated_at": "2026-10-19T00:59:58+00:00",
+      "sha256": "8f45bd2bbc9a89cde8fe48092b71a78a6fcd4832af4405d9ddb99cd62eaf5eed",
+      "generated_at": "2026-10-25T02:26:08+00:00",
       "warnings": []
     },
     {
       "nodes": "B5",
       "file": "rate_components_manifest.json",
-      "sha256": "76364ab891bcf1147e3c65a8c967a898ce6f62b46991904f605ee48a0f6f4dcd",
-      "generated_at": "2026-10-19T01:00:13+00:00",
+      "sha256": "28ace263c73b1459716a995ca3037e4c30394ea2f0feb064dcbe88572f889300",
+      "generated_at": "2026-10-25T02:26:24+00:00",
       "warnings": [
         "MS168 (GULFPORT, MS) is listed more than once with identical values in the source; kept one row"
       ]
@@ -119,29 +183,29 @@
     {
       "nodes": "B6",
       "file": "mha_2026_geometry_manifest.json",
-      "sha256": "600bf48da3aa2b6e72167fbf2d9c4230607a7e1a6ddd775e2ab5de104124b770",
-      "generated_at": "2026-10-19T01:00:03+00:00",
+      "sha256": "63707e791bd4ee5bd190e62c77a96862a4189e94971290e76d768eb60bcbf247",
+      "generated_at": "2026-10-25T02:26:13+00:00",
       "warnings": []
     },
     {
       "nodes": "B28",
       "file": "non_mha_2026_geometry_manifest.json",
-      "sha256": "b373e6f1613ff16d576d9243dbdd13acb2e29336b5470622d47891ad436d83bb",
-      "generated_at": "2026-10-19T01:00:13+00:00",
+      "sha256": "4388b6a1f37513484ed715e64b0cb7d445125bfd53ca0c376ee8836126c27a0a",
+      "generated_at": "2026-10-25T02:26:23+00:00",
       "warnings": []
     },
     {
       "nodes": "B7",
       "file": "areas_2026_manifest.json",
-      "sha256": "15627a91fa4cdc6fff7e2526ba551d86d3f493e0120a51d704855af2de8ece91",
-      "generated_at": "2026-10-19T01:00:19+00:00",
+      "sha256": "2c82e460a1a993d2a608eb98ac966885809289c015f663ed785b138463624bd1",
+      "generated_at": "2026-10-25T02:26:30+00:00",
       "warnings": []
     },
     {
       "nodes": "B8",
       "file": "mha_zori_manifest.json",
-      "sha256": "f5ed7e12cd5f9ba009a43bd9e90dbfb17a1dffcf12987700653dd4ec29c6f0fd",
-      "generated_at": "2026-10-19T01:00:19+00:00",
+      "sha256": "1ef881ddee7b7eab72f2f99c89fed9ffc5a451bfe015324efd5e367d3c0f253c",
+      "generated_at": "2026-10-25T02:26:30+00:00",
       "warnings": [
         "862 ZIP(s) had fewer than 3 months in the window and were left out",
         "6 ZIP(s) above 25,000 in the window, kept (seasonal luxury markets; the MHA median limits their pull): 11930 (NY218, peak 52,565), 11937 (NY218, peak 35,440), 11963 (NY218, peak 55,972), 11968 (NY218, peak 41,575), 11976 (NY218, peak 101,167), 81611 (not in a real MHA, peak 27,159)"
@@ -150,15 +214,15 @@
     {
       "nodes": "B9",
       "file": "mha_zhvi_manifest.json",
-      "sha256": "d5df475eb34de76b3af575f27151406ec723f82665902cd2d8a613d5a2774888",
-      "generated_at": "2026-10-19T01:00:20+00:00",
+      "sha256": "5a600e2a945cc996e3e2d5c0884de847258e49d54c7bd260a12fdc5cb10c5cce",
+      "generated_at": "2026-10-25T02:26:31+00:00",
       "warnings": []
     },
     {
       "nodes": "B10",
       "file": "mha_safmr_manifest.json",
-      "sha256": "fa48e411224997fc477308aed0b6fda98824d36cb05459374a229bc18a1d14f4",
-      "generated_at": "2026-10-19T01:00:23+00:00",
+      "sha256": "d3f3d16495e39f605c813cad4b3380759883406492b718c96424eafd680eccc6",
+      "generated_at": "2026-10-25T02:26:33+00:00",
       "warnings": [
         "10106 ZIP(s) appear under more than one HUD area; their rows were averaged"
       ]
@@ -166,33 +230,68 @@
     {
       "nodes": "A8",
       "file": "mha_tax_insurance_manifest.json",
-      "sha256": "8e93911112c2f3920c6b333962572fc94ce070cc483019e0a3c7c1bf87510655",
-      "generated_at": "2026-10-19T01:00:25+00:00",
+      "sha256": "c9c39bdc61895f626a276f2cdc847b9f7d359c082f54c23bbd690e02d84e7ddd",
+      "generated_at": "2026-10-25T02:26:36+00:00",
       "warnings": []
     },
     {
       "nodes": "B11",
       "file": "mha_ownership_manifest.json",
-      "sha256": "e28bf71ac781480a7b9eec582825e34645bd57b4c57ffa4513487cfcfcd2befe",
-      "generated_at": "2026-10-19T01:00:25+00:00",
+      "sha256": "c43ce2fb57486425739324624397b93a0c5e635ead3eaebca915ce337f410420",
+      "generated_at": "2026-10-25T02:26:36+00:00",
       "warnings": [
         "10 MHA(s) have a home value but no ZORI utilities estimate; own_total_monthly is blank there"
       ]
     },
     {
+      "nodes": "A14",
+      "file": "standards_check_manifest.json",
+      "sha256": "3d1fe5197f1ca75728b0133b536cab2afa0e01788f31a0340502afbf336d846d",
+      "generated_at": "2026-10-25T02:26:36+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B29",
+      "file": "mha_rent_by_type_manifest.json",
+      "sha256": "de24561e5bc9d05a5ea0fd88b4e2a74ea3263f26b37909290341115956d9da03",
+      "generated_at": "2026-10-25T02:26:37+00:00",
+      "warnings": [
+        "15 MHA(s) take the national apartment factor (0.9131): none of their ZIPs lies in a metro with the A15 series",
+        "12 MHA(s) take the national single_family factor (1.1741): none of their ZIPs lies in a metro with the A15 series",
+        "28 metro name(s) in the ZIP file have no A15 all-homes row, even by principal city (mostly micropolitan areas Zillow does not cover): Alexander City, AL, Alice, TX, Bluffton, IN, Cadillac, MI, Cambridge, MD, Eufaula, AL-GA, Fallon, NV, Fremont, OH"
+      ]
+    },
+    {
+      "nodes": "B30",
+      "file": "mha_ownership_by_type_manifest.json",
+      "sha256": "00490c81a498d51a9c76ab7afb6fd8f9dfbdf557dbbf37ba5bf81a7f5debf662",
+      "generated_at": "2026-10-25T02:26:40+00:00",
+      "warnings": [
+        "41 MHA(s) take the national building apartment ratio (0.6551)",
+        "47 MHA(s) take the national bedrooms 1 ratio (0.6954)",
+        "6 MHA(s) take the national bedrooms 3 ratio (1.3635)",
+        "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
+        "median PITI of sfh3 (3,507) is below th3 (3,526): the home types are out of DoD's order in buy mode (see reference_check)",
+        "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull"
+      ]
+    },
+    {
       "nodes": "B12-B15",
       "file": "coverage_metrics_manifest.json",
-      "sha256": "257b0d531771a21f742ba570007021f1c22984a713247b55a4785dd267cf7e1e",
-      "generated_at": "2026-10-19T01:00:25+00:00",
+      "sha256": "8be7c41a8fdd3e81e71228bdb1f250b3101b0e79f1fc431a5c1b67cde9aa0f29",
+      "generated_at": "2026-10-25T02:26:40+00:00",
       "warnings": [
-        "2 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2006, o3_dep/MA119=0.2513"
+        "3 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2006, o3_dep/CA044=0.2641, o3_dep/MA119=0.1721"
       ]
     },
     {
       "nodes": "B16",
       "file": "weights_manifest.json",
-      "sha256": "414d0f7c8f090bf4aceaf18547a4fb3075779bd5de11f7652b89074bfcae4470",
-      "generated_at": "2026-10-19T01:00:27+00:00",
+      "sha256": "44fae35dfff9bc28f7a8408af0b2b00b4e3afdabe7da895c3c9d52ed0441de45",
+      "generated_at": "2026-10-25T02:26:42+00:00",
       "warnings": [
         "25 KNN link(s) longer than 500 km; longest MT175->WA313 724.0 km",
         "queen contiguity leaves 81 of 289 MHAs with no neighbour and splits the map into 122 pieces; KNN is the primary weights"
@@ -201,8 +300,8 @@
     {
       "nodes": "B17-B18",
       "file": "spatial_stats_manifest.json",
-      "sha256": "ecb4eb81d145734f26a31f06164cf8a57e4baa3385d312943708bfdd7b42f823",
-      "generated_at": "2026-10-19T01:01:11+00:00",
+      "sha256": "62c669a6c960b3c0175a81a43d4a2b17602c5c6f1f7b023ac1d9ba79a91095bb",
+      "generated_at": "2026-10-25T02:27:26+00:00",
       "warnings": []
     }
   ],
@@ -246,5 +345,5 @@
       }
     }
   },
-  "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27 -> SHA256SUMS"
+  "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31 -> SHA256SUMS"
 }

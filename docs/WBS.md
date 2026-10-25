@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 24 October 2026  
-**Nodes tracked:** 74  ·  ⚫ Complete (before this week): 25  ·  🟢 Completed this week: 15  ·  🟣 In progress: 6  ·  🔴 Not started: 25  ·  ⚪ Scrapped: 3
+**Nodes tracked:** 74  ·  ⚫ Complete (before this week): 25  ·  🟢 Completed this week: 20  ·  🟣 In progress: 1  ·  🔴 Not started: 25  ·  ⚪ Scrapped: 3
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -18,16 +18,11 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M3** 2.3 MHA Benchmarks + 2.4 Ownership Metrics | Sat 10 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
-| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 8 / 14 | `██████░░░░ 57%` | ⏳ Due in 6 days |
+| **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 13 / 14 | `█████████░ 93%` | ⏳ Due in 6 days |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 20 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **A15** Zillow ZORI by home type (single-family, multifamily) ZIP-level — due 30 Oct (M6)
-- 🟣 **A16** Zillow ZHVI by home type and bedroom count ZIP-level — due 30 Oct (M6)
-- 🟣 **B29** Rent benchmark by home type at MHA — due 30 Oct (M6)
-- 🟣 **B30** Ownership cost by home type at MHA — due 30 Oct (M6)
-- 🟣 **B31** Grid payload (BAH by rank and dependents; benchmarks by home type) — due 30 Oct (M6)
 - 🟣 **W1** Layer 2 writeup (how Layer 1 becomes Layer 3) — due 30 Oct (M6)
 
 ## Nodal map
@@ -274,8 +269,8 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A11,A12,A13,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15 done
-    class A8,A9,A14,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,W2 week
-    class A15,A16,B29,B30,B31,W1 prog
+    class A8,A9,A14,A15,A16,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 week
+    class W1 prog
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25 todo
     class A10,B25,B26 gone
     class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
@@ -305,8 +300,8 @@ External inputs and project-authored config. Deterministic: identical inputs, id
 | ⚫ | **A12** | Profile definitions config | required | — | D18-D19 (18 Oct): research profiles stay e5_dep and o3_dep at their DoD standard; their benchmarks follow D19, so O-3 is recomputed and E-5 does not change; completed 03 Oct |
 | ⚫ | **A13** | Classification and color scheme config | required | — | config/ui_text.json (map wording, read only by B21) added 18 Oct (D12); completed 03 Oct |
 | 🟢 | **A14** | DoD BAH housing standards by grade and dependency status | required | — | D18 (18 Oct 2026): the DoD housing standard (one of six home types, or the published blend between two) for every pay grade E1-E9, W1-W5, O1-O9 with and without dependents, and each cell's member cost share from the 2026 out-of-pocket table; config/housing_standards.json. Source to settle first: the DoD BAH Primer or the CNA 2026 evaluation (the 2014 summary has no without-dependents or warrant-officer standards); 24 Oct: config/housing_standards.json from the DTMO BAH Primer (Jan 2022; 2018 edition and CNA 2026 Table 1 agree) and the 2026 out-of-pocket PDF; make standards rebuilds every 2026 rate from the anchor cells: all 46 cells pass in 299 MHAs (median residual $1-4); above the top profile is a markup on its cost; E-8 without dependents implies ~23% vs the primer's 20% (kept); O-8/O-9 = O-7; completed 24 Oct |
-| 🟣 | **A15** | Zillow ZORI by home type (single-family, multifamily) ZIP-level | required | — | D19: building-type factor for the rent benchmark; third-party, listed by URL and SHA-256 and not redistributed; ZIP-level availability of each series confirmed on the first make fetch; 24 Oct: Zillow publishes SFR and MFR ZORI by metro only, so A15 is three metro files (A15.sfr, A15.mfr, A15.all); each ZIP takes its metro's ratio (A4 Metro column), national fallback (proposed D21); code ready, fetch on the workstation |
-| 🟣 | **A16** | Zillow ZHVI by home type and bedroom count ZIP-level | required | — | D19: single-family, condo/co-op and 1-4 bedroom series for the buy benchmark by home type; third-party, not redistributed; 24 Oct: six ZIP files in the fetcher (A16.sfr, A16.condo, A16.br1-br4); code ready, fetch on the workstation |
+| 🟢 | **A15** | Zillow ZORI by home type (single-family, multifamily) ZIP-level | required | — | D19: building-type factor for the rent benchmark; third-party, listed by URL and SHA-256 and not redistributed; ZIP-level availability of each series confirmed on the first make fetch; 24 Oct: Zillow publishes SFR and MFR ZORI by metro only, so A15 is three metro files (A15.sfr, A15.mfr, A15.all); each ZIP takes its metro's ratio (A4 Metro column), national fallback (proposed D21); code ready, fetch on the workstation; completed 24 Oct |
+| 🟢 | **A16** | Zillow ZHVI by home type and bedroom count ZIP-level | required | — | D19: single-family, condo/co-op and 1-4 bedroom series for the buy benchmark by home type; third-party, not redistributed; 24 Oct: six ZIP files in the fetcher (A16.sfr, A16.condo, A16.br1-br4); code ready, fetch on the workstation; completed 24 Oct |
 
 ### Layer 2 — Data Processing
 
@@ -336,14 +331,14 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B8** | ZORI at MHA (utilities-adjusted) | required | A3, B1, B5 | completed 08 Oct |
 | ⚫ | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
 | ⚫ | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
-| 🟣 | **B29** | Rent benchmark by home type at MHA | required | A15, B8, B10, B1 | D19: utilities-adjusted ZORI for the building type (apartment = multifamily, townhouse = all homes, single-family = SFR) times the SAFMR bedroom ratio (n BR / 2 BR) within the MHA; the 2-bedroom townhouse equals B8, so E-5 is unchanged (tested); MHAs without the type's series get a status, not a value; code ready 24 Oct: rent_by_type.py (make rent-types); 2 BR townhouse = B8 checked in every MHA; national fallback recorded per MHA (caveat type_factor_national) |
+| 🟢 | **B29** | Rent benchmark by home type at MHA | required | A15, B8, B10, B1 | D19: utilities-adjusted ZORI for the building type (apartment = multifamily, townhouse = all homes, single-family = SFR) times the SAFMR bedroom ratio (n BR / 2 BR) within the MHA; the 2-bedroom townhouse equals B8, so E-5 is unchanged (tested); MHAs without the type's series get a status, not a value; code ready 24 Oct: rent_by_type.py (make rent-types); 2 BR townhouse = B8 checked in every MHA; national fallback recorded per MHA (caveat type_factor_national); completed 24 Oct |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | ⚫ | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; completed 08 Oct |
-| 🟣 | **B30** | Ownership cost by home type at MHA | required | A16, B9, B11 | D19: home value for the type (ZHVI building-type ratio times the ZHVI bedroom ratio, n BR / 2 BR), then B11's VA PITI plus utilities for each type; code ready 24 Oct: ownership_by_type.py (make own-types), B11's model and functions; 2 BR townhouse = B11 checked in every MHA; premium is the MHA average for every type (limitation) |
+| 🟢 | **B30** | Ownership cost by home type at MHA | required | A16, B9, B11 | D19: home value for the type (ZHVI building-type ratio times the ZHVI bedroom ratio, n BR / 2 BR), then B11's VA PITI plus utilities for each type; code ready 24 Oct: ownership_by_type.py (make own-types), B11's model and functions; 2 BR townhouse = B11 checked in every MHA; premium is the MHA average for every type (limitation); completed 24 Oct |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 
@@ -371,7 +366,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | 🟢 | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12); completed 18 Oct |
 | 🟢 | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py; completed 18 Oct |
 | 🟢 | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
-| 🟣 | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20; code ready 24 Oct: build_grid.py in make handoff, ICD 1.1.0 section 5b; costs carry cents so the browser formula reproduces B20 exactly (contract.grid_view, tested) |
+| 🟢 | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20; code ready 24 Oct: build_grid.py in make handoff, ICD 1.1.0 section 5b; costs carry cents so the browser formula reproduces B20 exactly (contract.grid_view, tested); completed 24 Oct |
 | 🟢 | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; 24 Oct: ICD 1.1.0 written (B31, B21 grid block, caveat type_factor_national, obligations 8-9, check 10); awaits author approval; completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)

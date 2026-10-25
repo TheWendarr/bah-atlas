@@ -3,7 +3,7 @@
     "B17",
     "B18"
   ],
-  "generated_at": "2026-10-19T01:01:11+00:00",
+  "generated_at": "2026-10-25T02:27:26+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -13,12 +13,12 @@
     "B14": "mha_buy_metrics.csv"
   },
   "input_sha256": {
-    "A12": "a92559c9d6a1a96eece241fc21fcb3a888d8d4d0ffd833f44885058089d2e3f3",
+    "A12": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
     "A13": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
-    "B6": "675a278a9f9f6879dc5f2bebc2dbebd8c5bfaed0c736d3b58d1b7c653391742f",
-    "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
-    "B16": "414d0f7c8f090bf4aceaf18547a4fb3075779bd5de11f7652b89074bfcae4470",
-    "B14": "15777758c86086245f55b8751c5c055d73c906309cd42f67eb9f2e9b2501446a"
+    "B6": "ffb07bc8c50e74b59d2921a2bc35847315abc0094fa1c1b22df9fd7dc2713dee",
+    "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
+    "B16": "44fae35dfff9bc28f7a8408af0b2b00b4e3afdabe7da895c3c9d52ed0441de45",
+    "B14": "b9d84be926d9e60907d2d57d0befeb8356a55d563c74e30f52bef40faa87762b"
   },
   "hypothesis": "H1: adequacy gaps are spatially autocorrelated across CONUS MHAs, not randomly placed",
   "method": {
@@ -97,9 +97,9 @@
     {
       "profile": "o3_dep",
       "mode": "rent",
-      "I_adequacy_gap": 0.255,
-      "I_flat95_gap": 0.2589,
-      "I_difference_flat95_minus_adequacy": 0.0039
+      "I_adequacy_gap": 0.387,
+      "I_flat95_gap": 0.3938,
+      "I_difference_flat95_minus_adequacy": 0.0068
     },
     {
       "profile": "e5_dep",
@@ -111,9 +111,9 @@
     {
       "profile": "o3_dep",
       "mode": "buy",
-      "I_adequacy_gap": 0.4339,
-      "I_flat95_gap": 0.4099,
-      "I_difference_flat95_minus_adequacy": -0.024
+      "I_adequacy_gap": 0.3713,
+      "I_flat95_gap": 0.3481,
+      "I_difference_flat95_minus_adequacy": -0.0232
     }
   ],
   "tests": [
@@ -236,53 +236,53 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.255,
+        "I": 0.387,
         "EI": -0.0035,
-        "z_norm": 8.076,
+        "z_norm": 12.199,
         "p_norm": 0.0,
-        "z_sim": 8.057,
+        "z_sim": 12.211,
         "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
-          "I": 0.2595,
+          "I": 0.3751,
           "p_sim": 1e-05
         },
         "knn8": {
-          "I": 0.2608,
+          "I": 0.3737,
           "p_sim": 1e-05
         },
         "queen": {
-          "I": 0.2684,
-          "p_sim": 0.00016,
+          "I": 0.4202,
+          "p_sim": 1e-05,
           "n": 205,
           "islands_dropped": 78
         }
       },
       "lisa": {
         "clusters": {
-          "HH": 22,
-          "LL": 20,
-          "HL": 4,
-          "LH": 6,
-          "NS": 231
+          "HH": 25,
+          "LL": 39,
+          "HL": 1,
+          "LH": 10,
+          "NS": 208
         },
-        "significant": 52,
-        "fdr_cutoff_p": 0.00025,
-        "fdr_significant": 2,
+        "significant": 75,
+        "fdr_cutoff_p": 0.00389,
+        "fdr_significant": 24,
         "fdr_clusters": {
-          "HH": 0,
-          "LL": 1,
-          "HL": 0,
-          "LH": 1
+          "HH": 9,
+          "LL": 10,
+          "HL": 1,
+          "LH": 4
         }
       },
       "gi_star": {
-        "hot": 28,
-        "cold": 24,
-        "ns": 231,
-        "hh_also_hot": 22,
-        "ll_also_cold": 20
+        "hot": 35,
+        "cold": 40,
+        "ns": 208,
+        "hh_also_hot": 25,
+        "ll_also_cold": 39
       },
       "not_tested": {
         "no_value": 6,
@@ -299,37 +299,37 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.2589,
+        "I": 0.3938,
         "EI": -0.0035,
-        "z_norm": 8.199,
+        "z_norm": 12.41,
         "p_norm": 0.0,
-        "z_sim": 8.183,
+        "z_sim": 12.435,
         "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
-          "HH": 31,
-          "LL": 23,
-          "HL": 4,
-          "LH": 4,
-          "NS": 221
+          "HH": 25,
+          "LL": 34,
+          "HL": 2,
+          "LH": 10,
+          "NS": 212
         },
-        "significant": 62,
-        "fdr_cutoff_p": 0.00029,
-        "fdr_significant": 3,
+        "significant": 71,
+        "fdr_cutoff_p": 0.00439,
+        "fdr_significant": 25,
         "fdr_clusters": {
-          "HH": 1,
-          "LL": 1,
+          "HH": 11,
+          "LL": 9,
           "HL": 0,
-          "LH": 1
+          "LH": 5
         }
       },
       "gi_star": {
         "hot": 35,
-        "cold": 27,
-        "ns": 221,
-        "hh_also_hot": 31,
-        "ll_also_cold": 23
+        "cold": 36,
+        "ns": 212,
+        "hh_also_hot": 25,
+        "ll_also_cold": 34
       },
       "not_tested": {
         "no_value": 6,
@@ -456,24 +456,24 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.4339,
+        "I": 0.3713,
         "EI": -0.0035,
-        "z_norm": 13.665,
+        "z_norm": 11.709,
         "p_norm": 0.0,
-        "z_sim": 13.671,
+        "z_sim": 11.714,
         "p_sim": 1e-05
       },
       "moran_sensitivity": {
         "knn4": {
-          "I": 0.4558,
+          "I": 0.4089,
           "p_sim": 1e-05
         },
         "knn8": {
-          "I": 0.3994,
+          "I": 0.3392,
           "p_sim": 1e-05
         },
         "queen": {
-          "I": 0.5922,
+          "I": 0.5711,
           "p_sim": 1e-05,
           "n": 205,
           "islands_dropped": 78
@@ -481,28 +481,28 @@
       },
       "lisa": {
         "clusters": {
-          "HH": 24,
-          "LL": 42,
-          "HL": 2,
-          "LH": 5,
-          "NS": 210
+          "HH": 18,
+          "LL": 27,
+          "HL": 9,
+          "LH": 7,
+          "NS": 222
         },
-        "significant": 73,
-        "fdr_cutoff_p": 0.00361,
-        "fdr_significant": 23,
+        "significant": 61,
+        "fdr_cutoff_p": 0.00239,
+        "fdr_significant": 20,
         "fdr_clusters": {
           "HH": 4,
-          "LL": 18,
+          "LL": 14,
           "HL": 1,
-          "LH": 0
+          "LH": 1
         }
       },
       "gi_star": {
-        "hot": 29,
-        "cold": 44,
-        "ns": 210,
-        "hh_also_hot": 24,
-        "ll_also_cold": 42
+        "hot": 25,
+        "cold": 36,
+        "ns": 222,
+        "hh_also_hot": 18,
+        "ll_also_cold": 27
       },
       "not_tested": {
         "no_value": 6,
@@ -519,37 +519,37 @@
       "n": 283,
       "weights": "knn k=6",
       "moran": {
-        "I": 0.4099,
+        "I": 0.3481,
         "EI": -0.0035,
-        "z_norm": 12.912,
+        "z_norm": 10.984,
         "p_norm": 0.0,
-        "z_sim": 12.917,
+        "z_sim": 10.986,
         "p_sim": 1e-05
       },
       "lisa": {
         "clusters": {
-          "HH": 22,
-          "LL": 37,
+          "HH": 16,
+          "LL": 26,
           "HL": 3,
-          "LH": 4,
-          "NS": 217
+          "LH": 5,
+          "NS": 233
         },
-        "significant": 66,
-        "fdr_cutoff_p": 0.00439,
-        "fdr_significant": 25,
+        "significant": 50,
+        "fdr_cutoff_p": 0.00297,
+        "fdr_significant": 20,
         "fdr_clusters": {
-          "HH": 4,
-          "LL": 20,
+          "HH": 3,
+          "LL": 14,
           "HL": 1,
-          "LH": 0
+          "LH": 2
         }
       },
       "gi_star": {
-        "hot": 26,
-        "cold": 40,
-        "ns": 217,
-        "hh_also_hot": 22,
-        "ll_also_cold": 37
+        "hot": 21,
+        "cold": 29,
+        "ns": 233,
+        "hh_also_hot": 16,
+        "ll_also_cold": 26
       },
       "not_tested": {
         "no_value": 6,
@@ -561,6 +561,7 @@
   "outputs": [
     "mha_spatial_stats.csv",
     "mha_lisa_e5_dep_rent_map.png",
+    "mha_lisa_o3_dep_rent_map.png",
     "spatial_stats_manifest.json"
   ],
   "warnings": []

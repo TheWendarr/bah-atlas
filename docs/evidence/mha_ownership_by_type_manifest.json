@@ -1,0 +1,206 @@
+{
+  "node": "B30",
+  "generated_at": "2026-10-25T02:26:40+00:00",
+  "inputs": {
+    "B9": "mha_zhvi.csv",
+    "A4": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.sfr": "Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.condo": "Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.br1": "Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.br2": "Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.br3": "Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "A16.br4": "Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "B1": "zip_mha.csv",
+    "B29": "mha_rent_by_type.csv",
+    "A8": "mha_tax_insurance.csv",
+    "A7": "PMMS_history.csv",
+    "B11": "mha_ownership.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B9": "cdaba1cbcfd5b33bda73536532a05628e7e5635b5f103756b0fb5166c6b208b0",
+    "A4": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
+    "A16.sfr": "3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639",
+    "A16.condo": "5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892",
+    "A16.br1": "395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93",
+    "A16.br2": "06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658",
+    "A16.br3": "14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6",
+    "A16.br4": "463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
+    "B29": "1ad85ab59d979be4bf1559acf2096cca42d7ca01d2e67376f5e84078563b9329",
+    "A8": "e3e84b027a8f094097573207980a96323f6c3de64771be93b977ac800960aacd",
+    "A7": "d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f",
+    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d",
+    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+  },
+  "config": "config/ownership.json",
+  "config_sha256": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
+  "window_months": "2026-01:2026-07",
+  "rate": {
+    "series": "pmms30",
+    "weeks": 30,
+    "mean_pct": 6.3137
+  },
+  "method": {
+    "home_value": "B9 zhvi_median x building_factor x bedroom_ratio",
+    "building_factor": "townhouse 1; apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR ZHVI / all-homes ZHVI; per ZIP, median over the MHA; national median fallback",
+    "bedroom_ratio": "ZHVI n BR / 2 BR per ZIP, median over the MHA; national median fallback",
+    "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities"
+  },
+  "ratios": {
+    "building_apartment": {
+      "zips_with_both": 6479,
+      "national_median": 0.6551,
+      "mhas_national_fallback": 41,
+      "zips_outside_range": 12
+    },
+    "building_single_family": {
+      "zips_with_both": 26129,
+      "national_median": 0.9869,
+      "mhas_national_fallback": 0,
+      "zips_outside_range": 2
+    },
+    "bedrooms_1": {
+      "zips_with_both": 4473,
+      "national_median": 0.6954,
+      "mhas_national_fallback": 47,
+      "zips_outside_range": 0
+    },
+    "bedrooms_3": {
+      "zips_with_both": 15829,
+      "national_median": 1.3635,
+      "mhas_national_fallback": 6,
+      "zips_outside_range": 2
+    },
+    "bedrooms_4": {
+      "zips_with_both": 13833,
+      "national_median": 1.7264,
+      "mhas_national_fallback": 7,
+      "zips_outside_range": 43
+    }
+  },
+  "reference_check": {
+    "all_homes_over_2br": {
+      "zips": 15989,
+      "median": 1.3563
+    },
+    "all_homes_over_3br": {
+      "zips": 20431,
+      "median": 1.0029
+    },
+    "all_homes_over_4br": {
+      "zips": 15244,
+      "median": 0.8232
+    },
+    "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom count the all-homes value resembles. D19 takes it to be a 2 BR townhouse."
+  },
+  "limitations": [
+    "the homeowners premium is the MHA average for every home type (FIO has no premium by dwelling type), so it is overstated for apartments and understated for 4 BR homes",
+    "a condo/co-op value stands for an apartment in buy mode"
+  ],
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "apt1": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 65,
+      "own_housing_monthly": {
+        "min": 424.75,
+        "median": 1344.78,
+        "max": 7982.66
+      }
+    },
+    "apt2": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 41,
+      "own_housing_monthly": {
+        "min": 594.81,
+        "median": 1821.62,
+        "max": 9487.21
+      }
+    },
+    "th2": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 0,
+      "own_housing_monthly": {
+        "min": 1021.63,
+        "median": 2602.2,
+        "max": 21655.5
+      }
+    },
+    "th3": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 6,
+      "own_housing_monthly": {
+        "min": 1597.37,
+        "median": 3525.71,
+        "max": 29074.3
+      }
+    },
+    "sfh3": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 6,
+      "own_housing_monthly": {
+        "min": 1568.85,
+        "median": 3506.96,
+        "max": 31665.44
+      }
+    },
+    "sfh4": {
+      "status": {
+        "ok": 289,
+        "piti_only_no_zori": 10,
+        "no_home_value": 0
+      },
+      "national_fallback": 7,
+      "own_housing_monthly": {
+        "min": 1989.55,
+        "median": 4411.97,
+        "max": 47222.22
+      }
+    }
+  },
+  "reference_identity": "2 BR townhouse = B11 in every MHA (checked)",
+  "mhas": 299,
+  "warnings": [
+    "41 MHA(s) take the national building apartment ratio (0.6551)",
+    "47 MHA(s) take the national bedrooms 1 ratio (0.6954)",
+    "6 MHA(s) take the national bedrooms 3 ratio (1.3635)",
+    "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
+    "median PITI of sfh3 (3,507) is below th3 (3,526): the home types are out of DoD's order in buy mode (see reference_check)",
+    "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+    "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+    "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+    "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull"
+  ],
+  "outputs": [
+    "mha_ownership_by_type.csv"
+  ]
+}

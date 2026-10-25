@@ -21,6 +21,96 @@
     "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
     "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf"
   },
+  "A15.all": {
+    "bytes": 1075563,
+    "filename": "Metro_zori_uc_sfrcondomfr_sm_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZORI, metro-level, all homes plus multifamily (smoothed)",
+    "node_id": "A15.all",
+    "retrieved_at": "2026-10-25T01:19:33+00:00",
+    "sha256": "1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv"
+  },
+  "A15.mfr": {
+    "bytes": 778812,
+    "filename": "Metro_zori_uc_mfr_sm_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZORI, metro-level, multifamily (smoothed)",
+    "node_id": "A15.mfr",
+    "retrieved_at": "2026-10-25T01:19:33+00:00",
+    "sha256": "b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv"
+  },
+  "A15.sfr": {
+    "bytes": 851561,
+    "filename": "Metro_zori_uc_sfr_sm_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZORI, metro-level, single-family (smoothed)",
+    "node_id": "A15.sfr",
+    "retrieved_at": "2026-10-25T01:19:32+00:00",
+    "sha256": "8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv"
+  },
+  "A16.br1": {
+    "bytes": 18497319,
+    "filename": "Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, 1 bedroom (mid-tier, smoothed, SA)",
+    "node_id": "A16.br1",
+    "retrieved_at": "2026-10-25T01:19:37+00:00",
+    "sha256": "395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A16.br2": {
+    "bytes": 76719366,
+    "filename": "Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, 2 bedrooms (mid-tier, smoothed, SA)",
+    "node_id": "A16.br2",
+    "retrieved_at": "2026-10-25T01:19:38+00:00",
+    "sha256": "06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A16.br3": {
+    "bytes": 101523975,
+    "filename": "Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, 3 bedrooms (mid-tier, smoothed, SA)",
+    "node_id": "A16.br3",
+    "retrieved_at": "2026-10-25T01:19:40+00:00",
+    "sha256": "14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A16.br4": {
+    "bytes": 77302808,
+    "filename": "Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, 4 bedrooms (mid-tier, smoothed, SA)",
+    "node_id": "A16.br4",
+    "retrieved_at": "2026-10-25T01:19:41+00:00",
+    "sha256": "463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A16.condo": {
+    "bytes": 31187042,
+    "filename": "Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, condo/co-op (mid-tier, smoothed, SA)",
+    "node_id": "A16.condo",
+    "retrieved_at": "2026-10-25T01:19:36+00:00",
+    "sha256": "5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv"
+  },
+  "A16.sfr": {
+    "bytes": 123302173,
+    "filename": "Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+    "license": "Zillow Group, Inc.; free use with attribution (zillow.com/research/data)",
+    "name": "Zillow ZHVI, ZIP-level, single-family (mid-tier, smoothed, SA)",
+    "node_id": "A16.sfr",
+    "retrieved_at": "2026-10-25T01:19:35+00:00",
+    "sha256": "3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639",
+    "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv"
+  },
   "A2": {
     "bytes": 66655314,
     "filename": "cb_2020_us_zcta520_500k.zip",

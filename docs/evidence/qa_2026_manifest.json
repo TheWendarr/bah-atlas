@@ -2,30 +2,38 @@
   "nodes": [
     "B23"
   ],
-  "generated_at": "2026-10-19T01:01:52+00:00",
-  "build_id": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1",
-  "schema_version": "1.0.3",
+  "generated_at": "2026-10-25T02:28:10+00:00",
+  "build_id": "54c91816f8a245173ed4820d40707b02194191cd3bae2a9f8a52fceb8946facf",
+  "schema_version": "1.1.0",
   "inputs": {
     "B7": "areas_2026.pmtiles",
     "B20": "payload_2026.json",
     "B21": "ui_metadata_2026.json",
     "B27": "hotspots_2026.json",
+    "B31": "grid_2026.json",
     "B22": "build_manifest_2026.json",
     "B12": "mha_rent_metrics.csv",
     "B14": "mha_buy_metrics.csv",
     "B8": "mha_zori.csv",
-    "B11": "mha_ownership.csv"
+    "B11": "mha_ownership.csv",
+    "B29": "mha_rent_by_type.csv",
+    "B30": "mha_ownership_by_type.csv",
+    "A14": "housing_standards.json"
   },
   "input_sha256": {
     "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
-    "B20": "030e3f66ebf70acf4e0fcbdf14eb67238461307ea42c965a0e95533faceae00d",
-    "B21": "4dfa607e265fc1ad5110e6e76ac90436359e1cc836fb9ea7016b01376ada0dc7",
-    "B27": "968897c934f2f18381c7b3a5c04056c5be1e5b7a9bab48a23dc695c19ea44256",
-    "B22": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1",
-    "B12": "d3894d662d0c8faf102eef3319a2ecab5d4ce8cb5c94e222224fc2caaa6a1e8b",
-    "B14": "15777758c86086245f55b8751c5c055d73c906309cd42f67eb9f2e9b2501446a",
+    "B20": "100dffdeacbcab5ad06d3bce3d570a6d3b188756f36521352bff06107f60af82",
+    "B21": "485e0f418b10cbf825f990c973a87ddd037b075c6f92cfde9abd875affff3870",
+    "B27": "3fd5766b30538bf5161d649521486ad0eb3780fb1f6fe9fae0fed88687273966",
+    "B31": "b9e653173721903231bf55840acf492ae9f9ace689247f871e8298de931c224a",
+    "B22": "54c91816f8a245173ed4820d40707b02194191cd3bae2a9f8a52fceb8946facf",
+    "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
+    "B14": "b9d84be926d9e60907d2d57d0befeb8356a55d563c74e30f52bef40faa87762b",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
-    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d"
+    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d",
+    "B29": "1ad85ab59d979be4bf1559acf2096cca42d7ca01d2e67376f5e84078563b9329",
+    "B30": "931d86adfb77cc9467c9927e220085acc18d234d5e8ece1d5eb00c8791d40f99",
+    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
   },
   "verdict": "PASS",
   "checks": [
@@ -42,12 +50,12 @@
     {
       "check": "Provenance: built from committed code",
       "result": "PASS",
-      "detail": "B22 commit 518cc2fa8f2d is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+      "detail": "B22 commit 1502e53a724f is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
     },
     {
       "check": "Check 9: file sizes recorded; SHA256SUMS matches",
       "result": "PASS",
-      "detail": "B20 payload 44 KB gzipped (plan expectation: under 300 KB)"
+      "detail": "B20 payload 45 KB gzipped (plan expectation: under 300 KB)"
     },
     {
       "check": "Check 9: counts by status recorded",
@@ -57,7 +65,7 @@
     {
       "check": "Check 9: classes that differ between rounded and unrounded values",
       "result": "NOTE",
-      "detail": "1 value(s) change class; 15 sit within rounding of a break"
+      "detail": "3 value(s) change class; 14 sit within rounding of a break"
     },
     {
       "check": "Check 4: B20 codes without a polygon listed",
@@ -65,7 +73,7 @@
       "detail": "0: none"
     },
     {
-      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28)",
+      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, A14 check)",
       "result": "PASS",
       "detail": "all present"
     },
@@ -73,6 +81,16 @@
       "check": "Traces: three MHAs recomputed from inputs to B20",
       "result": "PASS",
       "detail": "KS105, NC182, MA119 agree at every step"
+    },
+    {
+      "check": "Grid: the browser formula on B31 reproduces B20 for the research profiles",
+      "result": "PASS",
+      "detail": "1356 of 1356 area x profile x mode views identical"
+    },
+    {
+      "check": "Grid traces: E-1 in a 4 BR single-family home and O-9 in a 1 BR apartment",
+      "result": "PASS",
+      "detail": "KS105: recomputed from B4, A14, B29 and B30"
     },
     {
       "check": "B19: spatial model form",
@@ -86,9 +104,9 @@
     }
   ],
   "provenance": {
-    "b22_commit": "518cc2fa8f2d45e1ca167b4c5d1cefa7cc66a8f4",
+    "b22_commit": "1502e53a724fca353606e070a1912694fd7be28b",
     "b22_dirty": true,
-    "detail": "B22 commit 518cc2fa8f2d is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    "detail": "B22 commit 1502e53a724f is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
   },
   "files": {
     "areas_2026.pmtiles": {
@@ -97,24 +115,29 @@
       "sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb"
     },
     "payload_2026.json": {
-      "bytes": 462207,
-      "gzip_bytes": 45140,
-      "sha256": "030e3f66ebf70acf4e0fcbdf14eb67238461307ea42c965a0e95533faceae00d"
+      "bytes": 463498,
+      "gzip_bytes": 45608,
+      "sha256": "100dffdeacbcab5ad06d3bce3d570a6d3b188756f36521352bff06107f60af82"
     },
     "ui_metadata_2026.json": {
-      "bytes": 29965,
-      "gzip_bytes": 8265,
-      "sha256": "4dfa607e265fc1ad5110e6e76ac90436359e1cc836fb9ea7016b01376ada0dc7"
+      "bytes": 36802,
+      "gzip_bytes": 9426,
+      "sha256": "485e0f418b10cbf825f990c973a87ddd037b075c6f92cfde9abd875affff3870"
     },
     "hotspots_2026.json": {
-      "bytes": 133164,
-      "gzip_bytes": 6570,
-      "sha256": "968897c934f2f18381c7b3a5c04056c5be1e5b7a9bab48a23dc695c19ea44256"
+      "bytes": 133147,
+      "gzip_bytes": 6567,
+      "sha256": "3fd5766b30538bf5161d649521486ad0eb3780fb1f6fe9fae0fed88687273966"
+    },
+    "grid_2026.json": {
+      "bytes": 356557,
+      "gzip_bytes": 58991,
+      "sha256": "b9e653173721903231bf55840acf492ae9f9ace689247f871e8298de931c224a"
     },
     "build_manifest_2026.json": {
-      "bytes": 9585,
-      "gzip_bytes": 3556,
-      "sha256": "1721008eb5efeb23af3beb36f9db6b7a6222c7089b91a8cb953a5f51beece2a1"
+      "bytes": 15205,
+      "gzip_bytes": 4920,
+      "sha256": "54c91816f8a245173ed4820d40707b02194191cd3bae2a9f8a52fceb8946facf"
     }
   },
   "areas_by_class": {
@@ -162,9 +185,29 @@
       "rounded": 50,
       "class_unrounded": 3,
       "class_rounded": 4
+    },
+    {
+      "area": "GA072",
+      "profile": "o3_dep",
+      "mode": "buy",
+      "metric": "surplus_usd",
+      "unrounded": -500.1,
+      "rounded": -500,
+      "class_unrounded": 0,
+      "class_rounded": 1
+    },
+    {
+      "area": "NJ200",
+      "profile": "o3_dep",
+      "mode": "rent",
+      "metric": "surplus_usd",
+      "unrounded": 49.89,
+      "rounded": 50,
+      "class_unrounded": 3,
+      "class_rounded": 4
     }
   ],
-  "values_near_a_break": 15,
+  "values_near_a_break": 14,
   "codes_without_polygon": [],
   "traces": [
     {
@@ -203,10 +246,10 @@
           "status": "ok",
           "bah": 2064.0,
           "cost_share": 151.0,
-          "cost": 1510.56,
-          "adequacy_recomputed": 1.4663436076686793,
-          "adequacy_b12_b14": 1.4663,
-          "adequacy_b20": 1.4663,
+          "cost": 2160.19,
+          "adequacy_recomputed": 1.0253727681361362,
+          "adequacy_b12_b14": 1.0254,
+          "adequacy_b20": 1.0254,
           "agree": true,
           "b27_cluster": "NS"
         },
@@ -216,10 +259,10 @@
           "status": "ok",
           "bah": 2064.0,
           "cost_share": 151.0,
-          "cost": 2253.08,
-          "adequacy_recomputed": 0.9830986915688746,
-          "adequacy_b12_b14": 0.9831,
-          "adequacy_b20": 0.9831,
+          "cost": 2965.3,
+          "adequacy_recomputed": 0.7469733247900718,
+          "adequacy_b12_b14": 0.747,
+          "adequacy_b20": 0.747,
           "agree": true,
           "b27_cluster": "NS"
         }
@@ -263,12 +306,12 @@
           "status": "ok",
           "bah": 2175.0,
           "cost_share": 151.0,
-          "cost": 2097.09,
-          "adequacy_recomputed": 1.1091560209623812,
-          "adequacy_b12_b14": 1.1092,
-          "adequacy_b20": 1.1092,
+          "cost": 3246.45,
+          "adequacy_recomputed": 0.716474918757412,
+          "adequacy_b12_b14": 0.7165,
+          "adequacy_b20": 0.7165,
           "agree": true,
-          "b27_cluster": "LL"
+          "b27_cluster": "NS"
         },
         {
           "profile": "o3_dep",
@@ -276,10 +319,10 @@
           "status": "ok",
           "bah": 2175.0,
           "cost_share": 151.0,
-          "cost": 2323.83,
-          "adequacy_recomputed": 1.0009338032472255,
-          "adequacy_b12_b14": 1.0009,
-          "adequacy_b20": 1.0009,
+          "cost": 3436.83,
+          "adequacy_recomputed": 0.676786457287675,
+          "adequacy_b12_b14": 0.6768,
+          "adequacy_b20": 0.6768,
           "agree": true,
           "b27_cluster": "NS"
         }
@@ -336,21 +379,80 @@
           "status": "piti_only_no_zori",
           "bah": 5442.0,
           "cost_share": 151.0,
-          "cost": 21655.5,
-          "adequacy_recomputed": 0.25827157073260837,
-          "adequacy_b12_b14": 0.2583,
-          "adequacy_b20": 0.2583,
+          "cost": 31613.62,
+          "adequacy_recomputed": 0.17691741723978463,
+          "adequacy_b12_b14": 0.1769,
+          "adequacy_b20": 0.1769,
           "agree": true,
           "b27_cluster": null
         }
       ]
     }
   ],
+  "grid": {
+    "views_compared": 1356,
+    "views_identical": 1356,
+    "differences": [],
+    "traces": [
+      {
+        "area": "KS105",
+        "rank": "E1",
+        "dependents": "with",
+        "home_type": "sfh4",
+        "mode": "rent",
+        "bah": 1503.0,
+        "cost_share": 115,
+        "cost": 2194.22,
+        "adequacy_recomputed": 0.7373918750170905,
+        "adequacy_b31_formula": 0.7374,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "E1",
+        "dependents": "with",
+        "home_type": "sfh4",
+        "mode": "buy",
+        "bah": 1503.0,
+        "cost_share": 115,
+        "cost": 3650.93,
+        "adequacy_recomputed": 0.44317475273423484,
+        "adequacy_b31_formula": 0.4432,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "O9",
+        "dependents": "with",
+        "home_type": "apt1",
+        "mode": "rent",
+        "bah": 2655.0,
+        "cost_share": 212,
+        "cost": 1038.78,
+        "adequacy_recomputed": 2.759968424497969,
+        "adequacy_b31_formula": 2.76,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "O9",
+        "dependents": "with",
+        "home_type": "apt1",
+        "mode": "buy",
+        "bah": 2655.0,
+        "cost_share": 212,
+        "cost": 1053.05,
+        "adequacy_recomputed": 2.722567779307725,
+        "adequacy_b31_formula": 2.7226,
+        "agree": true
+      }
+    ]
+  },
   "outputs": [
     "qa_2026.md",
     "qa_2026_manifest.json"
   ],
   "output_sha256": {
-    "qa_2026.md": "5dd470bd94af390e5b181ff16d74e77d68ce10418bf8c45c417312f849c6c53f"
+    "qa_2026.md": "8c52d08a9351b19e00d63b763c71976dbef2130bab8e37b393f56ed5e4467b2b"
   }
 }

@@ -1,42 +1,58 @@
-2026-10-18 — Ran 102 tests in 33.686s — OK
+2026-10-24 — Ran 127 tests in 36.718s — OK
 
-......................................................................................................
+........................................unknown node ids: A17
+.......................................................................................
 ----------------------------------------------------------------------
-Ran 102 tests in 33.686s
+Ran 127 tests in 36.718s
 
 OK
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 22934cc6bcb9; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: every gate passes; `make deliver` will copy the handoff to /tmp/tmpewpt7awt/delivery/2026/
+deliver_handoff: every gate passes; `make deliver` will copy the handoff to /tmp/tmpck6jcy3k/delivery/2026/
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 22934cc6bcb9; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: delivered 8 files to /tmp/tmpewpt7awt/delivery/2026/ and checked them against SHA256SUMS and B23
+deliver_handoff: delivered 9 files to /tmp/tmpck6jcy3k/delivery/2026/ and checked them against SHA256SUMS and B23
 next:
   make done N=W1
-  git add /tmp/tmpewpt7awt/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
-  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpewpt7awt/delivery/2026/ with the W1 write-up"
+  git add /tmp/tmpck6jcy3k/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpck6jcy3k/delivery/2026/ with the W1 write-up"
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 22934cc6bcb9; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 89f0327000e9; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 22934cc6bcb9; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: delivered 8 files to /tmp/tmpewpt7awt/delivery/2026/ and checked them against SHA256SUMS and B23
+deliver_handoff: delivered 9 files to /tmp/tmpck6jcy3k/delivery/2026/ and checked them against SHA256SUMS and B23
 next:
   make done N=W1
-  git add /tmp/tmpewpt7awt/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
-  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpewpt7awt/delivery/2026/ with the W1 write-up"
+  git add /tmp/tmpck6jcy3k/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpck6jcy3k/delivery/2026/ with the W1 write-up"
+  local A6  DoD BAH Rate Component Breakdown 2026  4.0 KB  sha 49d2eec977e6…  (browser download, verified)
+
+fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmp849tfli9/fetch_manifest.json
+  local A6  DoD BAH Rate Component Breakdown 2026  4.0 KB  sha 49d2eec977e6…  (browser download, verified)
+
+fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmprryyz98z/fetch_manifest.json
+  cache A15.mfr  Zillow ZORI, metro-level, multifamily (smoothed)  1 B  (present)
+  cache A16.sfr  Zillow ZHVI, ZIP-level, single-family (mid-tier, smoothed, SA)  1 B  (present)
+  cache A16.condo  Zillow ZHVI, ZIP-level, condo/co-op (mid-tier, smoothed, SA)  1 B  (present)
+  cache A16.br1  Zillow ZHVI, ZIP-level, 1 bedroom (mid-tier, smoothed, SA)  1 B  (present)
+  cache A16.br2  Zillow ZHVI, ZIP-level, 2 bedrooms (mid-tier, smoothed, SA)  1 B  (present)
+  cache A16.br3  Zillow ZHVI, ZIP-level, 3 bedrooms (mid-tier, smoothed, SA)  1 B  (present)
+  cache A16.br4  Zillow ZHVI, ZIP-level, 4 bedrooms (mid-tier, smoothed, SA)  1 B  (present)
+
+fetched 0  present 7  failed 0  action-needed 0  ->  /tmp/tmppxlt02bs/fetch_manifest.json

@@ -14,7 +14,7 @@
   },
   "config": "config/ownership.json",
   "config_sha256": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
-  "generated_at": "2026-10-19T01:00:25+00:00",
+  "generated_at": "2026-10-25T02:26:36+00:00",
   "rate": {
     "series": "pmms30",
     "window": "2026-01:2026-07",

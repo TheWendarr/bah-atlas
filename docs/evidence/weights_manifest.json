@@ -1,11 +1,11 @@
 {
   "node": "B16",
-  "generated_at": "2026-10-19T01:00:27+00:00",
+  "generated_at": "2026-10-25T02:26:42+00:00",
   "inputs": {
     "B6": "mha_2026.gpkg"
   },
   "input_sha256": {
-    "B6": "675a278a9f9f6879dc5f2bebc2dbebd8c5bfaed0c736d3b58d1b7c653391742f"
+    "B6": "ffb07bc8c50e74b59d2921a2bc35847315abc0094fa1c1b22df9fd7dc2713dee"
   },
   "scope": {
     "rule": "CONUS only: MHA codes starting AK, HI, PR, GU, VI, AS, MP are excluded",

@@ -1,0 +1,196 @@
+{
+  "node": "B29",
+  "generated_at": "2026-10-25T02:26:37+00:00",
+  "inputs": {
+    "B8": "mha_zori.csv",
+    "B10": "mha_safmr.csv",
+    "A15.sfr": "Metro_zori_uc_sfr_sm_month.csv",
+    "A15.mfr": "Metro_zori_uc_mfr_sm_month.csv",
+    "A15.all": "Metro_zori_uc_sfrcondomfr_sm_month.csv",
+    "A4": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+    "B1": "zip_mha.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B10": "66df87450290c8306e19db85bc460ec2fa862d0500ce3a9ea4016a457bee345c",
+    "A15.sfr": "8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6",
+    "A15.mfr": "b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d",
+    "A15.all": "1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a",
+    "A4": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
+    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+  },
+  "window_months": "2026-01:2026-07",
+  "method": {
+    "rent": "B8 zori_utilities_adjusted x building_factor x bedroom_ratio",
+    "utilities": "B8 utilities_usd x building_factor x bedroom_ratio",
+    "building_factor": "townhouse 1 (B8 stands for a 2 BR townhouse); apartment = metro MFR / all-homes ZORI, single-family = metro SFR / all-homes ZORI, median over the MHA's ZIPs; national ratio where no ZIP lies in a metro with the series",
+    "bedroom_ratio": "B10 SAFMR n BR / 2 BR within the MHA"
+  },
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "metros": {
+    "A15.all_with_value": 665,
+    "A15.sfr": {
+      "metros_with_value": 529,
+      "rows": 608
+    },
+    "A15.mfr": {
+      "metros_with_value": 549,
+      "rows": 630
+    },
+    "zip_metro_names": 379,
+    "zip_metro_names_matched": 351,
+    "matching": {
+      "matched_exact": 204,
+      "matched_by_principal_city": 147,
+      "ambiguous": [],
+      "unmatched": [
+        "Alexander City, AL",
+        "Alice, TX",
+        "Bluffton, IN",
+        "Cadillac, MI",
+        "Cambridge, MD",
+        "Eufaula, AL-GA",
+        "Fallon, NV",
+        "Fremont, OH",
+        "Grand Rapids, MN",
+        "Ketchikan, AK",
+        "Kill Devil Hills, NC",
+        "Laurel, MS",
+        "Ludington, MI",
+        "Morgan City, LA",
+        "Moultrie, GA",
+        "Natchitoches, LA",
+        "Oil City, PA",
+        "Point Pleasant, WV-OH",
+        "Salem, OH",
+        "Sault Ste. Marie, MI",
+        "Scottsburg, IN",
+        "Shawano, WI",
+        "Spearfish, SD",
+        "Sweetwater, TX",
+        "Vicksburg, MS",
+        "Vineyard Haven, MA",
+        "Wauchula, FL",
+        "West Point, MS"
+      ]
+    },
+    "mha_zips_with_metro": 12351,
+    "mha_zips_with_a15_metro": 12259
+  },
+  "building_factors": {
+    "apartment": {
+      "median": 0.9128,
+      "min": 0.6754,
+      "max": 0.9897,
+      "national": 0.9131,
+      "mhas_national_fallback": 15
+    },
+    "single_family": {
+      "median": 1.2356,
+      "min": 0.9932,
+      "max": 1.7923,
+      "national": 1.1741,
+      "mhas_national_fallback": 12
+    }
+  },
+  "coverage": {
+    "apt1": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 0,
+        "metro": 284,
+        "national": 15
+      },
+      "rent_monthly": {
+        "min": 849.34,
+        "median": 1468.96,
+        "max": 3361.67
+      }
+    },
+    "apt2": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 0,
+        "metro": 284,
+        "national": 15
+      },
+      "rent_monthly": {
+        "min": 1043.98,
+        "median": 1761.16,
+        "max": 3916.23
+      }
+    },
+    "th2": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 299,
+        "metro": 0,
+        "national": 0
+      },
+      "rent_monthly": {
+        "min": 1196.56,
+        "median": 1953.56,
+        "max": 4167.51
+      }
+    },
+    "th3": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 299,
+        "metro": 0,
+        "national": 0
+      },
+      "rent_monthly": {
+        "min": 1461.84,
+        "median": 2572.24,
+        "max": 5508.78
+      }
+    },
+    "sfh3": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 0,
+        "metro": 287,
+        "national": 12
+      },
+      "rent_monthly": {
+        "min": 1627.52,
+        "median": 3243.72,
+        "max": 6958.75
+      }
+    },
+    "sfh4": {
+      "mhas_with_value": 289,
+      "factor_source": {
+        "reference": 0,
+        "metro": 287,
+        "national": 12
+      },
+      "rent_monthly": {
+        "min": 1885.16,
+        "median": 3794.77,
+        "max": 7578.99
+      }
+    }
+  },
+  "reference_identity": "2 BR townhouse = B8 in every MHA (checked)",
+  "mhas": 299,
+  "warnings": [
+    "15 MHA(s) take the national apartment factor (0.9131): none of their ZIPs lies in a metro with the A15 series",
+    "12 MHA(s) take the national single_family factor (1.1741): none of their ZIPs lies in a metro with the A15 series",
+    "28 metro name(s) in the ZIP file have no A15 all-homes row, even by principal city (mostly micropolitan areas Zillow does not cover): Alexander City, AL, Alice, TX, Bluffton, IN, Cadillac, MI, Cambridge, MD, Eufaula, AL-GA, Fallon, NV, Fremont, OH"
+  ],
+  "outputs": [
+    "mha_rent_by_type.csv"
+  ]
+}

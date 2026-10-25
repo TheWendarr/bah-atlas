@@ -1,0 +1,818 @@
+{
+  "node": "A14",
+  "check": "housing standards table reproduces the 2026 BAH rates",
+  "generated_at": "2026-10-25T02:26:36+00:00",
+  "inputs": {
+    "B4": "bah_rates.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B4": "f1912660e5752189f2d8642c956a24615f5c7f710b0e256fe6626b2e1e6ffbf3",
+    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+  },
+  "method": {
+    "anchors": {
+      "th2": "E5 with dependents",
+      "th3": "E6 with dependents",
+      "sfh3": "W3 with dependents",
+      "sfh4": "O5 with dependents",
+      "apt1": "E4 without dependents",
+      "apt2": "O1 without dependents"
+    },
+    "interpolated": "cost = lower + share x (upper - lower)",
+    "above_top_anchor": "cost = lower x (1 + share)",
+    "rate": "cost - cost_share_monthly",
+    "without_floor": "rates within $2 of 75% of the with-dependents rate are set by the floor and left out",
+    "tolerance": {
+      "interpolated": 0.05,
+      "above_top_anchor": 0.005
+    }
+  },
+  "mhas": 299,
+  "cells": [
+    {
+      "grade": "E1",
+      "dependents": "with",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.5,
+      "anchor": false,
+      "mhas_used": 292,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5052,
+      "median_residual_usd": 1.5,
+      "median_abs_residual_usd": 1.5,
+      "implied_share_iqr": [
+        0.5029,
+        0.5086
+      ],
+      "difference": 0.0052
+    },
+    {
+      "grade": "E1",
+      "dependents": "without",
+      "lower": "apt1",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 241,
+      "mhas_at_75pct_floor": 58,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E2",
+      "dependents": "with",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.5,
+      "anchor": false,
+      "mhas_used": 292,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5052,
+      "median_residual_usd": 1.5,
+      "median_abs_residual_usd": 1.5,
+      "implied_share_iqr": [
+        0.5029,
+        0.5086
+      ],
+      "difference": 0.0052
+    },
+    {
+      "grade": "E2",
+      "dependents": "without",
+      "lower": "apt1",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 241,
+      "mhas_at_75pct_floor": 58,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E3",
+      "dependents": "with",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.5,
+      "anchor": false,
+      "mhas_used": 292,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5052,
+      "median_residual_usd": 1.5,
+      "median_abs_residual_usd": 1.5,
+      "implied_share_iqr": [
+        0.5029,
+        0.5086
+      ],
+      "difference": 0.0052
+    },
+    {
+      "grade": "E3",
+      "dependents": "without",
+      "lower": "apt1",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 241,
+      "mhas_at_75pct_floor": 58,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E4",
+      "dependents": "with",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.5,
+      "anchor": false,
+      "mhas_used": 292,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5052,
+      "median_residual_usd": 1.5,
+      "median_abs_residual_usd": 1.5,
+      "implied_share_iqr": [
+        0.5029,
+        0.5086
+      ],
+      "difference": 0.0052
+    },
+    {
+      "grade": "E4",
+      "dependents": "without",
+      "lower": "apt1",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 241,
+      "mhas_at_75pct_floor": 58,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E5",
+      "dependents": "with",
+      "lower": "th2",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E5",
+      "dependents": "without",
+      "lower": "apt1",
+      "upper": "apt2",
+      "share": 0.67,
+      "anchor": false,
+      "mhas_used": 267,
+      "mhas_at_75pct_floor": 29,
+      "implied_share_median": 0.6687,
+      "median_residual_usd": -0.48,
+      "median_abs_residual_usd": 0.96,
+      "implied_share_iqr": [
+        0.6648,
+        0.6707
+      ],
+      "difference": -0.0013
+    },
+    {
+      "grade": "E6",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "E6",
+      "dependents": "without",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.07,
+      "anchor": false,
+      "mhas_used": 154,
+      "mhas_at_75pct_floor": 140,
+      "implied_share_median": 0.0737,
+      "median_residual_usd": 1.29,
+      "median_abs_residual_usd": 1.38,
+      "implied_share_iqr": [
+        0.0709,
+        0.0776
+      ],
+      "difference": 0.0037
+    },
+    {
+      "grade": "E7",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.36,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.3518,
+      "median_residual_usd": -2.28,
+      "median_abs_residual_usd": 2.88,
+      "implied_share_iqr": [
+        0.342,
+        0.3578
+      ],
+      "difference": -0.0082
+    },
+    {
+      "grade": "E7",
+      "dependents": "without",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.53,
+      "anchor": false,
+      "mhas_used": 210,
+      "mhas_at_75pct_floor": 85,
+      "implied_share_median": 0.5312,
+      "median_residual_usd": 0.58,
+      "median_abs_residual_usd": 0.83,
+      "implied_share_iqr": [
+        0.5293,
+        0.5339
+      ],
+      "difference": 0.0012
+    },
+    {
+      "grade": "E8",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.75,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.7459,
+      "median_residual_usd": -1.25,
+      "median_abs_residual_usd": 1.25,
+      "implied_share_iqr": [
+        0.7337,
+        0.7506
+      ],
+      "difference": -0.0041
+    },
+    {
+      "grade": "E8",
+      "dependents": "without",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.2,
+      "anchor": false,
+      "mhas_used": 254,
+      "mhas_at_75pct_floor": 35,
+      "implied_share_median": 0.2323,
+      "median_residual_usd": 10.4,
+      "median_abs_residual_usd": 10.4,
+      "implied_share_iqr": [
+        0.2231,
+        0.2461
+      ],
+      "difference": 0.0323
+    },
+    {
+      "grade": "E9",
+      "dependents": "with",
+      "lower": "sfh3",
+      "upper": "sfh4",
+      "share": 0.16,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.1571,
+      "median_residual_usd": -1.56,
+      "median_abs_residual_usd": 1.68,
+      "implied_share_iqr": [
+        0.1538,
+        0.1596
+      ],
+      "difference": -0.0029
+    },
+    {
+      "grade": "E9",
+      "dependents": "without",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.51,
+      "anchor": false,
+      "mhas_used": 252,
+      "mhas_at_75pct_floor": 37,
+      "implied_share_median": 0.5087,
+      "median_residual_usd": -0.44,
+      "median_abs_residual_usd": 1.03,
+      "implied_share_iqr": [
+        0.5041,
+        0.5114
+      ],
+      "difference": -0.0013
+    },
+    {
+      "grade": "W1",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.01,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0,
+      "median_residual_usd": -1.45,
+      "median_abs_residual_usd": 1.93,
+      "implied_share_iqr": [
+        0.0,
+        0.0108
+      ],
+      "difference": -0.01
+    },
+    {
+      "grade": "W1",
+      "dependents": "without",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.31,
+      "anchor": false,
+      "mhas_used": 225,
+      "mhas_at_75pct_floor": 69,
+      "implied_share_median": 0.3093,
+      "median_residual_usd": -0.28,
+      "median_abs_residual_usd": 0.88,
+      "implied_share_iqr": [
+        0.3068,
+        0.312
+      ],
+      "difference": -0.0007
+    },
+    {
+      "grade": "W2",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.52,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5088,
+      "median_residual_usd": -3.08,
+      "median_abs_residual_usd": 3.56,
+      "implied_share_iqr": [
+        0.4925,
+        0.5155
+      ],
+      "difference": -0.0112
+    },
+    {
+      "grade": "W2",
+      "dependents": "without",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.19,
+      "anchor": false,
+      "mhas_used": 276,
+      "mhas_at_75pct_floor": 11,
+      "implied_share_median": 0.1884,
+      "median_residual_usd": -0.59,
+      "median_abs_residual_usd": 0.99,
+      "implied_share_iqr": [
+        0.1853,
+        0.1909
+      ],
+      "difference": -0.0016
+    },
+    {
+      "grade": "W3",
+      "dependents": "with",
+      "lower": "sfh3",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "W3",
+      "dependents": "without",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.54,
+      "anchor": false,
+      "mhas_used": 287,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5401,
+      "median_residual_usd": 0.04,
+      "median_abs_residual_usd": 1.24,
+      "implied_share_iqr": [
+        0.5358,
+        0.5431
+      ],
+      "difference": 0.0001
+    },
+    {
+      "grade": "W4",
+      "dependents": "with",
+      "lower": "sfh3",
+      "upper": "sfh4",
+      "share": 0.22,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.2141,
+      "median_residual_usd": -3.2,
+      "median_abs_residual_usd": 3.2,
+      "implied_share_iqr": [
+        0.21,
+        0.2167
+      ],
+      "difference": -0.0059
+    },
+    {
+      "grade": "W4",
+      "dependents": "without",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.09,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0795,
+      "median_residual_usd": -2.31,
+      "median_abs_residual_usd": 2.64,
+      "implied_share_iqr": [
+        0.0634,
+        0.0876
+      ],
+      "difference": -0.0105
+    },
+    {
+      "grade": "W5",
+      "dependents": "with",
+      "lower": "sfh3",
+      "upper": "sfh4",
+      "share": 0.48,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.4784,
+      "median_residual_usd": -0.96,
+      "median_abs_residual_usd": 1.2,
+      "implied_share_iqr": [
+        0.4755,
+        0.48
+      ],
+      "difference": -0.0016
+    },
+    {
+      "grade": "W5",
+      "dependents": "without",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.45,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.4431,
+      "median_residual_usd": -2.0,
+      "median_abs_residual_usd": 2.0,
+      "implied_share_iqr": [
+        0.4265,
+        0.449
+      ],
+      "difference": -0.0069
+    },
+    {
+      "grade": "O1",
+      "dependents": "with",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.11,
+      "anchor": false,
+      "mhas_used": 287,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.112,
+      "median_residual_usd": 0.67,
+      "median_abs_residual_usd": 0.92,
+      "implied_share_iqr": [
+        0.1097,
+        0.1148
+      ],
+      "difference": 0.002
+    },
+    {
+      "grade": "O1",
+      "dependents": "without",
+      "lower": "apt2",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 284,
+      "mhas_at_75pct_floor": 15,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "O2",
+      "dependents": "with",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.98,
+      "anchor": false,
+      "mhas_used": 287,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.9694,
+      "median_residual_usd": -3.58,
+      "median_abs_residual_usd": 3.58,
+      "implied_share_iqr": [
+        0.9588,
+        0.976
+      ],
+      "difference": -0.0106
+    },
+    {
+      "grade": "O2",
+      "dependents": "without",
+      "lower": "apt2",
+      "upper": "th2",
+      "share": 0.83,
+      "anchor": false,
+      "mhas_used": 292,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.8341,
+      "median_residual_usd": 1.44,
+      "median_abs_residual_usd": 1.65,
+      "implied_share_iqr": [
+        0.8309,
+        0.8387
+      ],
+      "difference": 0.0041
+    },
+    {
+      "grade": "O3",
+      "dependents": "with",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.98,
+      "anchor": false,
+      "mhas_used": 291,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.9738,
+      "median_residual_usd": -1.78,
+      "median_abs_residual_usd": 1.9,
+      "implied_share_iqr": [
+        0.9568,
+        0.9794
+      ],
+      "difference": -0.0062
+    },
+    {
+      "grade": "O3",
+      "dependents": "without",
+      "lower": "th2",
+      "upper": "th3",
+      "share": 0.64,
+      "anchor": false,
+      "mhas_used": 287,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.6368,
+      "median_residual_usd": -1.44,
+      "median_abs_residual_usd": 1.8,
+      "implied_share_iqr": [
+        0.6296,
+        0.6398
+      ],
+      "difference": -0.0032
+    },
+    {
+      "grade": "O4",
+      "dependents": "with",
+      "lower": "sfh3",
+      "upper": "sfh4",
+      "share": 0.58,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.5753,
+      "median_residual_usd": -2.78,
+      "median_abs_residual_usd": 2.84,
+      "implied_share_iqr": [
+        0.5718,
+        0.5772
+      ],
+      "difference": -0.0047
+    },
+    {
+      "grade": "O4",
+      "dependents": "without",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.4,
+      "anchor": false,
+      "mhas_used": 286,
+      "mhas_at_75pct_floor": 5,
+      "implied_share_median": 0.3937,
+      "median_residual_usd": -1.8,
+      "median_abs_residual_usd": 1.8,
+      "implied_share_iqr": [
+        0.3814,
+        0.4
+      ],
+      "difference": -0.0063
+    },
+    {
+      "grade": "O5",
+      "dependents": "with",
+      "lower": "sfh4",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "O5",
+      "dependents": "without",
+      "lower": "th3",
+      "upper": "sfh3",
+      "share": 0.63,
+      "anchor": false,
+      "mhas_used": 251,
+      "mhas_at_75pct_floor": 41,
+      "implied_share_median": 0.6184,
+      "median_residual_usd": -2.93,
+      "median_abs_residual_usd": 3.09,
+      "implied_share_iqr": [
+        0.6012,
+        0.6246
+      ],
+      "difference": -0.0116
+    },
+    {
+      "grade": "O6",
+      "dependents": "with",
+      "lower": "sfh4",
+      "upper": null,
+      "share": 0.01,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0097,
+      "median_residual_usd": -1.01,
+      "median_abs_residual_usd": 1.13,
+      "implied_share_iqr": [
+        0.0094,
+        0.01
+      ],
+      "difference": -0.0003
+    },
+    {
+      "grade": "O6",
+      "dependents": "without",
+      "lower": "sfh3",
+      "upper": null,
+      "share": 0,
+      "anchor": true,
+      "mhas_used": 280,
+      "mhas_at_75pct_floor": 19,
+      "implied_share_median": null,
+      "median_residual_usd": 0.0,
+      "median_abs_residual_usd": 0.0
+    },
+    {
+      "grade": "O7",
+      "dependents": "with",
+      "lower": "sfh4",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0194,
+      "median_residual_usd": -1.96,
+      "median_abs_residual_usd": 1.96,
+      "implied_share_iqr": [
+        0.0191,
+        0.0197
+      ],
+      "difference": -0.0006
+    },
+    {
+      "grade": "O7",
+      "dependents": "without",
+      "lower": "sfh3",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 283,
+      "mhas_at_75pct_floor": 16,
+      "implied_share_median": 0.0195,
+      "median_residual_usd": -1.64,
+      "median_abs_residual_usd": 1.7,
+      "implied_share_iqr": [
+        0.0188,
+        0.0199
+      ],
+      "difference": -0.0005
+    },
+    {
+      "grade": "O8",
+      "dependents": "with",
+      "lower": "sfh4",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0194,
+      "median_residual_usd": -1.96,
+      "median_abs_residual_usd": 1.96,
+      "implied_share_iqr": [
+        0.0191,
+        0.0197
+      ],
+      "difference": -0.0006
+    },
+    {
+      "grade": "O8",
+      "dependents": "without",
+      "lower": "sfh3",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 283,
+      "mhas_at_75pct_floor": 16,
+      "implied_share_median": 0.0195,
+      "median_residual_usd": -1.64,
+      "median_abs_residual_usd": 1.7,
+      "implied_share_iqr": [
+        0.0188,
+        0.0199
+      ],
+      "difference": -0.0005
+    },
+    {
+      "grade": "O9",
+      "dependents": "with",
+      "lower": "sfh4",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 299,
+      "mhas_at_75pct_floor": 0,
+      "implied_share_median": 0.0194,
+      "median_residual_usd": -1.96,
+      "median_abs_residual_usd": 1.96,
+      "implied_share_iqr": [
+        0.0191,
+        0.0197
+      ],
+      "difference": -0.0006
+    },
+    {
+      "grade": "O9",
+      "dependents": "without",
+      "lower": "sfh3",
+      "upper": null,
+      "share": 0.02,
+      "anchor": false,
+      "mhas_used": 283,
+      "mhas_at_75pct_floor": 16,
+      "implied_share_median": 0.0195,
+      "median_residual_usd": -1.64,
+      "median_abs_residual_usd": 1.7,
+      "implied_share_iqr": [
+        0.0188,
+        0.0199
+      ],
+      "difference": -0.0005
+    }
+  ],
+  "cells_at_75pct_floor": 766,
+  "differences_of_0_02_or_more": [
+    "E8 without: A14 0.2, implied 0.2323"
+  ],
+  "verdict": "PASS",
+  "problems": []
+}
