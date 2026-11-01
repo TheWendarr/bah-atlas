@@ -1,6 +1,6 @@
 {
   "node": "B30",
-  "generated_at": "2026-10-25T02:26:40+00:00",
+  "generated_at": "2026-11-01T21:32:42+00:00",
   "inputs": {
     "B9": "mha_zhvi.csv",
     "A4": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
@@ -34,7 +34,7 @@
     "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
   },
   "config": "config/ownership.json",
-  "config_sha256": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
+  "config_sha256": "a7f963b6f59fb47a16b7d13421c9db9f8b3da88f8dbcbe3a895a8e06b00378cb",
   "window_months": "2026-01:2026-07",
   "rate": {
     "series": "pmms30",
@@ -43,7 +43,7 @@
   },
   "method": {
     "home_value": "B9 zhvi_median x building_factor x bedroom_ratio",
-    "building_factor": "townhouse 1; apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR ZHVI / all-homes ZHVI; per ZIP, median over the MHA; national median fallback",
+    "building_factor": "apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR ZHVI / all-homes ZHVI; per ZIP, median over the MHA; national median fallback; townhouse = apartment + 0.5 x (single-family - apartment) per MHA (D22 option B)",
     "bedroom_ratio": "ZHVI n BR / 2 BR per ZIP, median over the MHA; national median fallback",
     "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities"
   },
@@ -59,6 +59,13 @@
       "national_median": 0.9869,
       "mhas_national_fallback": 0,
       "zips_outside_range": 2
+    },
+    "building_townhouse": {
+      "method": "apartment factor + 0.5 x (single-family factor - apartment factor), per MHA",
+      "townhouse_position": 0.5,
+      "median_factor": 0.8265,
+      "mhas_national_fallback": 41,
+      "mhas_condo_above_single_family": 10
     },
     "bedrooms_1": {
       "zips_with_both": 4473,
@@ -92,11 +99,12 @@
       "zips": 15244,
       "median": 0.8232
     },
-    "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom count the all-homes value resembles. D19 takes it to be a 2 BR townhouse."
+    "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom count the all-homes value resembles. Since D22 the townhouse no longer rests on it: B9 is the base the type and bedroom factors scale."
   },
   "limitations": [
     "the homeowners premium is the MHA average for every home type (FIO has no premium by dwelling type), so it is overstated for apartments and understated for 4 BR homes",
-    "a condo/co-op value stands for an apartment in buy mode"
+    "a condo/co-op value stands for an apartment in buy mode",
+    "Zillow has no townhouse series: the townhouse is priced at a fixed position between the condo/co-op and single-family values (D22 option B), an assumption rather than a measurement"
   ],
   "crosswalk": {
     "crosswalk_file": "zip_mha.csv",
@@ -140,11 +148,11 @@
         "piti_only_no_zori": 10,
         "no_home_value": 0
       },
-      "national_fallback": 0,
+      "national_fallback": 41,
       "own_housing_monthly": {
-        "min": 1021.63,
-        "median": 2602.2,
-        "max": 21655.5
+        "min": 826.78,
+        "median": 2232.48,
+        "max": 16520.83
       }
     },
     "th3": {
@@ -153,11 +161,11 @@
         "piti_only_no_zori": 10,
         "no_home_value": 0
       },
-      "national_fallback": 6,
+      "national_fallback": 42,
       "own_housing_monthly": {
-        "min": 1597.37,
-        "median": 3525.71,
-        "max": 29074.3
+        "min": 1282.1,
+        "median": 2987.72,
+        "max": 22067.94
       }
     },
     "sfh3": {
@@ -187,14 +195,15 @@
       }
     }
   },
-  "reference_identity": "2 BR townhouse = B11 in every MHA (checked)",
+  "model_identity": "all-homes value (g = h = 1) reproduces B11 in every MHA (checked); since D22 the 2 BR townhouse is not B11",
   "mhas": 299,
   "warnings": [
     "41 MHA(s) take the national building apartment ratio (0.6551)",
     "47 MHA(s) take the national bedrooms 1 ratio (0.6954)",
     "6 MHA(s) take the national bedrooms 3 ratio (1.3635)",
     "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
-    "median PITI of sfh3 (3,507) is below th3 (3,526): the home types are out of DoD's order in buy mode (see reference_check)",
+    "41 MHA(s) build the townhouse factor from at least one national ratio (caveat type_factor_national)",
+    "10 MHA(s) have a condo/co-op factor above the single-family factor, so their townhouse is not between the two in DoD's order: IN338, KY430, MD458, MI148, MI156, NY215, OH233, PA253, WI318, WV322",
     "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
     "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
     "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",

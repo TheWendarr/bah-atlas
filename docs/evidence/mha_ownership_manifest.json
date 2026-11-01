@@ -13,8 +13,8 @@
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff"
   },
   "config": "config/ownership.json",
-  "config_sha256": "de091031b161e42d05199a8fc5ebf0daaff61fab12deec7439aa2fc16196d7aa",
-  "generated_at": "2026-10-25T02:26:36+00:00",
+  "config_sha256": "a7f963b6f59fb47a16b7d13421c9db9f8b3da88f8dbcbe3a895a8e06b00378cb",
+  "generated_at": "2026-11-01T21:32:38+00:00",
   "rate": {
     "series": "pmms30",
     "window": "2026-01:2026-07",

@@ -2,7 +2,7 @@
   "nodes": [
     "B19"
   ],
-  "generated_at": "2026-10-25T02:27:28+00:00",
+  "generated_at": "2026-11-01T21:33:30+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A3": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
@@ -17,10 +17,10 @@
     "A12": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
     "A3": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
     "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
-    "B6": "ffb07bc8c50e74b59d2921a2bc35847315abc0094fa1c1b22df9fd7dc2713dee",
+    "B6": "21d20270dee9715983eff8a2223c269c94eb777d64ccbb321175955622d6a68a",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
     "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
-    "B16": "44fae35dfff9bc28f7a8408af0b2b00b4e3afdabe7da895c3c9d52ed0441de45",
+    "B16": "3b8d069cf8efd8fb8fe9505a7b98315fc6489ab11bf663529cc190d03e1cf0e5",
     "B24": "1f5ff62a200db196a55bb554288a31d1bc974a9c2bcb4ef7e9154e4756139239"
   },
   "hypothesis": "H2: adequacy gaps are associated with the local rent level, recent rent growth and urbanicity (reduced chain, decision D8)",
