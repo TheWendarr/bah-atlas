@@ -368,11 +368,17 @@ def main() -> None:
                                                           for k, v in bf.items())])
     b30 = man.get("B30") or {}
     if b30:
-        cov_rows.append(["B30 ownership by home type (A16 ZIP ratios)",
-                         ", ".join(f"{k.replace('_', ' ')} {v.get('zips_with_both'):,} ZIPs"
-                                   for k, v in (b30.get("ratios") or {}).items()),
+        ratios = b30.get("ratios") or {}
+        zip_counts = ", ".join(f"{k.replace('_', ' ')} {v['zips_with_both']:,} ZIPs"
+                               for k, v in ratios.items() if v.get("zips_with_both") is not None)
+        th = ratios.get("building_townhouse")
+        if th:                                       # D22: built per MHA from the two factors, no ZIP count
+            zip_counts += (f"; townhouse at position {th.get('townhouse_position')} from condo/co-op to "
+                           f"single-family (D22), {th.get('mhas_condo_above_single_family')} MHA(s) with the "
+                           "condo factor above the single-family factor")
+        cov_rows.append(["B30 ownership by home type (A16 ZIP ratios)", zip_counts,
                          "national fallback: " + ", ".join(f"{k.replace('_', ' ')} {v.get('mhas_national_fallback')}"
-                                                          for k, v in (b30.get("ratios") or {}).items())])
+                                                          for k, v in ratios.items())])
     b24 = man.get("B24") or {}
     if b24:
         cov_rows.append(["B24 density (ACS + A2)", f"{n_(b24.get('real_mha_zips_with_usable_zcta'))} real-MHA ZIPs "

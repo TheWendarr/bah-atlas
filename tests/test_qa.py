@@ -51,6 +51,12 @@ class QAFixture(th.Fixture):
             {"zip": "80902", "mha": "CO001", "value": "1818.15", "months_used": 7},
             {"zip": "80903", "mha": "CO001", "value": "1900.00", "months_used": 7},
             {"zip": "99701", "mha": "AK400", "value": "1920.00", "months_used": 7}])
+        th.write_json(bench / "mha_ownership_by_type_manifest.json", {        # B30 after D22
+            "node": "B30", "warnings": [], "ratios": {
+                "building_apartment": {"zips_with_both": 4, "national_median": 0.65, "mhas_national_fallback": 1},
+                "building_single_family": {"zips_with_both": 5, "national_median": 0.99, "mhas_national_fallback": 0},
+                "building_townhouse": {"townhouse_position": 0.5, "median_factor": 0.82,
+                                       "mhas_national_fallback": 1, "mhas_condo_above_single_family": 0}}})
         th.write_json(d / "interim" / f"context_{Y}" / "mha_density_manifest.json",
                       {"nodes": ["B24"], "mhas_with_data": 3, "mhas_without_data": [], "warnings": []})
         th.write_json(d / "interim" / f"spatial_{Y}" / "regression_manifest.json", {
@@ -91,6 +97,8 @@ class TestQA(QAFixture):
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         man = self.manifest()
         self.assertEqual((man["nodes"], man["verdict"]), (["B23"], "PASS"))
+        report = (self.data / "processed" / "qa" / f"qa_{Y}.md").read_text()
+        self.assertIn("townhouse at position 0.5", report)                   # B30 D22 row (no ZIP count)
         self.assertEqual([t["area"] for t in man["traces"]], ["CO001", "AK400", "CO002"])
         self.assertTrue(all(r["agree"] for t in man["traces"] for r in t["rows"]))
         self.assertEqual(man["traces"][0]["zori_median_recomputed"], 1818.15)
