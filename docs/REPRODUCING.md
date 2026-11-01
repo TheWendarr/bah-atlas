@@ -114,12 +114,15 @@ Added 24 Oct 2026 for the rank × dependents × home type grid (A15, A16; decisi
 
 | Node | File | Download URL | SHA-256 of the copy the 2026 build used |
 |---|---|---|---|
-| A15.sfr | `Metro_zori_uc_sfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv | <!-- TODO (after the workstation pull) --> |
-| A15.mfr | `Metro_zori_uc_mfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv | <!-- TODO --> |
-| A15.all | `Metro_zori_uc_sfrcondomfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv | <!-- TODO --> |
-| A16.sfr | `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv | <!-- TODO --> |
-| A16.condo | `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv | <!-- TODO --> |
-| A16.br1–br4 | `Zip_zhvi_bdrmcnt_<1–4>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/ + the file name | <!-- TODO, one line each --> |
+| A15.sfr | `Metro_zori_uc_sfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv | `8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6` (851,561 bytes, retrieved 2026-10-25) |
+| A15.mfr | `Metro_zori_uc_mfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv | `b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d` (778,812 bytes, retrieved 2026-10-25) |
+| A15.all | `Metro_zori_uc_sfrcondomfr_sm_month.csv` | https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv | `1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a` (1,075,563 bytes, retrieved 2026-10-25) |
+| A16.sfr | `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv | `3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639` (123,302,173 bytes, retrieved 2026-10-25) |
+| A16.condo | `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv | `5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892` (31,187,042 bytes, retrieved 2026-10-25) |
+| A16.br1 | `Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv | `395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93` (18,497,319 bytes, retrieved 2026-10-25) |
+| A16.br2 | `Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv | `06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658` (76,719,366 bytes, retrieved 2026-10-25) |
+| A16.br3 | `Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv | `14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6` (101,523,975 bytes, retrieved 2026-10-25) |
+| A16.br4 | `Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` | https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv | `463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1` (77,302,808 bytes, retrieved 2026-10-25) |
 
 The ZIP-level ZHVI files are each roughly the size of A4 (about 50–120 MB), so the
 grid adds several hundred MB to `data/raw/`.

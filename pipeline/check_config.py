@@ -199,8 +199,8 @@ def check_standards(cfg: dict, grades: list[str], profiles: dict, errors: list[s
             errors.append(f"{where} [{t.get('id')}]: bedrooms must be an integer 0-4 (SAFMR range)")
     ref = next((t for t in types if t.get("id") == cfg.get("reference_type")), None)
     if not ref or (ref.get("building"), ref.get("bedrooms")) != ("townhouse", 2):
-        errors.append(f"{where}: reference_type must be the 2-bedroom townhouse, the dwelling B8 and B9 "
-                      "stand for (D19)")
+        errors.append(f"{where}: reference_type must be the 2-bedroom townhouse, the dwelling B8 stands "
+                      "for in rent mode (D19)")
     listed = list(cfg.get("grades") or [])
     if tuple(listed) != DROPDOWN_GRADES:
         errors.append(f"{where}: grades must be the 23 dropdown grades {list(DROPDOWN_GRADES)} in order")

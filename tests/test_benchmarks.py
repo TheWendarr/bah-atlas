@@ -261,6 +261,7 @@ class TestOwnership(Fixture):
         cfg = json.loads((ROOT / "config" / "ownership.json").read_text())
         cfg["loan"]["funding_fee_share"] = 2.15                            # percent typed as share
         cfg["insurance"]["scaled_to_bah_year"] = True                       # decision N2 says as published
+        cfg["home_types"]["townhouse_position"] = 1.5                       # D22: between condo and SFR
         bad = self.d / "ownership.json"
         bad.write_text(json.dumps(cfg))
         p = run("ownership_cost.py", "--zhvi", str(self.d / "x.csv"), "--pmms", str(self.d / "y.csv"),
@@ -268,6 +269,7 @@ class TestOwnership(Fixture):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("loan.funding_fee_share", p.stderr)
         self.assertIn("scaled_to_bah_year", p.stderr)
+        self.assertIn("townhouse_position", p.stderr)
 
     def test_bad_tax_rate_fails(self) -> None:
         zhvi = write(self.d / "mha_zhvi.csv", [["mha", "zhvi_median"], ["AA001", "300000.00"]])

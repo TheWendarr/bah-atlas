@@ -177,23 +177,23 @@ config" are the files that read or cite it (documentation is not listed).
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv, `…/Metro_zori_uc_mfr_sm_month.csv`, `…/Metro_zori_uc_sfrcondomfr_sm_month.csv` · landing: https://www.zillow.com/research/data/
 - **Artifact:** the three files in `data/raw/` under those vendor names (registry ids A15.sfr, A15.mfr, A15.all)
-- **Archive:** not committed (third-party terms; `make fetch` downloads them). Size and SHA-256 of the copies the build uses are recorded in the fetch manifest at the first pull. <!-- TODO (after the workstation pull): bytes, date, SHA-256 for each file -->
+- **Archive:** not committed (third-party terms; `make fetch` downloads them). The copies the 2026 build used, retrieved 2026-10-25 (UTC): `Metro_zori_uc_sfr_sm_month.csv`, 851,561 bytes, SHA-256 `8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6`; `Metro_zori_uc_mfr_sm_month.csv`, 778,812 bytes, SHA-256 `b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d`; `Metro_zori_uc_sfrcondomfr_sm_month.csv`, 1,075,563 bytes, SHA-256 `1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a`.
 - **Acquisition:** auto
 - **Role:** Building-type factor for the rent benchmark by home type (B29, D19): multifamily ÷ all-homes for apartments, single-family ÷ all-homes for single-family homes, each ZIP taking its metro's ratio. The `country` row is the national fallback.
 - **License:** Free for public use; **attribution to Zillow required**.
-- **Notes:** Zillow publishes the single-family and multifamily ZORI series by metro only; the ZIP folder holds the all-homes series alone (checked 24 Oct 2026). The plan's ZIP-level A15 is therefore metro-level (proposed D21). A metro-wide ratio cannot see a type premium that differs within a metro.
-- **Verified:** 2026-10-24 — filenames from Zillow's published file list; the first `make fetch` confirms each URL.
+- **Notes:** Zillow publishes the single-family and multifamily ZORI series by metro only; the ZIP folder holds the all-homes series alone (checked 24 Oct 2026). The plan's ZIP-level A15 is therefore metro-level (D21, decided 1 Nov 2026). A metro-wide ratio cannot see a type premium that differs within a metro.
+- **Verified:** 2026-10-25 — all three URLs fetched by `make fetch` (sizes and hashes above).
 
 ### A16 · Zillow ZHVI by home type and bedroom count — ZIP level  `[incorporated]`
 - **Provider:** Zillow (Zillow Group, Inc.)
 - **Link:** https://files.zillowstatic.com/research/public_csvs/zhvi/ — `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv`, `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv`, `Zip_zhvi_bdrmcnt_<1–4>_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` · landing: https://www.zillow.com/research/data/
 - **Artifact:** the six files in `data/raw/` under those vendor names (registry ids A16.sfr, A16.condo, A16.br1–A16.br4)
-- **Archive:** not committed (third-party terms; `make fetch` downloads them). <!-- TODO (after the workstation pull): bytes, date, SHA-256 for each file -->
+- **Archive:** not committed (third-party terms; `make fetch` downloads them). The copies the 2026 build used, retrieved 2026-10-25 (UTC): `Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv`, 123,302,173 bytes, SHA-256 `3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639`; `Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv`, 31,187,042 bytes, SHA-256 `5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892`; `Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv`, 18,497,319 bytes, SHA-256 `395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93`; `Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv`, 76,719,366 bytes, SHA-256 `06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658`; `Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv`, 101,523,975 bytes, SHA-256 `14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6`; `Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv`, 77,302,808 bytes, SHA-256 `463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1`.
 - **Acquisition:** auto
 - **Role:** Building-type and bedroom ratios for the ownership cost by home type (B30, D19): condo/co-op or single-family ÷ all homes (A4), and n BR ÷ 2 BR, each per ZIP and the MHA median, with the national median as fallback.
 - **License:** Free for public use; **attribution to Zillow required**.
-- **Notes:** Same layout as A4. Condo/co-op stands for an apartment in buy mode. Type and bedroom series cover fewer ZIPs than the all-homes series; the B30 manifest counts the MHAs on the national ratio.
-- **Verified:** 2026-10-24 — filenames from Zillow's published ZIP file list; the first `make fetch` confirms each URL.
+- **Notes:** Same layout as A4. Condo/co-op stands for an apartment in buy mode, and a townhouse is priced halfway between the condo/co-op and single-family values (D22, 1 Nov 2026), since Zillow has no townhouse series. Type and bedroom series cover fewer ZIPs than the all-homes series; the B30 manifest counts the MHAs on the national ratio.
+- **Verified:** 2026-10-25 — all six URLs fetched by `make fetch` (sizes and hashes above).
 
 ### A8 · Property tax and homeowners insurance by locality  `[incorporated]`
 Started 18 Oct 2026 and made a required node (tracked under M6), because B11–B18 are rebuilt on it before the front-end payload. Replaces the two national B11 placeholders listed under *Concepts & methods*. Plan: [M6 plan](plans/m6-plan.md).

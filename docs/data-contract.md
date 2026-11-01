@@ -1,6 +1,6 @@
 # Data contract — Layer 2 → Layer 3 Interface Control Document
 
-**ICD version:** 1.1.0 · **contract `schema_version`:** 1.1.0 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **revised:** 24 Oct 2026 (1.1.0, the grid) · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
+**ICD version:** 1.1.0 · **contract `schema_version`:** 1.1.0 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **revised:** 24 Oct 2026 (1.1.0, the grid), 1 Nov 2026 (D22 wording) · **approved:** 1 Nov 2026 · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
 
 This document fixes everything that crosses the boundary between the offline pipeline (Layer 2, B nodes) and the static map (Layer 3, C nodes): which files are handed over, the exact shape of each, the rules for missing values, and what the map may and may not do with them. Layer 3 is built against this document, not against the pipeline code.
 
@@ -112,7 +112,7 @@ B20 packs values already computed by B4 and B12–B15. It computes nothing new.
 | `status` | string | ✓ | ✓ | B12/B14 | Why any value is null (section 5.4) |
 | `bah_monthly` | integer \| null | ✓ | ✓ | B4 | BAH for the profile's pay grade and dependency status |
 | `cost_share_monthly` | integer \| null | ✓ | ✓ | A12 | DTMO member cost share (the statutory deduction) |
-| `cost_monthly` | integer \| null | ✓ | ✓ | B29 / B30 | Local cost of the profile's DoD housing standard (A14, D19): utilities-inclusive rent (rent); PITI plus utilities (buy), or PITI alone under `piti_only_no_zori`. For E-5 the standard is the 2 BR townhouse, which equals B8 / B11 |
+| `cost_monthly` | integer \| null | ✓ | ✓ | B29 / B30 | Local cost of the profile's DoD housing standard (A14, D19): utilities-inclusive rent (rent); PITI plus utilities (buy), or PITI alone under `piti_only_no_zori`. For E-5 the standard is the 2 BR townhouse: B8 in rent mode; in buy mode B30 prices it between condo/co-op and single-family (D22) |
 | `adequacy_ratio` | number \| null | ✓ | ✓ | B12/B14 | (BAH + cost share) ÷ cost. Primary map layer; target 1.00 |
 | `design_gap_usd` | integer \| null | ✓ | ✓ | B13/B15 | BAH + cost share − cost. Primary map layer |
 | `coverage_ratio` | number \| null | ✓ | ✓ | B12/B14 | BAH ÷ cost. Descriptive map layer |
@@ -122,7 +122,7 @@ B20 packs values already computed by B4 and B12–B15. It computes nothing new.
 | `safmr_monthly` | integer \| null | ✓ | — | B10 | HUD SAFMR at the profile's anchor bedrooms |
 | `safmr_adequacy_ratio` | number \| null | ✓ | — | B12 | Adequacy against SAFMR. Sensitivity map layer (D3) |
 | `safmr_design_gap_usd` | integer \| null | ✓ | — | B13 | Design gap against SAFMR. Sensitivity map layer (D3) |
-| `own_housing_monthly` | integer \| null | — | ✓ | B11 | PITI alone (principal, interest, tax, insurance, mortgage insurance) |
+| `own_housing_monthly` | integer \| null | — | ✓ | B30 | PITI alone (principal, interest, tax, insurance, mortgage insurance) |
 | `caveats` | array of string | ✓ | ✓ | — | Row-level caveat ids (section 5.5) |
 
 `adequacy_gap` (adequacy_ratio − 1) is not carried: it is the same quantity as `adequacy_ratio`, and the map shows the ratio. B27 carries the cluster results computed on it.
@@ -456,8 +456,8 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 | Version | Date | Change |
 |---|---|---|
-| 1.1.0 | 24 Oct 2026 | Revised the same evening, before approval or delivery, after the first real run: a blended standard is rounded to cents before its metrics (5b.4 step 4), and all rounding is half away from zero on the exact value (sections 3, 5b.4). B23 had found 3 of 1,356 views a dollar apart. Additive (D18–D20). New delivered file B31 `grid_2026.json` (section 5b): BAH for 23 ranks × 2 dependency statuses, benchmarks for the six DoD home types, cost shares and standards, with the browser formula, its rounding and worked examples. B21 gains `grid` (section 6.1). New caveat id `type_factor_national`. B20 `cost_monthly` now comes from B29/B30 at each research profile's DoD standard: E-5 is unchanged, O-3 is recomputed (values change, interface unchanged). Consumer obligations 8–9 and the must-not exception for the grid formula; conformance check 10; six delivered files. Made before any delivery, so no consumer is affected. |
-| 1.0.3 | 18 Oct 2026 | Wording only. Section 5.5: `insurance_state_fallback` describes the D11 fallback (FIO state median), not the NAIC average it replaced. Section 11, check 1: `make layer2` is the end-to-end run. Section 12: delivery location `delivery/2026/` (option B, a frozen copy) and the six `make deliver` gates. Made before any delivery, so no consumer is affected. |
+| 1.1.0 | 24 Oct 2026 | Revised the same evening, before approval or delivery, after the first real run: a blended standard is rounded to cents before its metrics (5b.4 step 4), and all rounding is half away from zero on the exact value (sections 3, 5b.4). B23 had found 3 of 1,356 views a dollar apart. Additive (D18–D20). New delivered file B31 `grid_2026.json` (section 5b): BAH for 23 ranks × 2 dependency statuses, benchmarks for the six DoD home types, cost shares and standards, with the browser formula, its rounding and worked examples. B21 gains `grid` (section 6.1). New caveat id `type_factor_national`. B20 `cost_monthly` now comes from B29/B30 at each research profile's DoD standard: E-5 is unchanged, O-3 is recomputed (values change, interface unchanged). Consumer obligations 8–9 and the must-not exception for the grid formula; conformance check 10; six delivered files. Made before any delivery, so no consumer is affected. Revised 1 Nov 2026, before approval or delivery (D22 option B, values only): in buy mode the townhouse is priced between the condo/co-op and single-family values, so E-5's buy `cost_monthly` comes from B30 and no longer equals B11; section 5 rows `cost_monthly` and `own_housing_monthly` say so. **Approved by the author 1 Nov 2026.** |
+| 1.0.3 | 18 Oct 2026 | Wording only. Section 5.5: `insurance_state_fallback` describes the D11 fallback (FIO state median), not the NAIC average it replaced. Section 11, check 1: `make layer2` is the end-to-end run. Section 12: delivery location `delivery/2026/` (option B, a frozen copy) and the six `make deliver` gates. Made before any delivery, so no consumer is affected. **Approved by the author 1 Nov 2026.** |
 | 1.0.2 | 18 Oct 2026 | p-values in B27 rounded to 5 decimal places instead of 4: at 99,999 permutations the smallest p is 0.00002, which 4 places would show as 0. Section 8 lists the fields B22 carries; section 6 names the window keys; section 12 names the handoff folder. Made before any file was produced under 1.0.x, so no consumer is affected. |
 | 1.0.1 | 18 Oct 2026 | Section 4: the 2026 feature count (339) and the territory bucket's extent, from the first B28/B7 run. No interface change. |
 | 1.0.0 | 18 Oct 2026 | First issue. Interface fixed from the 18 Oct decisions (D1–D8, N1, N2, 2.1–2.10) and D9 (one tile layer keyed on `code`). |

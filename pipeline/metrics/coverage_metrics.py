@@ -38,9 +38,10 @@ Metrics, per A12 profile p and real MHA m
         blended from the six home-type benchmarks with home_types.blend():
           rent mode: B29 rent_monthly             (utilities-inclusive)
           buy mode:  B30 own_total_monthly        (PITI + utilities)
-        E-5's standard is the 2 BR townhouse, which B29 and B30 hold equal to B8 and
-        B11, so E-5 is unchanged by D19. O-3's is 98% of the way from a 3 BR
-        townhouse to a 3 BR single-family home.
+        E-5's standard is the 2 BR townhouse. In rent mode B29 holds it equal to B8,
+        so E-5 rent is unchanged by D19. In buy mode B30 prices the townhouse between
+        condo and single-family (D22 option B), so E-5 buy is no longer B11. O-3's is
+        98% of the way from a 3 BR townhouse to a 3 BR single-family home.
 
   coverage_ratio   R = BAH / C               share of benchmark cost BAH pays (descriptive)
   design_coverage    = 1 - A / C             share BAH is designed to pay at this cost level

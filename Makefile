@@ -133,7 +133,8 @@ rent-types:
 		--crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
 
 # B9 + A16 + B29 utilities + B11's model -> B30: ownership cost for each home type (D19).
-# The 2 BR townhouse equals B11 (checked). Needs `make ownership rent-types` first.
+# Townhouse between condo and single-family (D22 option B); the all-homes value reproduces
+# B11 (checked). Needs `make ownership rent-types` first.
 own-types:
 	$(PYTHON) pipeline/benchmarks/ownership_by_type.py --zhvi $(BENCH)/mha_zhvi.csv --zhvi-all $(ZHVI_CSV) \
 		$(A16_ARGS) --crosswalk $(INTERIM)/zip_mha.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
@@ -152,7 +153,7 @@ density:
 # Adequacy ratio and gap vs the statutory design, coverage ratio, flat-95% sensitivity
 # gap, and dollar surplus for every A12 profile x real MHA, each against the cost of
 # the profile's A14 housing standard (D19): rent (B29, with the B10 SAFMR cross-check)
-# and buy (B30). E-5's standard is the 2 BR townhouse, i.e. B8 and B11.
+# and buy (B30). E-5's standard is the 2 BR townhouse: B8 in rent mode, B30 th2 in buy mode (D22).
 # Needs `make benchmarks` first; stops if B8 and B9 cover different months.
 metrics:
 	$(PYTHON) pipeline/metrics/coverage_metrics.py --bah-rates $(INTERIM)/bah_rates.csv \

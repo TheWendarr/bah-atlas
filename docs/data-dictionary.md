@@ -154,12 +154,12 @@ identity check, warnings.
 | column          | type  | notes |
 |-----------------|-------|-------|
 | mha, home_type  | str   | as B29 |
-| building_factor, building_source | float, str | 1 for townhouses; condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; `reference`, `zip` or `national` |
+| building_factor, building_source | float, str | condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; townhouse = condo factor + 0.5 × (SFR factor − condo factor) per MHA (D22); `zip` or `national` (a townhouse is `zip` only when both sides are) |
 | bedroom_ratio, bedroom_source | float, str | ZHVI n BR ÷ 2 BR per ZIP, MHA median; `reference`, `zip` or `national` |
 | home_value      | float | B9 `zhvi_median` × building_factor × bedroom_ratio |
 | rate_pct, pi_monthly, tax_monthly, tax_source, insurance_monthly, insurance_source, mi_monthly, own_housing_monthly | | B11's model on `home_value` (see `mha_ownership.csv`); the premium is the MHA average for every type |
 | utilities_usd   | float | B29 `utilities_usd` for the type |
-| own_total_monthly | float | `own_housing_monthly + utilities_usd`; the 2 BR townhouse equals B11 |
+| own_total_monthly | float | `own_housing_monthly + utilities_usd`; since D22 the 2 BR townhouse is not B11 (the all-homes value, checked internally, is) |
 | status          | str   | `ok`, `piti_only_no_zori` or `no_home_value` |
 
 `mha_ownership_by_type_manifest.json`: inputs and SHA-256 (B9, A4, the six A16

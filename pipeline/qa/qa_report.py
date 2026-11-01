@@ -459,7 +459,8 @@ def main() -> None:
             lines.append("- **B8**: no ZIP in this MHA has ZORI in the window.")
         o = own.get(code, {})
         if o:
-            lines.append(f"- **B11**: PITI {fmt(num(o.get('own_housing_monthly')), 2)}, with utilities "
+            lines.append(f"- **B11** (all-homes value; the buy benchmark is B30 since D22): PITI "
+                         f"{fmt(num(o.get('own_housing_monthly')), 2)}, with utilities "
                          f"{fmt(num(o.get('own_total_monthly')), 2)}; tax {o.get('tax_source')}, "
                          f"insurance {o.get('insurance_source')}.")
         rows = []

@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 STANDARDS = ROOT / "config" / "housing_standards.json"
 TYPE_IDS = ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")
-REFERENCE = "th2"     # the dwelling B8 and B9 stand for (D19)
+REFERENCE = "th2"     # the dwelling B8 stands for in rent mode (D19); buy mode prices it per D22
 
 
 def load(path: Path = STANDARDS) -> dict:

@@ -125,6 +125,10 @@ def load_config(path: Path) -> dict:
             problems.append(f"{section}.fallback must be 'state' (the only fallback wired up)")
     if ins.get("scaled_to_bah_year") is not False:
         problems.append("insurance.scaled_to_bah_year must be false (decision N2: used as published)")
+    pos = cfg.get("home_types", {}).get("townhouse_position")
+    if not isinstance(pos, (int, float)) or isinstance(pos, bool) or not 0 <= pos <= 1:
+        problems.append(f"home_types.townhouse_position = {pos!r}; expected a number in [0, 1] "
+                        "(D22: 0 prices the townhouse as a condo, 1 as a single-family home)")
     agg.fail_if(problems, TOOL)
     return cfg
 

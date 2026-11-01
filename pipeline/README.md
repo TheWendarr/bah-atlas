@@ -77,7 +77,9 @@ go to `data/interim/benchmarks_YYYY/`.
   2 BR townhouse equals B8 (checked on every run).
 - `ownership_by_type.py` — B30 (`make own-types`): home value for each type =
   B9 × the A16 ZIP building-type and bedroom ratios, then B11's own model and
-  B29 utilities; the 2 BR townhouse equals B11 (checked on every run).
+  B29 utilities. The townhouse sits halfway between the condo/co-op and
+  single-family factors (D22); the all-homes value reproduces B11 (checked on
+  every run).
 
 - `density_to_mha.py` — B24: population density per MHA (urbanicity for the
   B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,

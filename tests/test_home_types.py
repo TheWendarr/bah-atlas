@@ -214,9 +214,20 @@ class TestChain(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         rows = read(self.out / "mha_ownership_by_type.csv")
         b11 = {m: r for (m, _), r in read(self.out / "mha_ownership.csv").items()}
-        for m in ("AA001", "AA002", "AA003"):                              # D19: 2 BR townhouse = B11
-            self.assertEqual(rows[(m, "th2")]["own_housing_monthly"], b11[m]["own_housing_monthly"])
-            self.assertEqual(rows[(m, "th2")]["own_total_monthly"], b11[m].get("own_total_monthly", ""))
+        # D22 option B: townhouse = apartment + 0.5 x (single-family - apartment), per MHA.
+        # AA001: 0.75 + 0.5 x (1.25 - 0.75) = 1.0, so its 2 BR townhouse lands on B11.
+        self.assertEqual(rows[("AA001", "th2")]["building_factor"], "1.000000")
+        self.assertEqual(rows[("AA001", "th2")]["own_housing_monthly"], b11["AA001"]["own_housing_monthly"])
+        self.assertEqual(rows[("AA001", "th2")]["own_total_monthly"], b11["AA001"]["own_total_monthly"])
+        # AA002: condo on the national 0.75, single-family 1.15 -> 0.95, below the all-homes value (B11).
+        a2 = {t: rows[("AA002", t)] for t in ht.TYPE_IDS}
+        self.assertEqual((a2["th2"]["building_factor"], a2["th2"]["building_source"]), ("0.950000", "national"))
+        self.assertLess(float(a2["th2"]["own_housing_monthly"]), float(b11["AA002"]["own_housing_monthly"]))
+        vals = [float(a2[t]["home_value"]) for t in ("apt2", "th2", "th3", "sfh3")]
+        self.assertEqual(vals, sorted(vals))                                # DoD's order holds in buy mode
+        # AA003: both sides national, 0.75 + 0.5 x (1.2 - 0.75) = 0.975 on a 150k all-homes value.
+        self.assertEqual((rows[("AA003", "th2")]["building_factor"], rows[("AA003", "th2")]["home_value"]),
+                         ("0.975000", "146250.00"))
         self.assertEqual(rows[("AA001", "th3")]["home_value"], "375000.00")     # 300k x 1.25
         self.assertEqual(rows[("AA001", "sfh3")]["home_value"], "468750.00")    # 300k x 1.25 x 1.25
         self.assertEqual(rows[("AA001", "apt1")]["home_value"], "180000.00")    # 300k x 0.75 x 0.8
@@ -232,6 +243,9 @@ class TestChain(unittest.TestCase):
         self.assertEqual(c["home_value"], "225000.00")                      # 150k x 1.2 x 1.25
         man = json.loads((self.out / "mha_ownership_by_type_manifest.json").read_text())
         self.assertEqual(man["ratios"]["building_apartment"]["mhas_national_fallback"], 2)
+        self.assertEqual(man["ratios"]["building_townhouse"]["mhas_national_fallback"], 2)
+        self.assertEqual(man["ratios"]["building_townhouse"]["townhouse_position"], 0.5)
+        self.assertIn("reproduces B11", man["model_identity"])
         self.assertEqual(man["coverage"]["sfh4"]["status"], {"ok": 2, "piti_only_no_zori": 1, "no_home_value": 0})
         # The fixture's all-homes values equal its 2 BR values ZIP by ZIP, so the D19 reference holds there
         self.assertEqual(man["reference_check"]["all_homes_over_2br"]["median"], 1.0)

@@ -3,7 +3,9 @@
 ownership_by_type.py  (B9 + A4 + A16 + B1 + B29 + A7 + A8 rollup + A14 -> B30 ownership cost by home type)
 
 Decision D19, option B, buy mode: the monthly cost of owning each of DoD's six
-housing profiles in every MHA, on the same footing as B11.
+housing profiles in every MHA, on the same footing as B11. Decision D22, option B
+(1 Nov 2026): the townhouse is priced between the condo/co-op and single-family
+values, because Zillow has no townhouse series.
 
     python pipeline/benchmarks/ownership_by_type.py \
         --zhvi data/interim/benchmarks_2026/mha_zhvi.csv \
@@ -23,13 +25,24 @@ Method (per MHA m and home type t = building b, n bedrooms)
 ------------------------------------------------------------------------------
   value(t) = B9 zhvi_median(m) x g_b(m) x h_n(m)
 
-  g_b  building-type factor: townhouse 1 (B9, the all-homes ZHVI, stands for the
-       2 BR townhouse, A14 reference_type); apartment = condo/co-op ZHVI / all-homes
-       ZHVI; single-family = SFR ZHVI / all-homes ZHVI. Each ratio is taken per ZIP
-       (ZIPs with both series over B9's months), and the MHA takes the median.
+  g_b  building-type factor: apartment = condo/co-op ZHVI / all-homes ZHVI;
+       single-family = SFR ZHVI / all-homes ZHVI. Each ratio is taken per ZIP (ZIPs
+       with both series over B9's months), and the MHA takes the median.
+       townhouse (D22 option B) = g_apartment + p x (g_single_family - g_apartment),
+       p = config/ownership.json home_types.townhouse_position (0.5, the midpoint),
+       built from the MHA's two factors, so in every MHA the townhouse sits between
+       the apartment and the single-family home whenever condo <= single-family.
   h_n  bedroom ratio: ZHVI n BR / ZHVI 2 BR per ZIP, median over the MHA.
   An MHA with no ZIP holding both series takes the national median of the ZIP
-  ratios; building_source and bedroom_source say which (zip | national).
+  ratios; building_source and bedroom_source say which (zip | national). The
+  townhouse factor is `zip` only when both of its factors are.
+
+Until D22 the all-homes ZHVI (B9) itself stood for the 2 BR townhouse (D19), so
+the 2 BR townhouse equalled B11. The second grid run showed the all-homes index
+behaves like a 3 BR value and gave single-family homes no premium over
+townhouses, so the townhouse now has its own factor and E-5's buy benchmark is
+no longer B11. B11 stays the all-homes ownership cost: B30 recomputes it with
+g = h = 1 and stops if it differs, which checks that B30 and B11 run one model.
 
   Then B11's model unchanged (config/ownership.json, the same PMMS window, the
   MHA's own tax rate and insurance premium from the A8 rollup):
@@ -39,8 +52,6 @@ Method (per MHA m and home type t = building b, n bedrooms)
   The premium is the MHA's average homeowners premium for every type (FIO
   publishes no premium by dwelling type); see the limitation in the manifest.
 
-The 2-bedroom townhouse therefore equals B11 to the cent in every MHA; the
-script checks this against --ownership and stops if it does not hold.
 
 Status per row: ok | piti_only_no_zori (B29 has no utilities: decision 2.4) |
 no_home_value (no B9 value).
@@ -119,6 +130,7 @@ def main() -> None:
     cfg = ht.load(args.standards)
     own_cfg = oc.load_config(args.config)
     loan = own_cfg["loan"]
+    th_pos = own_cfg["home_types"]["townhouse_position"]
     spec = args.window or oc.window_from_b9(args.zhvi)
     if spec is None:
         agg.die(TOOL, f"mha_zhvi_manifest.json not found beside {args.zhvi} (run `make zhvi`)")
@@ -162,12 +174,26 @@ def main() -> None:
     building, stats = {}, {}
     for b, key in (("apartment", "condo"), ("single_family", "sfr")):
         building[b], _, stats[f"building_{b}"] = ratio_by_mha(series[key], series["all"], members, b)
+    # D22 option B: the townhouse between the MHA's condo/co-op and single-family factors.
+    building["townhouse"], inverted = {}, []
+    for m in members:
+        (ga, sa, za), (gs, ss, zs) = building["apartment"][m], building["single_family"][m]
+        src = "zip" if sa == ss == "zip" else "national"
+        building["townhouse"][m] = (ga + th_pos * (gs - ga), src, min(za, zs))
+        if ga > gs:
+            inverted.append(m)
+    th_vals = [v[0] for v in building["townhouse"].values()]
+    stats["building_townhouse"] = {
+        "method": f"apartment factor + {th_pos} x (single-family factor - apartment factor), per MHA",
+        "townhouse_position": th_pos, "median_factor": round(statistics.median(th_vals), 4),
+        "mhas_national_fallback": sum(v[1] == "national" for v in building["townhouse"].values()),
+        "mhas_condo_above_single_family": len(inverted)}
     bedroom = {}
     for n in (1, 3, 4):
         bedroom[n], _, stats[f"bedrooms_{n}"] = ratio_by_mha(series[f"br{n}"], series["br2"], members, f"{n} BR")
 
-    # Diagnostic for the D19 assumption that the all-homes ZHVI (B9) stands for a 2 BR townhouse:
-    # which bedroom series does the all-homes value sit closest to, ZIP by ZIP? Evidence only.
+    # Diagnostic behind D22: which bedroom series does the all-homes value (B9) sit closest to,
+    # ZIP by ZIP? Evidence only.
     reference_check = {}
     for n in (2, 3, 4):
         both = [series["all"][z] / series[f"br{n}"][z] for z in series["all"]
@@ -180,6 +206,15 @@ def main() -> None:
     fee_mult = (1 + loan["funding_fee_share"]) if loan["funding_fee_financed"] else 1.0
     down, mi_share = loan["down_payment_share"], loan["mortgage_insurance_annual_share"]
 
+    def piti(v: float, tax_rate: float, premium: float) -> tuple[float, float, float, float, float]:
+        """B11's arithmetic, in B11's order, so the all-homes value reproduces B11 exactly."""
+        loan_amt = v * (1 - down) * fee_mult
+        pi = oc.payment(loan_amt, rate, n_months)
+        tax = v * tax_rate / 12
+        ins = premium / 12
+        mi = loan_amt * mi_share / 12
+        return pi, tax, ins, mi, pi + tax + ins + mi
+
     rows, identity_fail = [], []
     for m in mhas:
         raw = b9[m]["zhvi_median"].strip()
@@ -187,7 +222,7 @@ def main() -> None:
         tax_rate, premium = float(ti["effective_tax_rate"]), float(ti["insurance_annual_usd"])
         for t in ht.types(cfg):
             b, n = t["building"], t["bedrooms"]
-            g, gsrc, gz = (1.0, "reference", 0) if b == "townhouse" else building[b][m]
+            g, gsrc, gz = building[b][m]
             h, hsrc, hz = (1.0, "reference", 0) if n == 2 else bedroom[n][m]
             out = {"mha": m, "home_type": t["id"], "building_factor": f"{g:.6f}", "building_source": gsrc,
                    "bedroom_ratio": f"{h:.6f}", "bedroom_source": hsrc, "rate_pct": f"{rate:.3f}"}
@@ -196,13 +231,7 @@ def main() -> None:
                 rows.append(out)
                 continue
             v = float(raw) * g * h
-            # B11's arithmetic, in B11's order, so the reference type reproduces it exactly.
-            loan_amt = v * (1 - down) * fee_mult
-            pi = oc.payment(loan_amt, rate, n_months)
-            tax = v * tax_rate / 12
-            ins = premium / 12
-            mi = loan_amt * mi_share / 12
-            housing = pi + tax + ins + mi
+            pi, tax, ins, mi, housing = piti(v, tax_rate, premium)
             util = rent[(m, t["id"])]["utilities_usd"].strip()
             out.update({"home_value": agg.fmt(v), "pi_monthly": agg.fmt(pi), "tax_monthly": agg.fmt(tax),
                         "tax_source": ti["tax_source"], "insurance_monthly": agg.fmt(ins),
@@ -210,11 +239,16 @@ def main() -> None:
                         "own_housing_monthly": agg.fmt(housing), "utilities_usd": util,
                         "own_total_monthly": agg.fmt(housing + float(util)) if util else "",
                         "status": "ok" if util else "piti_only_no_zori"})
-            if t["id"] == ht.REFERENCE and (out["own_housing_monthly"], out["own_total_monthly"]) != (
-                    b11[m]["own_housing_monthly"].strip(), b11[m]["own_total_monthly"].strip()):
-                identity_fail.append(m)
             rows.append(out)
-    agg.fail_if([f"the 2 BR townhouse differs from B11 in {len(identity_fail)} MHA(s): "
+        # Model identity: the all-homes value (g = h = 1) with B8's utilities must reproduce B11.
+        if raw:
+            housing_all = piti(float(raw), tax_rate, premium)[4]
+            util_ref = rent[(m, ht.REFERENCE)]["utilities_usd"].strip()
+            total_all = agg.fmt(housing_all + float(util_ref)) if util_ref else ""
+            if (agg.fmt(housing_all), total_all) != (b11[m]["own_housing_monthly"].strip(),
+                                                     b11[m]["own_total_monthly"].strip()):
+                identity_fail.append(m)
+    agg.fail_if([f"the all-homes value does not reproduce B11 in {len(identity_fail)} MHA(s): "
                  f"{', '.join(identity_fail[:10])} (rebuild B11 and B30 from the same inputs)"]
                 if identity_fail else [], TOOL)
 
@@ -235,15 +269,22 @@ def main() -> None:
                        "own_housing_monthly": ({"min": round(min(vals), 2), "median": round(statistics.median(vals), 2),
                                                 "max": round(max(vals), 2)} if vals else None)}
     warnings = [f"{s['mhas_national_fallback']} MHA(s) take the national {k.replace('_', ' ')} ratio "
-                f"({s['national_median']})" for k, s in stats.items() if s["mhas_national_fallback"]]
+                f"({s['national_median']})" for k, s in stats.items()
+                if k != "building_townhouse" and s["mhas_national_fallback"]]
+    if stats["building_townhouse"]["mhas_national_fallback"]:
+        warnings.append(f"{stats['building_townhouse']['mhas_national_fallback']} MHA(s) build the townhouse factor "
+                        "from at least one national ratio (caveat type_factor_national)")
     medians = {t: (cv["own_housing_monthly"] or {}).get("median") for t, cv in coverage.items()}
     for cheaper, dearer in (("apt1", "apt2"), ("apt2", "th2"), ("th2", "th3"), ("th3", "sfh3"), ("sfh3", "sfh4")):
         if None not in (medians[cheaper], medians[dearer]) and medians[dearer] < medians[cheaper]:
             warnings.append(f"median PITI of {dearer} ({medians[dearer]:,.0f}) is below {cheaper} "
                             f"({medians[cheaper]:,.0f}): the home types are out of DoD's order in buy mode "
                             "(see reference_check)")
+    if inverted:
+        warnings.append(f"{len(inverted)} MHA(s) have a condo/co-op factor above the single-family factor, so "
+                        f"their townhouse is not between the two in DoD's order: {', '.join(sorted(inverted)[:10])}")
     warnings += [f"{s['zips_outside_range']} ZIP {k.replace('_', ' ')} ratio(s) outside {FACTOR_RANGE}; kept, "
-                 "the MHA median limits their pull" for k, s in stats.items() if s["zips_outside_range"]]
+                 "the MHA median limits their pull" for k, s in stats.items() if s.get("zips_outside_range")]
 
     inputs = {"B9": args.zhvi, "A4": args.zhvi_all, "A16.sfr": args.zhvi_sfr, "A16.condo": args.zhvi_condo,
               **{f"A16.br{n}": getattr(args, f"zhvi_br{n}") for n in (1, 2, 3, 4)},
@@ -260,21 +301,27 @@ def main() -> None:
         "rate": {"series": "pmms30", "weeks": len(rates), "mean_pct": round(rate, 4)},
         "method": {
             "home_value": "B9 zhvi_median x building_factor x bedroom_ratio",
-            "building_factor": "townhouse 1; apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR "
-                               "ZHVI / all-homes ZHVI; per ZIP, median over the MHA; national median fallback",
+            "building_factor": "apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR ZHVI / "
+                               "all-homes ZHVI; per ZIP, median over the MHA; national median fallback; "
+                               f"townhouse = apartment + {th_pos} x (single-family - apartment) per MHA (D22 option B)",
             "bedroom_ratio": "ZHVI n BR / 2 BR per ZIP, median over the MHA; national median fallback",
             "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities",
         },
         "ratios": stats,
         "reference_check": {**reference_check,
                             "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom "
-                                       "count the all-homes value resembles. D19 takes it to be a 2 BR townhouse."},
+                                       "count the all-homes value resembles. Since D22 the townhouse no longer "
+                                       "rests on it: B9 is the base the type and bedroom factors scale."},
         "limitations": ["the homeowners premium is the MHA average for every home type (FIO has no premium by "
                         "dwelling type), so it is overstated for apartments and understated for 4 BR homes",
-                        "a condo/co-op value stands for an apartment in buy mode"],
+                        "a condo/co-op value stands for an apartment in buy mode",
+                        "Zillow has no townhouse series: the townhouse is priced at a fixed position between the "
+                        "condo/co-op and single-family values (D22 option B), an assumption rather than a "
+                        "measurement"],
         "crosswalk": cw_stats,
         "coverage": coverage,
-        "reference_identity": "2 BR townhouse = B11 in every MHA (checked)",
+        "model_identity": "all-homes value (g = h = 1) reproduces B11 in every MHA (checked); since D22 the "
+                          "2 BR townhouse is not B11",
         "mhas": len(mhas),
         "warnings": warnings,
         "outputs": ["mha_ownership_by_type.csv"],
@@ -284,12 +331,16 @@ def main() -> None:
     rc = ", ".join(f"{k.replace('all_homes_over_', '')} {v['median']}" for k, v in reference_check.items() if v)
     print(f"  all-homes ZHVI / n-bedroom ZHVI (median per ZIP): {rc}")
     for k, s in stats.items():
+        if k == "building_townhouse":
+            print(f"  {k:24} MHA median {s['median_factor']} (position {s['townhouse_position']}); "
+                  f"{s['mhas_national_fallback']} MHA(s) with a national side")
+            continue
         print(f"  {k:24} national median {s['national_median']}; {s['zips_with_both']:,} ZIPs; "
               f"{s['mhas_national_fallback']} MHA(s) on the national ratio")
     for t, cv in coverage.items():
         h = cv["own_housing_monthly"]
         print(f"  {t:5} {cv['status']}" + (f", PITI median {h['median']:,.0f}" if h else ""))
-    print("  2 BR townhouse = B11 in every MHA")
+    print("  all-homes value = B11 in every MHA (model identity)")
     for w in warnings:
         print(f"  warning: {w}")
     print(f"  -> {args.out / 'mha_ownership_by_type.csv'}")

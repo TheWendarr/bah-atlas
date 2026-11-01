@@ -101,7 +101,7 @@
     {
       "id": "home_type_benchmarks",
       "title": "How home types are priced",
-      "text": "Zillow's typical rent and home value for an area are taken to stand for a 2-bedroom townhouse. Other home types are scaled from it: by the area's HUD Fair Market Rent bedroom ratios (rent) or Zillow's bedroom-count home values (buy), and by Zillow's apartment, condo or single-family series against all homes. Zillow publishes single-family and multifamily rents only by metro area, so the rent adjustment for building type is a metro-wide ratio. Homeowners insurance is the area's average premium for every home type."
+      "text": "Rent: Zillow's typical rent for an area is taken to stand for a 2-bedroom townhouse, and other home types are scaled from it by the area's HUD Fair Market Rent bedroom ratios and by Zillow's multifamily or single-family rent against all homes. Zillow publishes those two rent series only by metro area, so the rent adjustment for building type is a metro-wide ratio. Buy: Zillow publishes no townhouse home values, so a townhouse is priced halfway between the area's condo and single-family values; apartments use condo values, and bedroom counts scale by Zillow's bedroom-count home values. Homeowners insurance is the area's average premium for every home type."
     }
   ],
   "geometry": {

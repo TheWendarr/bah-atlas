@@ -42,7 +42,7 @@ Each profile selects one BAH cell (pay grade × dependency status from B4) and t
 | `profiles[].anchor_dwelling`, `anchor_bedrooms` | The DoD housing standard for the grade in words (the values are in A14), and the SAFMR bedroom count used for the cross-check. |
 | `profiles[].cost_share_monthly` | DTMO member out-of-pocket dollars for the cell. Must equal the A14 cell (`make check-config`). |
 | `benchmarks.standard_source` | `A14`: each profile is measured against the cost of its DoD housing standard (D19). |
-| `benchmarks.rent_primary`, `buy_primary` | `b29_at_standard`, `b30_at_standard`: the standard blended from the B29 rent and B30 ownership benchmarks by home type. For E-5 that is the 2 BR townhouse, which equals B8 and B11. |
+| `benchmarks.rent_primary`, `buy_primary` | `b29_at_standard`, `b30_at_standard`: the standard blended from the B29 rent and B30 ownership benchmarks by home type. For E-5 that is the 2 BR townhouse, which equals B8 in rent mode; in buy mode it is priced between condo and single-family (D22), so it no longer equals B11. |
 | `benchmarks.rent_crosscheck`, `safmr_bedroom_field` | HUD SAFMR (B10) at the profile's `anchor_bedrooms`. |
 | `cost_share.*` | Where the cost-share dollars come from: method, year, source, URL, local artifact, SHA-256, the values read, and the date verified. `make verify` checks the SHA-256 against the fetch record. |
 
@@ -56,7 +56,7 @@ B12–B15 therefore test `adequacy_ratio` = (BAH + `cost_share_monthly`) ÷ benc
 - **O-3 with dependents** is the contrast profile. DoD's O-3 standard sits 98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home. It therefore differs from the primary in grade band, bedroom count and dwelling type at once.
 - **Source:** DoD BAH housing standards by pay grade (BAH Primer; summarized at military.com, *Paycheck Chronicles*, 4 Dec 2014). This is listed in [SOURCES.md](SOURCES.md) under *Concepts & methods*.
 
-**Why each profile has its own benchmark (D19, 18 Oct 2026).** Until 18 Oct one all-homes ZORI series served both profiles, so the E-5 vs O-3 contrast came only from the BAH numerator. Since D19 each profile is measured against its DoD standard: B29 and B30 give every MHA a benchmark for each of the six housing profiles (building type from Zillow's type series, bedrooms from the SAFMR or ZHVI bedroom ratio), and the profile's standard is blended from them with the A14 formula. The all-homes series is taken to stand for a 2 BR townhouse, E-5's standard, so E-5 is unchanged; O-3 is recomputed. The SAFMR cross-check at `anchor_bedrooms` stays as it was.
+**Why each profile has its own benchmark (D19, 18 Oct 2026).** Until 18 Oct one all-homes ZORI series served both profiles, so the E-5 vs O-3 contrast came only from the BAH numerator. Since D19 each profile is measured against its DoD standard: B29 and B30 give every MHA a benchmark for each of the six housing profiles (building type from Zillow's type series, bedrooms from the SAFMR or ZHVI bedroom ratio), and the profile's standard is blended from them with the A14 formula. In rent mode the all-homes series is taken to stand for a 2 BR townhouse, E-5's standard, so E-5 rent is unchanged; O-3 is recomputed. Buy mode changed again with D22 (below, under `config/ownership.json`). The SAFMR cross-check at `anchor_bedrooms` stays as it was.
 
 **Cost share.** These are the member out-of-pocket (absorption) dollars per cell, read from DTMO's annual out-of-pocket table: the same amount at every duty station. The 2026 values are E-5 with dependents $126 and O-3 with dependents $151. See the A12 out-of-pocket entry in [SOURCES.md](SOURCES.md).
 
@@ -69,7 +69,7 @@ Decision D18 (18 Oct 2026) lets the map show any rank with or without dependents
 | `_doc` | Pointer to this page. |
 | `version`, `bah_year` | Schema version of this file; the BAH year the cost shares belong to. |
 | `home_types[]` | DoD's six housing profiles, cheapest first: `id`, `building` (`apartment`, `townhouse`, `single_family`) and `bedrooms`. The order is the order standards interpolate in. |
-| `reference_type` | `th2`, the 2-bedroom townhouse. B8 (all-homes ZORI) and B9 (all-homes ZHVI) are taken to stand for this dwelling, so every other type is a ratio to it (D19). |
+| `reference_type` | `th2`, the 2-bedroom townhouse. B8 (all-homes ZORI) is taken to stand for this dwelling in rent mode, so every other rent is a ratio to it (D19). In buy mode B9 is the base the type and bedroom factors scale, and the townhouse has its own factor (D22). |
 | `grades` | The rank dropdown: E-1–E-9, W-1–W-5, O-1–O-9 (D18; O-1E–O-3E and O-10 left out). |
 | `standards.<grade>.with`, `.without` | `lower`, `upper`, `share`. Anchor: `upper` null and `share` 0, the cost of `lower`. Interpolated: `lower` + `share` × (`upper` − `lower`). Above the highest profile: `upper` null and `share` > 0, the cost of `lower` × (1 + `share`). |
 | `cost_share_monthly.<grade>.with`, `.without` | DTMO 2026 out-of-pocket dollars for the cell (5% of the national mean BAH for the grade). |
@@ -175,12 +175,12 @@ MHAs that survive the Benjamini–Hochberg false-discovery-rate correction get t
 
 ## `config/ownership.json` (B11)
 
-How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `ownership_cost.py` reads and validates every field; `tax_insurance_to_mha.py` reads the property-tax and insurance years. Version 2 (18 Oct 2026, A8) replaced the national tax and insurance placeholders with per-MHA values and moved the explanations here, so B11 and everything after it are rerun once.
+How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `ownership_cost.py` reads and validates every field; `tax_insurance_to_mha.py` reads the property-tax and insurance years. Version 2 (18 Oct 2026, A8) replaced the national tax and insurance placeholders with per-MHA values and moved the explanations here, so B11 and everything after it are rerun once. Version 3 (1 Nov 2026, D22) adds `home_types.townhouse_position`, read by B30.
 
 | Field | Meaning |
 |---|---|
 | `_doc` | Pointer to this page. |
-| `version` | Schema version of this file. Version 2: locality tax and insurance, values only. |
+| `version` | Schema version of this file. Version 2: locality tax and insurance, values only. Version 3: the townhouse position (D22). |
 | `loan.program` | The financing modelled: a VA purchase loan, first use. |
 | `loan.term_years` | 30. |
 | `loan.down_payment_share` | 0: no down payment, the common VA case. |
@@ -196,6 +196,7 @@ How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `
 | `insurance.fallback` | `state`: an MHA with no published ZIP takes its state's median. |
 | `insurance.scaled_to_bah_year` | `false`: used as published (decision N2). |
 | `utilities.method` | `from_B8`: the owner cost adds the same utilities dollars B8 derives for renters in the MHA. |
+| `home_types.townhouse_position` | 0.5: where B30 prices a townhouse on the line from the MHA's condo/co-op factor (0) to its single-family factor (1), the midpoint (D22 option B). Read by B30 only; B11 validates it. |
 
 **Why a VA loan.** Buy mode models the financing a service member most often uses: a VA-guaranteed loan, no down payment, no mortgage insurance, with the funding fee financed. Members with a service-connected disability rating are exempt from the fee, and subsequent-use VA loans pay 3.3% with less than 5% down; both are one-parameter sensitivity checks. Sources: VA funding fee table (rates effective 7 Apr 2023) and the Freddie Mac PMMS (A7), in [SOURCES.md](SOURCES.md).
 
@@ -208,6 +209,8 @@ How a ZHVI home value (B9) becomes a monthly ownership cost comparable to BAH. `
 **Insurance state fallback (D11, decided 18 Oct 2026).** The FIO workbook has no state column, so the fallback is the median over the published ZIPs of every real MHA in the same state, rather than the NAIC state average: one source and one data year for every premium. No 2026 MHA needed it.
 
 **Why not scaled to 2026 (decision N2).** Premiums have risen since 2022, so buy-mode costs understate 2026 insurance. Scaling would need an inflator the project would have to choose and defend; using the published year keeps the number traceable. B11 records the limitation in its manifest, and B23 and the write-up state it.
+
+**Townhouse in buy mode (D22, decided 1 Nov 2026, option B).** Zillow publishes no townhouse home value. D19 let the all-homes ZHVI (B9) stand for the 2 BR townhouse, but the second grid run (24 Oct) showed that per ZIP the all-homes value is 1.356 × the 2 BR value, 1.003 × the 3 BR value and 0.823 × the 4 BR value, and that the single-family series sits almost on it (national ratio 0.987). The 3 BR townhouse therefore came out above the 3 BR single-family home in buy mode. B30 now prices the townhouse at a fixed position between the MHA's condo/co-op and single-family factors: g_townhouse = g_condo + 0.5 × (g_single-family − g_condo). The 2 BR townhouse, E-5's buy benchmark, no longer equals B11, so B11, B14–B18 and the handoff are rerun. B11 is kept as the all-homes ownership cost, and B30 checks that the all-homes value (both factors 1) reproduces it to the cent, so the two still run one model. The 0.5 is an assumption, not a measurement; a townhouse factor is `zip` only when both of its sides are, so an MHA without condo data carries `type_factor_national` on its townhouse values. Options A (keep D19 and state that buy mode cannot separate townhouses from single-family homes) and C (anchor buy mode to the 2 BR ZHVI series) were not taken. B30's `reference_check` still records which bedroom count the all-homes value resembles.
 
 ---
 
