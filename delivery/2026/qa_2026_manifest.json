@@ -1,0 +1,448 @@
+{
+  "nodes": [
+    "B23"
+  ],
+  "generated_at": "2026-11-01T21:34:11+00:00",
+  "build_id": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129",
+  "schema_version": "1.1.0",
+  "inputs": {
+    "B7": "areas_2026.pmtiles",
+    "B20": "payload_2026.json",
+    "B21": "ui_metadata_2026.json",
+    "B27": "hotspots_2026.json",
+    "B31": "grid_2026.json",
+    "B22": "build_manifest_2026.json",
+    "B12": "mha_rent_metrics.csv",
+    "B14": "mha_buy_metrics.csv",
+    "B8": "mha_zori.csv",
+    "B11": "mha_ownership.csv",
+    "B29": "mha_rent_by_type.csv",
+    "B30": "mha_ownership_by_type.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
+    "B20": "c06e9e54f10b05a7a0ee1dbd26d6f3c89a4fe31e7221fdf197703b484b98d00b",
+    "B21": "3143b41ce7d8ae743af4cdcb6ab65cffc55df959e25f8d551aab34b01b5916fb",
+    "B27": "96acf430522a5d9a594a582c1d0ad6bec2fb79d7eb09fba248ada5a8f4ff5eba",
+    "B31": "57742c7bcfbe104cf03da5841279e30329711753ed0d1efe59496cc3bf4993ed",
+    "B22": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129",
+    "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
+    "B14": "69ac7453c1eba7248752ca05e39fb1dd373d09692f0d048fc804870e29775748",
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d",
+    "B29": "1ad85ab59d979be4bf1559acf2096cca42d7ca01d2e67376f5e84078563b9329",
+    "B30": "e438fbdf16c65a832a7ac9b1587e9084f4cd89c1cf1e29b6d4b1aa260bdf9715",
+    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+  },
+  "verdict": "PASS",
+  "checks": [
+    {
+      "check": "Contract checks 3-8 (validate_handoff.py)",
+      "result": "PASS",
+      "detail": "the handoff conforms to the data contract"
+    },
+    {
+      "check": "Check 2: recorded hashes (verify_hashes.py)",
+      "result": "PASS",
+      "detail": "verify_hashes: all recorded hashes agree"
+    },
+    {
+      "check": "Provenance: built from committed code",
+      "result": "PASS",
+      "detail": "B22 commit 84b227b93c89 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    },
+    {
+      "check": "Check 9: file sizes recorded; SHA256SUMS matches",
+      "result": "PASS",
+      "detail": "B20 payload 44 KB gzipped (plan expectation: under 300 KB)"
+    },
+    {
+      "check": "Check 9: counts by status recorded",
+      "result": "PASS",
+      "detail": "339 areas: ccg 39, mha 299, unknown 1"
+    },
+    {
+      "check": "Check 9: classes that differ between rounded and unrounded values",
+      "result": "NOTE",
+      "detail": "2 value(s) change class; 15 sit within rounding of a break"
+    },
+    {
+      "check": "Check 4: B20 codes without a polygon listed",
+      "result": "PASS",
+      "detail": "0: none"
+    },
+    {
+      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, A14 check)",
+      "result": "PASS",
+      "detail": "all present"
+    },
+    {
+      "check": "Traces: three MHAs recomputed from inputs to B20",
+      "result": "PASS",
+      "detail": "KS105, NC182, MA119 agree at every step"
+    },
+    {
+      "check": "Grid: the browser formula on B31 reproduces B20 for the research profiles",
+      "result": "PASS",
+      "detail": "1356 of 1356 area x profile x mode views identical"
+    },
+    {
+      "check": "Grid traces: E-1 in a 4 BR single-family home and O-9 in a 1 BR apartment",
+      "result": "PASS",
+      "detail": "KS105: recomputed from B4, A14, B29 and B30"
+    },
+    {
+      "check": "B19: spatial model form",
+      "result": "NOTE",
+      "detail": "ambiguous (lag and error both fitted); predictor readings differ between them for at least one predictor"
+    },
+    {
+      "check": "B19: sample selection",
+      "result": "NOTE",
+      "detail": "201 of 283 modelled; dropped MHAs differ in adequacy_gap, ln_density, ln_rent"
+    }
+  ],
+  "provenance": {
+    "b22_commit": "84b227b93c897aec4242d9511d1997374efe958e",
+    "b22_dirty": true,
+    "detail": "B22 commit 84b227b93c89 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+  },
+  "files": {
+    "areas_2026.pmtiles": {
+      "bytes": 17584031,
+      "gzip_bytes": 17191315,
+      "sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb"
+    },
+    "payload_2026.json": {
+      "bytes": 463206,
+      "gzip_bytes": 45450,
+      "sha256": "c06e9e54f10b05a7a0ee1dbd26d6f3c89a4fe31e7221fdf197703b484b98d00b"
+    },
+    "ui_metadata_2026.json": {
+      "bytes": 36947,
+      "gzip_bytes": 9483,
+      "sha256": "3143b41ce7d8ae743af4cdcb6ab65cffc55df959e25f8d551aab34b01b5916fb"
+    },
+    "hotspots_2026.json": {
+      "bytes": 133145,
+      "gzip_bytes": 6607,
+      "sha256": "96acf430522a5d9a594a582c1d0ad6bec2fb79d7eb09fba248ada5a8f4ff5eba"
+    },
+    "grid_2026.json": {
+      "bytes": 358353,
+      "gzip_bytes": 58963,
+      "sha256": "57742c7bcfbe104cf03da5841279e30329711753ed0d1efe59496cc3bf4993ed"
+    },
+    "build_manifest_2026.json": {
+      "bytes": 15389,
+      "gzip_bytes": 4990,
+      "sha256": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129"
+    }
+  },
+  "areas_by_class": {
+    "mha": 299,
+    "unknown": 1,
+    "ccg": 39
+  },
+  "status_counts": {
+    "e5_dep": {
+      "rent": {
+        "no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      },
+      "buy": {
+        "piti_only_no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      }
+    },
+    "o3_dep": {
+      "rent": {
+        "no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      },
+      "buy": {
+        "piti_only_no_zori": 10,
+        "ok": 289,
+        "no_rate": 1,
+        "ccg_no_benchmark": 39
+      }
+    }
+  },
+  "rounding_class_differences": [
+    {
+      "area": "FL057",
+      "profile": "e5_dep",
+      "mode": "rent",
+      "metric": "surplus_usd",
+      "unrounded": 49.92,
+      "rounded": 50,
+      "class_unrounded": 3,
+      "class_rounded": 4
+    },
+    {
+      "area": "NJ200",
+      "profile": "o3_dep",
+      "mode": "rent",
+      "metric": "surplus_usd",
+      "unrounded": 49.89,
+      "rounded": 50,
+      "class_unrounded": 3,
+      "class_rounded": 4
+    }
+  ],
+  "values_near_a_break": 15,
+  "codes_without_polygon": [],
+  "traces": [
+    {
+      "area": "KS105",
+      "why": "surplus: adequacy gap nearest the median of the positive gaps",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 1626.0,
+          "cost_share": 126.0,
+          "cost": 1510.56,
+          "adequacy_recomputed": 1.159834763266603,
+          "adequacy_b12_b14": 1.1598,
+          "adequacy_b20": 1.1598,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 1626.0,
+          "cost_share": 126.0,
+          "cost": 1924.75,
+          "adequacy_recomputed": 0.9102480841667749,
+          "adequacy_b12_b14": 0.9102,
+          "adequacy_b20": 0.9102,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 2064.0,
+          "cost_share": 151.0,
+          "cost": 2160.19,
+          "adequacy_recomputed": 1.0253727681361362,
+          "adequacy_b12_b14": 1.0254,
+          "adequacy_b20": 1.0254,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 2064.0,
+          "cost_share": 151.0,
+          "cost": 2956.36,
+          "adequacy_recomputed": 0.7492321638772003,
+          "adequacy_b12_b14": 0.7492,
+          "adequacy_b20": 0.7492,
+          "agree": true,
+          "b27_cluster": "NS"
+        }
+      ],
+      "zori_median_recomputed": 1223.55,
+      "zori_median_b8": 1223.55
+    },
+    {
+      "area": "NC182",
+      "why": "short of design: adequacy gap nearest the median of the negative gaps",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 1806.0,
+          "cost_share": 126.0,
+          "cost": 2097.09,
+          "adequacy_recomputed": 0.921276626181995,
+          "adequacy_b12_b14": 0.9213,
+          "adequacy_b20": 0.9213,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 1806.0,
+          "cost_share": 126.0,
+          "cost": 1996.39,
+          "adequacy_recomputed": 0.9677467829432125,
+          "adequacy_b12_b14": 0.9677,
+          "adequacy_b20": 0.9677,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "ok",
+          "bah": 2175.0,
+          "cost_share": 151.0,
+          "cost": 3246.45,
+          "adequacy_recomputed": 0.716474918757412,
+          "adequacy_b12_b14": 0.7165,
+          "adequacy_b20": 0.7165,
+          "agree": true,
+          "b27_cluster": "NS"
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "ok",
+          "bah": 2175.0,
+          "cost_share": 151.0,
+          "cost": 3426.91,
+          "adequacy_recomputed": 0.6787455754601084,
+          "adequacy_b12_b14": 0.6787,
+          "adequacy_b20": 0.6787,
+          "agree": true,
+          "b27_cluster": "NS"
+        }
+      ],
+      "zori_median_recomputed": 1719.61,
+      "zori_median_b8": 1719.61
+    },
+    {
+      "area": "MA119",
+      "why": "fallback: buy cost on PITI alone, no ZORI for utilities (decision 2.4)",
+      "rows": [
+        {
+          "profile": "e5_dep",
+          "mode": "rent",
+          "status": "no_zori",
+          "bah": 4344.0,
+          "cost_share": 126.0,
+          "cost": null,
+          "adequacy_recomputed": null,
+          "adequacy_b12_b14": null,
+          "adequacy_b20": null,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "e5_dep",
+          "mode": "buy",
+          "status": "piti_only_no_zori",
+          "bah": 4344.0,
+          "cost_share": 126.0,
+          "cost": 16520.83,
+          "adequacy_recomputed": 0.2705675199127404,
+          "adequacy_b12_b14": 0.2706,
+          "adequacy_b20": 0.2706,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "rent",
+          "status": "no_zori",
+          "bah": 5442.0,
+          "cost_share": 151.0,
+          "cost": null,
+          "adequacy_recomputed": null,
+          "adequacy_b12_b14": null,
+          "adequacy_b20": null,
+          "agree": true,
+          "b27_cluster": null
+        },
+        {
+          "profile": "o3_dep",
+          "mode": "buy",
+          "status": "piti_only_no_zori",
+          "bah": 5442.0,
+          "cost_share": 151.0,
+          "cost": 31473.49,
+          "adequacy_recomputed": 0.17770510991949096,
+          "adequacy_b12_b14": 0.1777,
+          "adequacy_b20": 0.1777,
+          "agree": true,
+          "b27_cluster": null
+        }
+      ]
+    }
+  ],
+  "grid": {
+    "views_compared": 1356,
+    "views_identical": 1356,
+    "differences": [],
+    "traces": [
+      {
+        "area": "KS105",
+        "rank": "E1",
+        "dependents": "with",
+        "home_type": "sfh4",
+        "mode": "rent",
+        "bah": 1503.0,
+        "cost_share": 115,
+        "cost": 2194.22,
+        "adequacy_recomputed": 0.7373918750170905,
+        "adequacy_b31_formula": 0.7374,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "E1",
+        "dependents": "with",
+        "home_type": "sfh4",
+        "mode": "buy",
+        "bah": 1503.0,
+        "cost_share": 115,
+        "cost": 3650.93,
+        "adequacy_recomputed": 0.44317475273423484,
+        "adequacy_b31_formula": 0.4432,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "O9",
+        "dependents": "with",
+        "home_type": "apt1",
+        "mode": "rent",
+        "bah": 2655.0,
+        "cost_share": 212,
+        "cost": 1038.78,
+        "adequacy_recomputed": 2.759968424497969,
+        "adequacy_b31_formula": 2.76,
+        "agree": true
+      },
+      {
+        "area": "KS105",
+        "rank": "O9",
+        "dependents": "with",
+        "home_type": "apt1",
+        "mode": "buy",
+        "bah": 2655.0,
+        "cost_share": 212,
+        "cost": 1053.05,
+        "adequacy_recomputed": 2.722567779307725,
+        "adequacy_b31_formula": 2.7226,
+        "agree": true
+      }
+    ]
+  },
+  "outputs": [
+    "qa_2026.md",
+    "qa_2026_manifest.json"
+  ],
+  "output_sha256": {
+    "qa_2026.md": "57e2dddf315643398bc6e4fb4330e542bee26040cb2c0f16dd17036f4d62e653"
+  }
+}

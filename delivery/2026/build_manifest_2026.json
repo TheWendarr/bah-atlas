@@ -1,0 +1,350 @@
+{
+  "node": "B22",
+  "schema_version": "1.1.0",
+  "bah_year": 2026,
+  "generated_at": "2026-11-01T21:33:30+00:00",
+  "git": {
+    "commit": "84b227b93c897aec4242d9511d1997374efe958e",
+    "dirty": true
+  },
+  "software": {
+    "python": "3.14.8",
+    "tippecanoe": "tippecanoe v2.82.0",
+    "esda": "2.10.0",
+    "libpysal": "4.15.0",
+    "numpy": "2.4.6"
+  },
+  "raw_inputs": {
+    "A1": {
+      "filename": "BAH-ASCII-2026.zip",
+      "sha256": "5446fed831e125c23cc6a407dcde4cae541f108e90ac852aaadeec0aa11e515f",
+      "bytes": 302657,
+      "source_url": "https://www.travel.dod.mil/Allowances/Basic-Allowance-for-Housing/BAH-Rate-Files-Alt/",
+      "retrieved_at": "2026-09-03T03:22:50+00:00"
+    },
+    "A12": {
+      "filename": "2026-BAH_OOP_Amounts.pdf",
+      "sha256": "375ff25e5e8d0eb5d81f5d427534a672310c35bb745d40b31ceb7ba3c72520c3",
+      "bytes": 266626,
+      "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH_OOP_Amounts/2026-BAH_OOP_Amounts.pdf",
+      "retrieved_at": "2026-10-17T22:21:01+00:00"
+    },
+    "A15.all": {
+      "filename": "Metro_zori_uc_sfrcondomfr_sm_month.csv",
+      "sha256": "1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a",
+      "bytes": 1075563,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:33+00:00"
+    },
+    "A15.mfr": {
+      "filename": "Metro_zori_uc_mfr_sm_month.csv",
+      "sha256": "b0c6483fd6677bde9c9d7ba025e0ddc39b2669d06fa1a129363f97cf778fd66d",
+      "bytes": 778812,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_mfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:33+00:00"
+    },
+    "A15.sfr": {
+      "filename": "Metro_zori_uc_sfr_sm_month.csv",
+      "sha256": "8519d086e6ca4317a457d8575065408d1191063a303b1861a612c559ef0df5b6",
+      "bytes": 851561,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfr_sm_month.csv",
+      "retrieved_at": "2026-10-25T01:19:32+00:00"
+    },
+    "A16.br1": {
+      "filename": "Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "395fab16f06837335752c3dc1b3fa6d24315089e3f19d292110e74ce8571aa93",
+      "bytes": 18497319,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_1_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:37+00:00"
+    },
+    "A16.br2": {
+      "filename": "Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "06486cdcffe19f7b769165def75e760cd078f73bbe3529260a881d657f19b658",
+      "bytes": 76719366,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_2_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:38+00:00"
+    },
+    "A16.br3": {
+      "filename": "Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "14a4bcb7c544ea9bfff633d3fcbeb83fd0398fb822a3dad0f4f89a187edb1fe6",
+      "bytes": 101523975,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:40+00:00"
+    },
+    "A16.br4": {
+      "filename": "Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "463445dec0de9665f63503180a4fd39ce9cff9b1a50067c28d8df8fc070328d1",
+      "bytes": 77302808,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_bdrmcnt_4_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:41+00:00"
+    },
+    "A16.condo": {
+      "filename": "Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "5070e78c72063848bb8cdd50168d161050728c67aa853aab38de310b44fc3892",
+      "bytes": 31187042,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_condo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:36+00:00"
+    },
+    "A16.sfr": {
+      "filename": "Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "3d191e746bd7bbe97d1f7ecc1b9f94fb9890a04d6ba02a4358e0454f2d475639",
+      "bytes": 123302173,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfr_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-10-25T01:19:35+00:00"
+    },
+    "A2": {
+      "filename": "cb_2020_us_zcta520_500k.zip",
+      "sha256": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+      "bytes": 66655314,
+      "source_url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip",
+      "retrieved_at": "2026-09-07T20:59:17+00:00"
+    },
+    "A3": {
+      "filename": "Zip_zori_uc_sfrcondomfr_sm_month.csv",
+      "sha256": "357c4544a4691608bbd20ff9941d4a112be54056fcae652de9d7cf41b601ac42",
+      "bytes": 9916175,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_month.csv",
+      "retrieved_at": "2026-09-07T20:59:48+00:00"
+    },
+    "A4": {
+      "filename": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "sha256": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
+      "bytes": 123065811,
+      "source_url": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
+      "retrieved_at": "2026-09-07T21:01:45+00:00"
+    },
+    "A5": {
+      "filename": "fy2026_safmrs_revised.xlsx",
+      "sha256": "35e26f33181adcfd2b5b457f7824fe2880e65be18aec2805766e39b5eaf3e28f",
+      "bytes": 4382259,
+      "source_url": "https://www.huduser.gov/portal/datasets/fmr/fmr2026/fy2026_safmrs_revised.xlsx",
+      "retrieved_at": "2026-10-03T19:38:42+00:00"
+    },
+    "A6": {
+      "filename": "dod_bah_rate_components_2026.pdf",
+      "sha256": "a0cbf7f4dad787ffbb3605c151f69c61ee4e2dd7bb39e1bcff3646bed8b69800",
+      "bytes": 208266,
+      "source_url": "https://www.travel.dod.mil/Portals/119/Documents/BAH/PDF_BAH-Rate-Component-Breakdown/2026-BAH-Rate-Component-Breakdown.pdf",
+      "retrieved_at": "2026-10-03T19:28:11+00:00"
+    },
+    "A7": {
+      "filename": "PMMS_history.csv",
+      "sha256": "d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f",
+      "bytes": 97483,
+      "source_url": "https://www.freddiemac.com/pmms/docs/PMMS_history.csv",
+      "retrieved_at": "2026-10-03T19:38:42+00:00"
+    },
+    "A8": {
+      "filename": "Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+      "sha256": "99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e",
+      "bytes": 14892818,
+      "source_url": "https://home.treasury.gov/system/files/311/Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+      "retrieved_at": "2026-10-18T21:47:16+00:00"
+    },
+    "A9": {
+      "filename": "acs5_2024_zcta.json",
+      "sha256": "51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30",
+      "bytes": 1219849,
+      "source_url": "https://api.census.gov/data/2024/acs/acs5?get=B25090_001E,B25079_001E,B01003_001E&for=zip%20code%20tabulation%20area:*",
+      "retrieved_at": "2026-10-18T22:00:33+00:00"
+    }
+  },
+  "configs": {
+    "classification.json": "0ca6cdae995aa3d6a6c553c71d3eb4e669be5603c6e4dc2d55428d702cba88de",
+    "housing_standards.json": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4",
+    "ownership.json": "a7f963b6f59fb47a16b7d13421c9db9f8b3da88f8dbcbe3a895a8e06b00378cb",
+    "profiles.json": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
+    "ui_text.json": "d19f5fc6a98e2aad0ac92330e572838146084633fc44bfa2fc089fb597d6fce7"
+  },
+  "stages": [
+    {
+      "nodes": "A1-A9 A12 A15 A16",
+      "file": "fetch_manifest.json",
+      "sha256": "f583fa4ac92bf826bf7c4f84ee1fdce6bebf26222cd981a7a5aa9f77c6273f58",
+      "generated_at": null,
+      "warnings": []
+    },
+    {
+      "nodes": "B1-B4",
+      "file": "manifest.json",
+      "sha256": "3afa828fb73364088c336e8e4d6956b14dfeb87d7b80d6b7f0d100f4e8a56705",
+      "generated_at": "2026-11-01T21:32:10+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B5",
+      "file": "rate_components_manifest.json",
+      "sha256": "c1b40ea321c9de1bae842f9154e25ee9c00817641eb66938600ba2945d9645bd",
+      "generated_at": "2026-11-01T21:32:26+00:00",
+      "warnings": [
+        "MS168 (GULFPORT, MS) is listed more than once with identical values in the source; kept one row"
+      ]
+    },
+    {
+      "nodes": "B6",
+      "file": "mha_2026_geometry_manifest.json",
+      "sha256": "f004d12e0bf1c18b202b1c77fad38d72487f7480d3c92777b4d5326f74589182",
+      "generated_at": "2026-11-01T21:32:15+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B28",
+      "file": "non_mha_2026_geometry_manifest.json",
+      "sha256": "f80e841be7199919c8c6eaf0dbb51313b9bcc6c00d873c79adfb65847b236e44",
+      "generated_at": "2026-11-01T21:32:26+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B7",
+      "file": "areas_2026_manifest.json",
+      "sha256": "2519ef0d1d8e6a2898e561908bec9720274528e00bddee94f192eaf9ee4186d7",
+      "generated_at": "2026-11-01T21:32:32+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B8",
+      "file": "mha_zori_manifest.json",
+      "sha256": "75a3923be8b171e336386515240ce1ba1608f0c1695a69c2850b262266f75d9b",
+      "generated_at": "2026-11-01T21:32:32+00:00",
+      "warnings": [
+        "862 ZIP(s) had fewer than 3 months in the window and were left out",
+        "6 ZIP(s) above 25,000 in the window, kept (seasonal luxury markets; the MHA median limits their pull): 11930 (NY218, peak 52,565), 11937 (NY218, peak 35,440), 11963 (NY218, peak 55,972), 11968 (NY218, peak 41,575), 11976 (NY218, peak 101,167), 81611 (not in a real MHA, peak 27,159)"
+      ]
+    },
+    {
+      "nodes": "B9",
+      "file": "mha_zhvi_manifest.json",
+      "sha256": "84b1f0cf3b3591d870b2d6a872900936285b758570fa75fea5602f315b43b2d2",
+      "generated_at": "2026-11-01T21:32:33+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B10",
+      "file": "mha_safmr_manifest.json",
+      "sha256": "48a9fec3cefb1e3024d2c26ef74d27dbbb1079c67d6d1e1b679ae6b4348debce",
+      "generated_at": "2026-11-01T21:32:35+00:00",
+      "warnings": [
+        "10106 ZIP(s) appear under more than one HUD area; their rows were averaged"
+      ]
+    },
+    {
+      "nodes": "A8",
+      "file": "mha_tax_insurance_manifest.json",
+      "sha256": "65161abe7869e1e5f5303ba6a4712af6a4eac52ad2b66afcc7937129069ab3ca",
+      "generated_at": "2026-11-01T21:32:38+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B11",
+      "file": "mha_ownership_manifest.json",
+      "sha256": "38ceb84a13cbb72e2268659362e40deac5cc2624a7e42dd2ce1125c4ccf3a986",
+      "generated_at": "2026-11-01T21:32:38+00:00",
+      "warnings": [
+        "10 MHA(s) have a home value but no ZORI utilities estimate; own_total_monthly is blank there"
+      ]
+    },
+    {
+      "nodes": "A14",
+      "file": "standards_check_manifest.json",
+      "sha256": "08d555e162e7be364718a6043bf495295ab61b7e7947273032fb90eaf9af07e6",
+      "generated_at": "2026-11-01T21:32:38+00:00",
+      "warnings": []
+    },
+    {
+      "nodes": "B29",
+      "file": "mha_rent_by_type_manifest.json",
+      "sha256": "c82ec9fd73ef8bcf70df5f7a45e8aed8b12fc0716c48c220f1aa90fa4f12525d",
+      "generated_at": "2026-11-01T21:32:39+00:00",
+      "warnings": [
+        "15 MHA(s) take the national apartment factor (0.9131): none of their ZIPs lies in a metro with the A15 series",
+        "12 MHA(s) take the national single_family factor (1.1741): none of their ZIPs lies in a metro with the A15 series",
+        "28 metro name(s) in the ZIP file have no A15 all-homes row, even by principal city (mostly micropolitan areas Zillow does not cover): Alexander City, AL, Alice, TX, Bluffton, IN, Cadillac, MI, Cambridge, MD, Eufaula, AL-GA, Fallon, NV, Fremont, OH"
+      ]
+    },
+    {
+      "nodes": "B30",
+      "file": "mha_ownership_by_type_manifest.json",
+      "sha256": "e87af5ae1c6cfc1476a0aff100549e15108042db7853fe0f111bb3847f2d338e",
+      "generated_at": "2026-11-01T21:32:42+00:00",
+      "warnings": [
+        "41 MHA(s) take the national building apartment ratio (0.6551)",
+        "47 MHA(s) take the national bedrooms 1 ratio (0.6954)",
+        "6 MHA(s) take the national bedrooms 3 ratio (1.3635)",
+        "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
+        "41 MHA(s) build the townhouse factor from at least one national ratio (caveat type_factor_national)",
+        "10 MHA(s) have a condo/co-op factor above the single-family factor, so their townhouse is not between the two in DoD's order: IN338, KY430, MD458, MI148, MI156, NY215, OH233, PA253, WI318, WV322",
+        "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull"
+      ]
+    },
+    {
+      "nodes": "B12-B15",
+      "file": "coverage_metrics_manifest.json",
+      "sha256": "cb25d7b6f661a191f8795cd16f1b2c47eed151398f54b741e80085dac605f819",
+      "generated_at": "2026-11-01T21:32:42+00:00",
+      "warnings": [
+        "3 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2629, o3_dep/CA044=0.2654, o3_dep/MA119=0.1729"
+      ]
+    },
+    {
+      "nodes": "B16",
+      "file": "weights_manifest.json",
+      "sha256": "3b8d069cf8efd8fb8fe9505a7b98315fc6489ab11bf663529cc190d03e1cf0e5",
+      "generated_at": "2026-11-01T21:32:43+00:00",
+      "warnings": [
+        "25 KNN link(s) longer than 500 km; longest MT175->WA313 724.0 km",
+        "queen contiguity leaves 81 of 289 MHAs with no neighbour and splits the map into 122 pieces; KNN is the primary weights"
+      ]
+    },
+    {
+      "nodes": "B17-B18",
+      "file": "spatial_stats_manifest.json",
+      "sha256": "1d9747aa6b9ec36b8d670ff459f6ef1ed83ae70e3b194025469b1305f5d58d59",
+      "generated_at": "2026-11-01T21:33:27+00:00",
+      "warnings": []
+    }
+  ],
+  "windows": {
+    "rent_zori_months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "home_value_zhvi_months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "mortgage_rate_window": "2026-01:2026-07",
+    "safmr": "HUD FY2026 SAFMR (fixed vintage, no monthly window)",
+    "property_tax_acs": "2020-2024",
+    "insurance_fio_year": 2022
+  },
+  "spatial": {
+    "permutations": 99999,
+    "seed": 2026,
+    "alpha": 0.05
+  },
+  "outputs": {
+    "B7": {
+      "file": "areas_2026.pmtiles",
+      "sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
+      "features_by_class": {
+        "mha": 299,
+        "ccg": 39,
+        "unknown": 1
+      }
+    }
+  },
+  "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31 -> SHA256SUMS"
+}
