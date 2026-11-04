@@ -10,14 +10,17 @@
 #
 # Settings (environment variables):
 #   BBOX     min_lon,min_lat,max_lon,max_lat   default: CONUS
+#   REGION   GeoJSON Polygon or MultiPolygon   replaces BBOX (D25: config/basemap_region.geojson)
 #   MAXZOOM  highest zoom kept                 default: 10 (try 6 for a quick test)
 #   DATE     build date YYYYMMDD               default: newest build in the last 8 days
 #   OUT      output path                       default: data/processed/basemap.pmtiles
+#   DRY_RUN  1 reports the extract size and writes nothing
 #
 # Examples:
 #   make basemap
 #   MAXZOOM=6 make basemap                          # small, fast trial run
 #   BBOX=-180,18,-154,72 OUT=data/processed/basemap_ak_hi.pmtiles make basemap
+#   REGION=config/basemap_region.geojson MAXZOOM=9 DRY_RUN=1 make basemap
 #
 # Licence: the basemap is an ODbL Produced Work; credit "© OpenStreetMap contributors"
 # and Protomaps on the map (C20 attribution node).
@@ -52,8 +55,20 @@ TMP="${OUT%.pmtiles}.tmp.pmtiles"
 rm -f "$TMP"
 
 echo "A11 basemap: extracting ${URL}"
-echo "  bbox ${BBOX}   maxzoom ${MAXZOOM}   ->  ${OUT}"
-"$PMTILES" extract "$URL" "$TMP" --bbox="$BBOX" --maxzoom="$MAXZOOM"
+if [[ -n "${REGION:-}" ]]; then
+  [[ -f "$REGION" ]] || die "region file not found: $REGION"
+  AREA=(--region="$REGION")
+  AREA_NOTE="region ${REGION}"
+else
+  AREA=(--bbox="$BBOX")
+  AREA_NOTE="bbox ${BBOX}"
+fi
+echo "  ${AREA_NOTE}   maxzoom ${MAXZOOM}   ->  ${OUT}"
+if [[ "${DRY_RUN:-}" == "1" ]]; then
+  "$PMTILES" extract "$URL" "$TMP" "${AREA[@]}" --maxzoom="$MAXZOOM" --dry-run
+  exit 0
+fi
+"$PMTILES" extract "$URL" "$TMP" "${AREA[@]}" --maxzoom="$MAXZOOM"
 
 [[ -s "$TMP" ]] || die "extract produced no output"
 [[ "$(head -c 7 "$TMP")" == "PMTiles" ]] || { rm -f "$TMP"; die "output is not a PMTiles archive"; }
@@ -68,7 +83,7 @@ cat > "${OUT%.pmtiles}_provenance.json" <<EOF
   "source": "Protomaps basemap daily build (OpenStreetMap-derived)",
   "source_url": "${URL}",
   "build_date": "${DATE}",
-  "bbox": "${BBOX}",
+  "area": "${AREA_NOTE}",
   "maxzoom": ${MAXZOOM},
   "output_file": "$(basename "$OUT")",
   "output_sha256": "${SHA}",

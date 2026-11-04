@@ -283,7 +283,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
@@ -313,6 +313,13 @@ wbs-week:
 # progress notes can link to results. Run after the pipeline, before wbs-week.
 evidence:
 	$(PYTHON) tools/collect_evidence.py
+
+# C1, C4, C24: check that a host serves a PMTiles archive correctly by range.
+#   make host-check URL=https://bah-atlas-tiles.mcgowanserver.com/areas_2026.c79d3723.pmtiles
+HOST_LOCAL ?= delivery/$(YEAR)/areas_$(YEAR).pmtiles
+HOST_ORIGIN ?= https://bah-atlas.mcgowanserver.com
+host-check:
+	$(PYTHON) tools/check_host.py --url $(URL) --local $(HOST_LOCAL) --origin $(HOST_ORIGIN)
 
 # Check every recorded SHA-256: evidence copies, config hashes, the hash chain
 # between manifests, and (where data/ holds pipeline output) the live files.
