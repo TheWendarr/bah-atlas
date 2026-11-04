@@ -10,8 +10,10 @@ venv/
 .idea/
 .vscode/
 
-# Node (web/ frontend, later)
+# Node (web/ frontend)
 node_modules/
+web/dist/
+web/test/.golden/
 
 # Data: keep the folder structure and docs, ignore the payloads
 data/raw/*

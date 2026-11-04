@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAH Atlas</title>
+<meta name="description" content="2026 Basic Allowance for Housing measured against local housing cost, by rank, dependents and home type.">
+<link rel="stylesheet" href="{{CSS}}">
+</head>
+<body>
+<header class="site-header">
+  <h1 class="site-title">BAH Atlas</h1>
+  <p class="site-tagline">2026 housing allowance against local cost</p>
+</header>
+<main class="site-main">
+  <div id="map" class="map" aria-label="Map of BAH adequacy by Military Housing Area"></div>
+  <section id="error" class="error" hidden>
+    <h2>The map could not start</h2>
+    <p>The data files on this page do not come from the same build, so showing them together could mix results. No values are shown until they match.</p>
+    <p>This can happen just after an update. Reloading usually fixes it.</p>
+    <p><a href="">Reload</a></p>
+    <pre id="error-detail" class="error-detail"></pre>
+  </section>
+</main>
+<script type="module" src="{{JS}}"></script>
+</body>
+</html>

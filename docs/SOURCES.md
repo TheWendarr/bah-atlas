@@ -326,10 +326,25 @@ with B19.
 - **Role:** Single-file tile archive for the area polygons (B7, `areas_2026.pmtiles`) and the basemap (A11); MapLibre reads it by HTTP range request, so the map never downloads the whole file (C1, C4).
 - **License:** BSD-3-Clause (specification and reference implementations).
 
-### MapLibre GL JS  `[planned]`
+### MapLibre GL JS  `[incorporated]`
 - **Provider:** MapLibre contributors — https://github.com/maplibre/maplibre-gl-js
 - **Role:** Front-end map runtime for Layer 3 (C-nodes): renders the B7 area tiles and the A11 basemap, joining B20 attributes with feature-state.
 - **License:** BSD-3-Clause (includes the BSD-3-Clause notice for Mapbox GL JS v1.13 and earlier, from which it was forked).
+
+### pmtiles (JavaScript library)  `[incorporated]`
+- **Provider:** Protomaps LLC — https://github.com/protomaps/PMTiles
+- **Role:** Reads the PMTiles archives by HTTP range request in the browser, through a MapLibre protocol handler (C5).
+- **License:** BSD-3-Clause.
+
+### esbuild  `[incorporated]`
+- **Provider:** Evan Wallace and contributors — https://github.com/evanw/esbuild
+- **Role:** Bundles the static site and serves it locally (C22). Build-time only.
+- **License:** MIT.
+
+### Playwright  `[incorporated]`
+- **Provider:** Microsoft — https://github.com/microsoft/playwright
+- **Role:** Runs the built site in a real browser for the end-to-end tests. Test-time only.
+- **License:** Apache-2.0.
 
 ---
 

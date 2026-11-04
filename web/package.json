@@ -1,0 +1,17 @@
+{
+  "name": "bah-atlas-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BAH Atlas static map (Layer 3)",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "maplibre-gl": "6.16.0",
+    "pmtiles": "4.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.63.0"
+  }
+}

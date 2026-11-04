@@ -80,7 +80,7 @@ bah-atlas/
 │   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27)
 │   └── qa/          QA / validation report (B23)
 ├── delivery/        the validated handoff, added only by `make deliver` (decision D10)
-├── web/             MapLibre GL JS frontend (Layer 3, not started)
+├── web/             MapLibre GL JS frontend (Layer 3, in progress)
 ├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
 │   ├── wbs/         nodes.csv + milestones.csv — project status source of truth

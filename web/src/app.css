@@ -1,0 +1,51 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+:root {
+  --ink: #1b2327;
+  --ink-muted: #4d575c;
+  --rule: #d9dddf;
+  --ground: #ffffff;
+  --land: #e9e6df;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.site-title { margin: 0; font-size: 18px; font-weight: 600; }
+
+.site-tagline { margin: 0; font-size: 13px; color: var(--ink-muted); }
+
+.site-main { position: relative; flex: 1 1 0; min-height: 0; }
+
+.map { position: absolute; inset: 0; background: var(--land); }
+
+.error { max-width: 520px; margin: 0 auto; padding: 48px 24px; font-size: 16px; line-height: 1.5; }
+
+.error h2 { margin: 0 0 12px; font-size: 26px; font-weight: 600; line-height: 1.2; }
+
+.error-detail {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: pre-wrap;
+}

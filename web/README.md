@@ -1,8 +1,30 @@
 # Web
 
-MapLibre GL JS frontend (static, CDN-served). Not started.
+The BAH Atlas static map (Layer 3): MapLibre GL JS, vanilla ES modules, no framework.
+It reads only `delivery/<year>/` and follows the
+[data contract](../docs/data-contract.md).
 
-Consumes the pipeline's processed outputs (MHA polygons as PMTiles, plus BAH
-and benchmark JSON). Planned launch features: rent and buy modes, coverage-ratio
-and dollar-surplus metrics, location A-to-B comparison, rent-vs-buy toggle,
-mobile-first layout, and an attribution/credits section.
+| Command | What it does |
+|---|---|
+| `make web-deps` | Installs the pinned packages from `package-lock.json` |
+| `make web-dev` | Builds with the tiles copied in and serves http://localhost:8000 |
+| `make web-build` | Builds the production site in `web/dist` |
+| `make web-test` | Formula parity on all 218,316 views, the class rule and the contract gate |
+| `make web-e2e` | The built site in a real browser (first run: `cd web && npx playwright install chromium`) |
+
+`python -m http.server` cannot run this site, because it ignores the HTTP range
+requests PMTiles depends on. `make web-dev` serves ranges correctly.
+
+## Layout
+
+| Path | Holds |
+|---|---|
+| `build.mjs` | Checks the delivery against `SHA256SUMS`, bundles the app, writes `dist/` and the security headers |
+| `site.config.json` | The year and the two public hostnames |
+| `src/contract.js` | Loads the delivered files; refuses to render if they do not share one build |
+| `src/grid.js` | The ICD 5b.4 formula, compared in tests with `contract.grid_view` |
+| `src/classify.js` | The ICD section 6 class rule |
+| `src/map.js` | MapLibre setup, area layers and the value join |
+
+The two tile archives live on Cloudflare R2, and the site and its JSON on Cloudflare
+Pages. Wording about the data comes from `ui_metadata_<year>.json`, never from this folder.

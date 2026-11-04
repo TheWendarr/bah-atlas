@@ -283,7 +283,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check web-deps web-build web-dev web-golden web-test web-e2e
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
@@ -325,6 +325,27 @@ host-check:
 # between manifests, and (where data/ holds pipeline output) the live files.
 verify:
 	$(PYTHON) tools/verify_hashes.py
+
+# Layer 3: the static site in web/ (web/README.md). web-deps once per clone; web-e2e
+# also needs a browser: `cd web && npx playwright install chromium`.
+web-deps:
+	cd web && npm ci
+
+web-build:
+	cd web && node build.mjs
+
+# A local site at http://localhost:8000 with the tiles copied in. Rebuild to see changes.
+web-dev:
+	cd web && node build.mjs --dev && npx esbuild --serve=8000 --servedir=dist
+
+web-golden:
+	$(PYTHON) tools/grid_golden.py --year $(YEAR)
+
+web-test: web-golden
+	cd web && node --test test/*.test.mjs
+
+web-e2e:
+	cd web && node build.mjs --dev && node --test test/e2e/*.test.mjs
 
 # Turn on the commit-message check (subject must name a node or milestone id).
 hooks:
