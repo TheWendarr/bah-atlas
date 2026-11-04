@@ -2,15 +2,16 @@
   "nodes": [
     "B23"
   ],
-  "generated_at": "2026-11-01T21:34:11+00:00",
-  "build_id": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129",
-  "schema_version": "1.1.0",
+  "generated_at": "2026-11-04T03:18:47+00:00",
+  "build_id": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86",
+  "schema_version": "1.2.0",
   "inputs": {
     "B7": "areas_2026.pmtiles",
     "B20": "payload_2026.json",
     "B21": "ui_metadata_2026.json",
     "B27": "hotspots_2026.json",
     "B31": "grid_2026.json",
+    "B32": "zips_2026.json",
     "B22": "build_manifest_2026.json",
     "B12": "mha_rent_metrics.csv",
     "B14": "mha_buy_metrics.csv",
@@ -22,11 +23,12 @@
   },
   "input_sha256": {
     "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
-    "B20": "c06e9e54f10b05a7a0ee1dbd26d6f3c89a4fe31e7221fdf197703b484b98d00b",
-    "B21": "3143b41ce7d8ae743af4cdcb6ab65cffc55df959e25f8d551aab34b01b5916fb",
-    "B27": "96acf430522a5d9a594a582c1d0ad6bec2fb79d7eb09fba248ada5a8f4ff5eba",
-    "B31": "57742c7bcfbe104cf03da5841279e30329711753ed0d1efe59496cc3bf4993ed",
-    "B22": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129",
+    "B20": "6e1041238a29d88fe57b6e80427c6feba2c9b37c32ba4e9c5201724e8936cc07",
+    "B21": "f560219fbd1867c0ce46d14914503a1b14c0efdfaabbcc5d23851e20b2770f46",
+    "B27": "4de8b0587a37e4de61cac34bc83bc6ff2de6a3bc17024ee7f691b59f5933759d",
+    "B31": "13a2c6db3fdf928a38d5f41522b004b2f062306476a6628010f9c27a5364695f",
+    "B32": "bbb8b0508fbab98ad31059ebfe992d689e971ffcea96e1a3912ec8719b4de720",
+    "B22": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86",
     "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
     "B14": "69ac7453c1eba7248752ca05e39fb1dd373d09692f0d048fc804870e29775748",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
@@ -50,7 +52,7 @@
     {
       "check": "Provenance: built from committed code",
       "result": "PASS",
-      "detail": "B22 commit 84b227b93c89 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+      "detail": "B22 commit 5940dd448489 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
     },
     {
       "check": "Check 9: file sizes recorded; SHA256SUMS matches",
@@ -104,9 +106,9 @@
     }
   ],
   "provenance": {
-    "b22_commit": "84b227b93c897aec4242d9511d1997374efe958e",
+    "b22_commit": "5940dd448489af8405adb052ff99f9474c763300",
     "b22_dirty": true,
-    "detail": "B22 commit 84b227b93c89 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    "detail": "B22 commit 5940dd448489 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
   },
   "files": {
     "areas_2026.pmtiles": {
@@ -116,28 +118,33 @@
     },
     "payload_2026.json": {
       "bytes": 463206,
-      "gzip_bytes": 45450,
-      "sha256": "c06e9e54f10b05a7a0ee1dbd26d6f3c89a4fe31e7221fdf197703b484b98d00b"
+      "gzip_bytes": 45446,
+      "sha256": "6e1041238a29d88fe57b6e80427c6feba2c9b37c32ba4e9c5201724e8936cc07"
     },
     "ui_metadata_2026.json": {
-      "bytes": 36947,
-      "gzip_bytes": 9483,
-      "sha256": "3143b41ce7d8ae743af4cdcb6ab65cffc55df959e25f8d551aab34b01b5916fb"
+      "bytes": 51965,
+      "gzip_bytes": 11801,
+      "sha256": "f560219fbd1867c0ce46d14914503a1b14c0efdfaabbcc5d23851e20b2770f46"
     },
     "hotspots_2026.json": {
-      "bytes": 133145,
-      "gzip_bytes": 6607,
-      "sha256": "96acf430522a5d9a594a582c1d0ad6bec2fb79d7eb09fba248ada5a8f4ff5eba"
+      "bytes": 134305,
+      "gzip_bytes": 7416,
+      "sha256": "4de8b0587a37e4de61cac34bc83bc6ff2de6a3bc17024ee7f691b59f5933759d"
     },
     "grid_2026.json": {
       "bytes": 358353,
-      "gzip_bytes": 58963,
-      "sha256": "57742c7bcfbe104cf03da5841279e30329711753ed0d1efe59496cc3bf4993ed"
+      "gzip_bytes": 58961,
+      "sha256": "13a2c6db3fdf928a38d5f41522b004b2f062306476a6628010f9c27a5364695f"
+    },
+    "zips_2026.json": {
+      "bytes": 331193,
+      "gzip_bytes": 101898,
+      "sha256": "bbb8b0508fbab98ad31059ebfe992d689e971ffcea96e1a3912ec8719b4de720"
     },
     "build_manifest_2026.json": {
-      "bytes": 15389,
-      "gzip_bytes": 4990,
-      "sha256": "9f248e0ffa26c33cf046ec37a7361cf7804adaf570b68dabc35277bbe3aea129"
+      "bytes": 15842,
+      "gzip_bytes": 5175,
+      "sha256": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86"
     }
   },
   "areas_by_class": {
@@ -443,6 +450,6 @@
     "qa_2026_manifest.json"
   ],
   "output_sha256": {
-    "qa_2026.md": "57e2dddf315643398bc6e4fb4330e542bee26040cb2c0f16dd17036f4d62e653"
+    "qa_2026.md": "ac6dab62d30aa7189cf0b3727b6d6c1530f1f28a80e134a2a50075f011121572"
   }
 }
