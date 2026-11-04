@@ -197,6 +197,9 @@ class TestCheckSite(unittest.TestCase):
     def test_bot_script_does_not_hide_another_change(self) -> None:
         self.assertTrue(any("differ from dist" in p for p in self.problems("bot_script_and_edit")))
 
+    def test_a_changed_page_shows_where_it_differs(self) -> None:
+        self.assertTrue(any("steal()" in p for p in self.problems("other_script")))
+
     def test_bot_script_is_removed_only_from_the_end_of_the_body(self) -> None:
         page = b"<body>" + BOT_SCRIPT + b"<p>map</p></body>"
         self.assertEqual(ch.without_bot_script(page), page)

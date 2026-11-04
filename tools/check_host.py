@@ -170,6 +170,12 @@ def without_bot_script(html: bytes) -> bytes:
     return html[:start] + html[end + len(b"</script>"):]
 
 
+def first_difference(live: bytes, local: bytes) -> str:
+    """Where a live page leaves the local copy, with the live text from that point."""
+    at = next((i for i, (a, b) in enumerate(zip(live, local)) if a != b), min(len(live), len(local)))
+    return f"{len(live)} bytes live, {len(local)} in dist, first difference at byte {at}: {live[at:at + 300]!r}"
+
+
 def check_site(site: str, dist: Path) -> list[str]:
     site = site.rstrip("/")
     rules = read_header_rules(dist / "_headers")
@@ -181,8 +187,10 @@ def check_site(site: str, dist: Path) -> list[str]:
             problems.append(f"{path}: HTTP {reply.status}")
             continue
         body = without_bot_script(reply.body) if path.endswith(".html") else reply.body
-        if body != file.read_bytes():
-            problems.append(f"{path}: the live bytes differ from dist")
+        local = file.read_bytes()
+        if body != local:
+            detail = f" ({first_difference(body, local)})" if path.endswith(".html") else ""
+            problems.append(f"{path}: the live bytes differ from dist{detail}")
         kind = expected_type(path)
         if kind and kind not in reply.headers.get("content-type", ""):
             problems.append(f"{path}: Content-Type is {reply.headers.get('content-type')!r}, expected {kind}")

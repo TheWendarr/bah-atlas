@@ -65,12 +65,16 @@ jobs:
       - run: make web-deps
       - run: make web-build
       - name: Deploy to Cloudflare Pages
+        id: deploy
         run: npx wrangler pages deploy dist --project-name bah-atlas --branch main
         working-directory: web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - run: make site-check
+      # The two live checks report separately: one failing still runs the other.
       - run: npx playwright install --with-deps chromium
+        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
         working-directory: web
       - run: make web-e2e-live
+        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
