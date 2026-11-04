@@ -289,7 +289,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-golden web-test web-e2e
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-style web-golden web-test web-e2e
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
@@ -350,6 +350,16 @@ web-build:
 # A local site at http://localhost:8000 with the tiles copied in. Rebuild to see changes.
 web-dev:
 	cd web && node build.mjs --dev && npx esbuild --serve=8000 --servedir=dist
+
+# Regenerate web/public/basemap (C4). Only needed to change the basemap's look.
+BASEMAP_ASSETS_COMMIT = 028c18f713baecad011301ff7a69acc39bcc2ae7
+web-style:
+	rm -rf .tmp-basemap-assets && mkdir .tmp-basemap-assets
+	git -C .tmp-basemap-assets init -q
+	git -C .tmp-basemap-assets fetch -q --depth 1 https://github.com/protomaps/basemaps-assets $(BASEMAP_ASSETS_COMMIT)
+	git -C .tmp-basemap-assets checkout -q FETCH_HEAD
+	cd web && ASSETS=../.tmp-basemap-assets node tools/basemap_style.mjs
+	rm -rf .tmp-basemap-assets
 
 web-golden:
 	$(PYTHON) tools/grid_golden.py --year $(YEAR)

@@ -8,7 +8,7 @@
 // delivery gets new URLs and its files always change together.
 
 import { createHash } from "node:crypto";
-import { copyFileSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -17,6 +17,7 @@ const WEB = dirname(fileURLToPath(import.meta.url));
 const DIST = join(WEB, "dist");
 const site = JSON.parse(readFileSync(join(WEB, "site.config.json"), "utf8"));
 const DELIVERY = join(WEB, "..", "delivery", String(site.year));
+const LOCAL_BASEMAP = join(WEB, "..", "data", "processed", "basemap.pmtiles");
 const dev = process.argv.includes("--dev");
 
 const sha256 = (data) => createHash("sha256").update(data).digest("hex");
@@ -65,6 +66,8 @@ function headersFile() {
     "  Cache-Control: public, max-age=31536000, immutable",
     "/data/*",
     "  Cache-Control: public, max-age=31536000, immutable",
+    "/basemap/*",
+    "  Cache-Control: public, max-age=86400",
     "",
   ].join("\n");
 }
@@ -84,9 +87,19 @@ for (const name of sums.keys()) {
   if (name.endsWith(".json")) copyFileSync(join(DELIVERY, name), join(DIST, dataPath, name));
 }
 
+cpSync(join(WEB, "public"), DIST, { recursive: true });
+
+// Without a local extract (it is built by `make basemap`, and CI has none), a local site
+// reads the area tiles as its basemap. They hold no basemap layers, so the style loads in
+// full and draws water color alone.
+let localBasemap = `tiles/${hashedAreas}`;
 if (dev) {
   mkdirSync(join(DIST, "tiles"));
   copyFileSync(join(DELIVERY, areasName), join(DIST, "tiles", hashedAreas));
+  if (existsSync(LOCAL_BASEMAP)) {
+    localBasemap = `tiles/${site.basemap}`;
+    copyFileSync(LOCAL_BASEMAP, join(DIST, localBasemap));
+  }
 }
 
 // MapLibre 6 finds its worker beside its own module, which bundling hides, so the
@@ -99,6 +112,8 @@ const SITE = {
   year,
   dataPath,
   areasUrl: dev ? `tiles/${hashedAreas}` : `${site.tilesOrigin}/${hashedAreas}`,
+  basemapPath: "basemap/",
+  basemapUrl: dev ? localBasemap : `${site.tilesOrigin}/${site.basemap}`,
   workerPath: `assets/${workerName}`,
 };
 

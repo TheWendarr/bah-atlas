@@ -1,5 +1,6 @@
 {
   "year": 2026,
   "siteOrigin": "https://bah-atlas.mcgowanserver.com",
-  "tilesOrigin": "https://bah-atlas-tiles.mcgowanserver.com"
+  "tilesOrigin": "https://bah-atlas-tiles.mcgowanserver.com",
+  "basemap": "basemap_2026.7ae93271.pmtiles"
 }

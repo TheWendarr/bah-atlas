@@ -72,6 +72,23 @@ test("feature-state carries the class computed for each area", async () => {
   await page.close();
 });
 
+test("the area fills draw below water, boundaries and labels", async () => {
+  const { page } = await open();
+  const order = await page.evaluate(() => window.bahAtlas.layerOrder());
+  assert.ok(order.indexOf("earth") < order.indexOf("area-fill"));
+  assert.ok(order.indexOf("mha-outline") < order.indexOf("water"));
+  assert.ok(order.indexOf("water") < order.indexOf("boundaries"));
+  assert.ok(order.indexOf("boundaries") < order.indexOf("places_locality"));
+  await page.close();
+});
+
+test("the live basemap draws and is credited", { skip: !LIVE }, async () => {
+  const { page } = await open();
+  assert.ok((await page.evaluate(() => window.bahAtlas.basemapFeatures("water"))) > 0);
+  assert.match(await page.evaluate(() => window.bahAtlas.attribution()), /OpenStreetMap/);
+  await page.close();
+});
+
 test("the map fits a phone with no horizontal scroll", async () => {
   const { page } = await open({ viewport: { width: 360, height: 640 } });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

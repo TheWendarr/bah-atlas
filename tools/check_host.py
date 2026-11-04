@@ -42,6 +42,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -182,7 +183,7 @@ def check_site(site: str, dist: Path) -> list[str]:
     problems: list[str] = []
     for file in sorted(p for p in dist.rglob("*") if p.is_file() and p.name != "_headers"):
         path = file.relative_to(dist).as_posix()
-        reply = request(f"{site}/{'' if path == 'index.html' else path}")
+        reply = request(f"{site}/{'' if path == 'index.html' else urllib.parse.quote(path)}")
         if reply.status != 200:
             problems.append(f"{path}: HTTP {reply.status}")
             continue

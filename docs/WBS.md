@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 03 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 3  ·  🟣 In progress: 7  ·  🔴 Not started: 17  ·  ⚪ Scrapped: 4
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 3  ·  🟣 In progress: 8  ·  🔴 Not started: 16  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -25,6 +25,7 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 
 - 🟣 **C2** Attribute payload JSON (served) — due 16 Nov (M7)
 - 🟣 **C3** UI metadata JSON (served) — due 16 Nov (M7)
+- 🟣 **C4** Basemap PMTiles (served) — due 16 Nov (M7)
 - 🟣 **C5** App bootstrap + MapLibre init — due 16 Nov (M7)
 - 🟣 **C14** Render function — due 16 Nov (M7)
 - 🟣 **C22** Build bundler — due 16 Nov (M7)
@@ -285,8 +286,8 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
     class B32,W1,C1 week
-    class C2,C3,C5,C14,C22,C23,C24 prog
-    class W3,C4,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C25 todo
+    class C2,C3,C4,C5,C14,C22,C23,C24 prog
+    class W3,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C25 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
@@ -407,7 +408,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🟢 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 at bah-atlas-tiles.mcgowanserver.com under a content-hashed name; tools/check_host.py is the gate; 3 Nov: uploaded to R2; make host-check passes on the real host (ranges, no compression, ETag, CORS); completed 03 Nov |
 | 🟣 | **C2** | Attribute payload JSON (served) | required | B20, B31 | D29 (3 Nov): ICD section 2 routes B31 through C2 as well; B20, B27, B31 and B32 served from Pages under a build-id path |
 | 🟣 | **C3** | UI metadata JSON (served) | required | B21 |  |
-| 🔴 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2 |
+| 🟣 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2; 3 Nov: maxzoom 9 from the dry run (185 MB, under the 315 MB Wrangler limit; zoom 10 is 448 MB); uploaded to R2 as basemap_2026.7ae93271.pmtiles; check_host passes; style, fonts and sprites in web/public/basemap |
 
 #### 3.2 Map and UI Runtime — due 16 November 2026 (M7)
 
@@ -439,7 +440,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🔴 | **W3** | Layer 3 writeup | optional | C21 | D31 (3 Nov): author-written, matching W1, due after the site is live; optional so it does not gate M7 unless the instructor expects it by 16 Nov |
 | 🟣 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile |
 | 🟣 | **C23** | CI/CD (GitHub Actions) | required | C22 | 3 Nov: .github/workflows/web.yml: tests, then deploy from main, then make site-check and the browser tests against the live site; actions pinned by commit |
-| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error |
+| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error; Web Analytics is off for the site, because the policy blocks it too |
 
 ## Weekly progress log
 

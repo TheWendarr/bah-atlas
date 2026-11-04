@@ -158,7 +158,7 @@ config" are the files that read or cite it (documentation is not listed).
 - **Link:** daily planet builds at `https://build.protomaps.com/YYYYMMDD.pmtiles` · docs: https://docs.protomaps.com/basemaps/downloads · project (linked in the map's source list): https://protomaps.com/
 - **Artifact:** `data/processed/basemap.pmtiles` + `basemap_provenance.json` (build date, bounding box, max zoom, SHA-256)
 - **Archive:** not archived: an extract of an OpenStreetMap planet build (ODbL), rebuilt by `make basemap`; `basemap_provenance.json` records the build.
-- **Acquisition:** build — `make basemap` (`pipeline/tiles/build_basemap.sh`) extracts a CONUS bounding box from the newest daily build with the pmtiles CLI; only the needed tiles are downloaded.
+- **Acquisition:** build — `REGION=config/basemap_region.geojson MAXZOOM=9 make basemap` (`pipeline/tiles/build_basemap.sh`) extracts the U.S. regions from the newest daily build with the pmtiles CLI; only the needed tiles are downloaded. Served from Cloudflare R2 under a content-hashed name (D25).
 - **Role:** Self-hosted basemap under the MHA choropleth (served as C4), so no third-party tile API key is needed.
 - **License:** Open Database License (ODbL) Produced Work. **Attribution required on the map:** "© OpenStreetMap contributors" and Protomaps.
 - **Notes:** Daily builds are retained for about a week, so the provenance JSON records exactly which build was cut.
@@ -335,6 +335,21 @@ with B19.
 - **Provider:** Protomaps LLC — https://github.com/protomaps/PMTiles
 - **Role:** Reads the PMTiles archives by HTTP range request in the browser, through a MapLibre protocol handler (C5).
 - **License:** BSD-3-Clause.
+
+### Protomaps basemap style and assets  `[incorporated]`
+- **Provider:** Protomaps LLC — https://github.com/protomaps/basemaps (`@protomaps/basemaps` 5.7.2) and https://github.com/protomaps/basemaps-assets (commit `028c18f`)
+- **Role:** The grayscale basemap style, generated once by `make web-style` into `web/public/basemap/` with its sprites and glyphs (C4, D25). The package is a build-time tool; the site loads only the static files.
+- **License:** BSD-3-Clause (style code); see the repositories for the sprites.
+
+### Noto Sans  `[incorporated]`
+- **Provider:** The Noto Project Authors, as glyph files from protomaps/basemaps-assets
+- **Role:** Map labels, self-hosted in `web/public/basemap/fonts/` for Latin, Greek and Cyrillic ranges (C4).
+- **License:** SIL Open Font License 1.1; the license text ships at `web/public/basemap/fonts/OFL.txt`.
+
+### MapLibre style specification  `[incorporated]`
+- **Provider:** MapLibre — https://github.com/maplibre/maplibre-gl-style-spec
+- **Role:** Validates the committed basemap style in `web/test/style.test.mjs`. Test-time only.
+- **License:** ISC.
 
 ### esbuild  `[incorporated]`
 - **Provider:** Evan Wallace and contributors — https://github.com/evanw/esbuild

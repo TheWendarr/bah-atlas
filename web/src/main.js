@@ -43,7 +43,13 @@ async function start() {
     metric: ui.default_metric,
   };
 
-  const map = await createMap({ container: "map", areasUrl: SITE.areasUrl, workerPath: SITE.workerPath });
+  const map = await createMap({
+    container: "map",
+    areasUrl: SITE.areasUrl,
+    basemapPath: SITE.basemapPath,
+    basemapUrl: SITE.basemapUrl,
+    workerPath: SITE.workerPath,
+  });
   addAreaLayers(map, { colors: ui.metrics[view.metric].colors, noDataColor: ui.no_data_color });
   const classes = applyClasses(map, classesFor(files, view));
   map.once("idle", () => {
@@ -51,7 +57,13 @@ async function start() {
   });
 
   // Read by the end-to-end tests.
-  window.bahAtlas = { classOf: (code) => classes.get(code), featureState: (code) => map.getFeatureState({ source: "areas", sourceLayer: "areas", id: code }) };
+  window.bahAtlas = {
+    classOf: (code) => classes.get(code),
+    featureState: (code) => map.getFeatureState({ source: "areas", sourceLayer: "areas", id: code }),
+    layerOrder: () => map.getLayersOrder(),
+    basemapFeatures: (sourceLayer) => map.querySourceFeatures("basemap", { sourceLayer }).length,
+    attribution: () => document.querySelector(".maplibregl-ctrl-attrib-inner")?.textContent ?? "",
+  };
 }
 
 start().catch((error) => showError(error.message));
