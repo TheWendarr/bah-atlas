@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 01 November 2026  
-**Nodes tracked:** 74  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 1  ·  🟣 In progress: 0  ·  🔴 Not started: 25  ·  ⚪ Scrapped: 3
+**Status as of:** 03 November 2026  
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 1  ·  🟣 In progress: 2  ·  🔴 Not started: 24  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -19,11 +19,12 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 14 / 14 | `██████████ 100%` | ✅ Complete |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 20 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 0 / 21 | `░░░░░░░░░░ 0%` | 🗓️ Upcoming |
 
 ## In progress now
 
-_Nothing marked in progress._
+- 🟣 **C1** MHA PMTiles (served) — due 16 Nov (M7)
+- 🟣 **C24** CDN hosting + security headers — due 16 Nov (M7)
 
 ## Nodal map
 
@@ -93,6 +94,7 @@ flowchart LR
             B22["B22 Build manifest JSON"]
             B28["B28 CCG and territory polygons"]
             B31["B31 Grid payload"]
+            B32["B32 ZIP to area lookup"]
             W2["W2 Data contract"]
         end
         subgraph S2_8["2.8 Writeup, QA and Enrichments"]
@@ -133,6 +135,7 @@ flowchart LR
             C25["C25 Authorized-standard notice"]
         end
         subgraph S3_3["3.3 Build and Delivery"]
+            W3["W3 Layer 3 writeup"]
             C22["C22 Build bundler"]
             C23["C23 CI/CD"]
             C24["C24 CDN hosting + security headers"]
@@ -227,9 +230,13 @@ flowchart LR
     B29 --> B31
     B30 --> B31
     B22 --> B31
+    B1 --> B32
+    B22 --> B32
     B23 --> W1
+    C21 --> W3
     B7 --> C1
     B20 --> C2
+    B31 --> C2
     B21 --> C3
     A11 --> C4
     C1 --> C5
@@ -250,6 +257,7 @@ flowchart LR
     C3 --> C14
     C3 --> C15
     C6 --> C15
+    B32 --> C15
     B27 --> C16
     C6 --> C17
     C6 --> C18
@@ -257,7 +265,9 @@ flowchart LR
     C6 --> C19
     C2 --> C19
     C3 --> C20
+    B22 --> C20
     B23 --> C21
+    B22 --> C21
     C22 --> C23
     C23 --> C24
     C6 --> C25
@@ -270,9 +280,10 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
     class W1 week
-    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25 todo
-    class A10,B25,B26 gone
-    class A9,A10,B19,B24,B25,B26,B27,C15,C16,C17,C18,C19 opt
+    class C1,C24 prog
+    class B32,W3,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C19,C20,C21,C22,C23,C25 todo
+    class A10,B25,B26,C18 gone
+    class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
 
 ## Master node list
@@ -366,6 +377,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py; completed 18 Oct |
 | ⚫ | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | ⚫ | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20; code ready 24 Oct: build_grid.py in make handoff, ICD 1.1.0 section 5b; costs carry cents so the browser formula reproduces B20 exactly (contract.grid_view, tested); completed 24 Oct |
+| 🔴 | **B32** | ZIP to area lookup | required | B1, B22 | D26 (3 Nov): delivered file zips_2026.json from B1, keyed by area code, about 102 KB gzipped; serves C15; tracked under M7, in Delivery 2 (ICD 1.2.0) |
 | ⚫ | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; 24 Oct: ICD 1.1.0 written (B31, B21 grid block, caveat type_factor_national, obligations 8-9, check 10); awaits author approval; 1 Nov: D22 wording added to ICD 1.1.0 (values only); ICD 1.0.3 and 1.1.0 approved by the author 1 Nov 2026; completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)
@@ -387,46 +399,48 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **C1** | MHA PMTiles (served) | required | B7 |  |
-| 🔴 | **C2** | Attribute payload JSON (served) | required | B20 |  |
+| 🟣 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 at bah-atlas-tiles.mcgowanserver.com under a content-hashed name; tools/check_host.py is the gate |
+| 🔴 | **C2** | Attribute payload JSON (served) | required | B20, B31 | D29 (3 Nov): ICD section 2 routes B31 through C2 as well; B20, B27, B31 and B32 served from Pages under a build-id path |
 | 🔴 | **C3** | UI metadata JSON (served) | required | B21 |  |
-| 🔴 | **C4** | Basemap PMTiles (served) | required | A11 |  |
+| 🔴 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2 |
 
 #### 3.2 Map and UI Runtime — due 16 November 2026 (M7)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 |  |
+| 🔴 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 | D23 (3 Nov): vanilla ES modules, MapLibre GL JS 6 and pmtiles only; D29: opens on CONUS with Alaska and Hawaii jump buttons |
 | 🔴 | **C6** | UI state object | required | C7, C13 |  |
-| 🔴 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown |
+| 🔴 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown; D29 (3 Nov): adds the metric selector as a fourth dropdown; D32 (2 Nov): bar above the map on laptops, summary chip and sheet on phones |
 | 🔴 | **C8** | Feature-state join | required | C14, C2 |  |
-| 🔴 | **C9** | Choropleth paint expression | required | C14, C3 |  |
-| 🔴 | **C10** | Legend | required | C14 |  |
-| 🔴 | **C11** | MHA detail popup/panel | required | C14 |  |
+| 🔴 | **C9** | Choropleth paint expression | required | C14, C3 | Mock-ups: outline class mha only, County Cost Groups fill only; D27 adds a second scale for views that are not the statutory test |
+| 🔴 | **C10** | Legend | required | C14 | D27 (3 Nov): the legend names the active scale; off-standard views use their own class labels |
+| 🔴 | **C11** | MHA detail popup/panel | required | C14 | D32 (2 Nov): side panel on laptops, bottom sheet on phones; D26: display_name when present |
 | 🔴 | **C12** | A/B comparison panel | required | C14 |  |
 | 🔴 | **C13** | Rent/Buy toggle | required | — |  |
 | 🔴 | **C14** | Render function | required | C6, C2, C3 | D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles |
-| 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6 |  |
-| 🔴 | **C16** | Hotspot overlay toggle | optional | B27 |  |
-| 🔴 | **C17** | Shareable URL / permalink | optional | C6 |  |
-| 🔴 | **C18** | Utilities toggle | optional | C6, C2 |  |
-| 🔴 | **C19** | Data export (CSV of view) | optional | C6, C2 |  |
-| 🔴 | **C20** | Attribution + methodology | required | C3 |  |
-| 🔴 | **C21** | About / data-caveats page | required | B23 |  |
+| 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6, B32 | D26 (3 Nov): needs B32; included in M7 scope (D30) |
+| 🔴 | **C16** | Hotspot overlay toggle | optional | B27 | D29 (3 Nov): B27 is served with the other JSON files; included in M7 scope (D30) |
+| 🔴 | **C17** | Shareable URL / permalink | optional | C6 | D30 (3 Nov): first optional node, because the E2E tests drive the app through it |
+| ⚪ | **C18** | Utilities toggle | optional | C6, C2 | Scrapped 3 Nov 2026 (D28): B31 rent costs include utilities and no rent-only figure is delivered, so the toggle would break ICD must-not rule 1 |
+| 🔴 | **C19** | Data export (CSV of view) | optional | C6, C2 | D30 (3 Nov): last optional node, first to cut |
+| 🔴 | **C20** | Attribution + methodology | required | C3, B22 |  |
+| 🔴 | **C21** | About / data-caveats page | required | B23, B22 | Prose is author-written; must state the O-3 benchmark dependence, the shared-denominator caveat and the model-form result from B23 |
 | 🔴 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default |
 
 #### 3.3 Build and Delivery — due 16 November 2026 (M7)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🔴 | **C22** | Build bundler | required | — |  |
+| 🔴 | **W3** | Layer 3 writeup | optional | C21 | D31 (3 Nov): author-written, matching W1, due after the site is live; optional so it does not gate M7 unless the instructor expects it by 16 Nov |
+| 🔴 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile |
 | 🔴 | **C23** | CI/CD (GitHub Actions) | required | C22 |  |
-| 🔴 | **C24** | CDN hosting + security headers | required | C23 |  |
+| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers |
 
 ## Weekly progress log
 
 The [progress index](progress/README.md) shows each milestone's status beside its latest note.
 
+- [03 November 2026](progress/2026-11-03.md) — M6
 - [24 October 2026](progress/2026-10-24.md) — M5
 - [17 October 2026](progress/2026-10-17.md) — M4
 - [10 October 2026](progress/2026-10-10.md) — M3
