@@ -439,7 +439,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🔴 | **W3** | Layer 3 writeup | optional | C21 | D31 (3 Nov): author-written, matching W1, due after the site is live; optional so it does not gate M7 unless the instructor expects it by 16 Nov |
 | 🟣 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile |
 | 🟣 | **C23** | CI/CD (GitHub Actions) | required | C22 | 3 Nov: .github/workflows/web.yml: tests, then deploy from main, then make site-check and the browser tests against the live site; actions pinned by commit |
-| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers |
+| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error |
 
 ## Weekly progress log
 

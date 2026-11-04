@@ -28,6 +28,9 @@ Site mode compares the deployed site with web/dist, after a deployment:
   files      every file in dist answers 200 with the same bytes and the right type
   headers    each header in dist/_headers is on the live response, unchanged
 
+Cloudflare's Bot Fight Mode adds one script before </body> of an HTML page (D33). The
+comparison removes that script and nothing else, so any other change to a page fails.
+
 --wait retries until the deployment has reached the site, then reports what still fails.
 
 Exit status 1 if any check fails. Stdlib only.
@@ -158,6 +161,15 @@ def expected_type(path: str) -> str | None:
     return None
 
 
+def without_bot_script(html: bytes) -> bytes:
+    """The page with Cloudflare's script removed, if that script is what ends the body."""
+    end = html.rfind(b"</script></body>")
+    start = html.rfind(b"<script>", 0, end)
+    if end < 0 or start < 0 or b"/cdn-cgi/challenge-platform/" not in html[start:end]:
+        return html
+    return html[:start] + html[end + len(b"</script>"):]
+
+
 def check_site(site: str, dist: Path) -> list[str]:
     site = site.rstrip("/")
     rules = read_header_rules(dist / "_headers")
@@ -168,7 +180,8 @@ def check_site(site: str, dist: Path) -> list[str]:
         if reply.status != 200:
             problems.append(f"{path}: HTTP {reply.status}")
             continue
-        if reply.body != file.read_bytes():
+        body = without_bot_script(reply.body) if path.endswith(".html") else reply.body
+        if body != file.read_bytes():
             problems.append(f"{path}: the live bytes differ from dist")
         kind = expected_type(path)
         if kind and kind not in reply.headers.get("content-type", ""):

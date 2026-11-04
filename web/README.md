@@ -11,7 +11,7 @@ It reads only `delivery/<year>/` and follows the
 | `make web-build` | Builds the production site in `web/dist` |
 | `make web-test` | Formula parity on all 218,316 views, the class rule and the contract gate |
 | `make web-e2e` | The built site in a real browser (first run: `cd web && npx playwright install chromium`) |
-| `make site-check` | The deployed site against `web/dist`: files, types and security headers |
+| `make site-check` | The deployed site against `web/dist`: files, types and security headers, allowing Cloudflare's Bot Fight Mode script and nothing else (D33) |
 | `make web-e2e-live` | The same browser tests against the deployed site and the real tile host |
 
 `python -m http.server` cannot run this site, because it ignores the HTTP range

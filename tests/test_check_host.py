@@ -112,6 +112,14 @@ class TestCheckHost(unittest.TestCase):
             self.assertLess(end, 100)
 
 
+BOT_SCRIPT = b"<script>(function(){var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a1';})();</script>"
+PAGE_CHANGES = {
+    "bot_script": lambda page: page.replace(b"</body>", BOT_SCRIPT + b"</body>"),
+    "other_script": lambda page: page.replace(b"</body>", b"<script>steal()</script></body>"),
+    "bot_script_and_edit": lambda page: page.replace(b"<p>", b"<p>changed ").replace(b"</body>", BOT_SCRIPT + b"</body>"),
+}
+
+
 def site_server(root: Path, fault: str | None = None) -> ThreadingHTTPServer:
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args) -> None:
@@ -127,6 +135,8 @@ def site_server(root: Path, fault: str | None = None) -> ThreadingHTTPServer:
             body = file.read_bytes()
             if fault == "stale" and path.endswith(".json"):
                 body = b"{}"
+            if path.endswith(".html") and fault in PAGE_CHANGES:
+                body = PAGE_CHANGES[fault](body)
             self.send_response(200)
             kinds = {".html": "text/html", ".mjs": "text/javascript", ".json": "application/json"}
             kind = "text/plain" if fault == "bad_type" else kinds[file.suffix]
@@ -149,7 +159,7 @@ class TestCheckSite(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.dist = Path(self.tmp.name)
         (self.dist / "assets").mkdir()
-        (self.dist / "index.html").write_text("<!doctype html>")
+        (self.dist / "index.html").write_text("<!doctype html><body><p>map</p></body>")
         (self.dist / "assets" / "worker.mjs").write_text("export {}")
         (self.dist / "data.json").write_text('{"a": 1}')
         (self.dist / "_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n/assets/*\n  Cache-Control: immutable\n")
@@ -177,6 +187,19 @@ class TestCheckSite(unittest.TestCase):
 
     def test_missing_header_fails(self) -> None:
         self.assertTrue(any("x-content-type-options" in p for p in self.problems("no_nosniff")))
+
+    def test_cloudflare_bot_script_passes(self) -> None:
+        self.assertEqual(self.problems("bot_script"), [])
+
+    def test_any_other_added_script_fails(self) -> None:
+        self.assertTrue(any("differ from dist" in p for p in self.problems("other_script")))
+
+    def test_bot_script_does_not_hide_another_change(self) -> None:
+        self.assertTrue(any("differ from dist" in p for p in self.problems("bot_script_and_edit")))
+
+    def test_bot_script_is_removed_only_from_the_end_of_the_body(self) -> None:
+        page = b"<body>" + BOT_SCRIPT + b"<p>map</p></body>"
+        self.assertEqual(ch.without_bot_script(page), page)
 
 
 if __name__ == "__main__":

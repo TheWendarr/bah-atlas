@@ -8,6 +8,11 @@ import { chromium } from "playwright";
 import { serve } from "../serve.mjs";
 
 const DIST = fileURLToPath(new URL("../../dist", import.meta.url));
+// D33: Bot Fight Mode adds an inline script to the live page, and the site's policy blocks
+// it. Only a live run forgives that one error; make site-check has already shown that the
+// script is the only change to the page, and a local run allows no inline script at all.
+const LIVE = Boolean(process.env.SITE_URL);
+const BLOCKED_INLINE_SCRIPT = /^Executing inline script violates/;
 const WEBGL = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"];
 
 let browser;
@@ -15,7 +20,7 @@ let site;
 let origin;
 
 before(async () => {
-  if (process.env.SITE_URL) {
+  if (LIVE) {
     origin = process.env.SITE_URL;
   } else {
     site = await serve(DIST);
@@ -34,7 +39,9 @@ async function open(context = {}, change = null) {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() !== "error") return;
+    if (LIVE && BLOCKED_INLINE_SCRIPT.test(message.text())) return;
+    errors.push(message.text());
   });
   if (change) {
     await page.route("**/grid_2026.json", async (route) => {
