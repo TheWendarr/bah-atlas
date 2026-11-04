@@ -197,7 +197,7 @@ regression: density
 		--seed $(SEED) --out $(SPATIAL)
 
 # --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31; docs/data-contract.md) ---
-# Writes the six delivered files and SHA256SUMS into $(HANDOFF), then validates them
+# Writes the seven delivered files and SHA256SUMS into $(HANDOFF), then validates them
 # against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
 # build is proven before B22 records it. A full rebuild from data/raw is
 # `make all handoff`. Afterwards run `make evidence verify` to record the B22 manifest.
@@ -221,6 +221,8 @@ handoff:
 	$(HANDOFF_PY)/build_ui_metadata.py --year $(YEAR) --names $(INTERIM)/mha_names.csv \
 		--coverage-manifest $(METRICS)/coverage_metrics_manifest.json \
 		--tax-manifest $(BENCH)/mha_tax_insurance_manifest.json \
+		--spatial-manifest $(SPATIAL)/spatial_stats_manifest.json \
+		--regression-manifest $(SPATIAL)/regression_manifest.json \
 		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/ui_metadata_$(YEAR).json
 	$(HANDOFF_PY)/build_hotspots.py --year $(YEAR) --spatial-stats $(SPATIAL)/mha_spatial_stats.csv \
 		--spatial-manifest $(SPATIAL)/spatial_stats_manifest.json --payload $(HANDOFF)/payload_$(YEAR).json \
@@ -229,8 +231,10 @@ handoff:
 		--bah-rates $(INTERIM)/bah_rates.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
 		--own-by-type $(BENCH)/mha_ownership_by_type.csv --ownership $(BENCH)/mha_ownership.csv \
 		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/grid_$(YEAR).json
+	$(HANDOFF_PY)/build_zip_lookup.py --year $(YEAR) --zip-mha $(INTERIM)/zip_mha.csv \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/zips_$(YEAR).json
 	cd $(HANDOFF) && sha256sum areas_$(YEAR).pmtiles payload_$(YEAR).json ui_metadata_$(YEAR).json \
-		hotspots_$(YEAR).json grid_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
+		hotspots_$(YEAR).json grid_$(YEAR).json zips_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
 	$(HANDOFF_PY)/validate_handoff.py --year $(YEAR) --handoff $(HANDOFF)
 
 # --- 2.8 QA / validation report (B23) ----------------------------------------
@@ -266,8 +270,10 @@ DELIVERY ?= delivery/$(YEAR)
 deliver-check:
 	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY) --check
 
+# A re-delivery supersedes the folder: `make deliver REPLACE=1`, logged in ICD section 13.
 deliver:
-	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY)
+	$(PYTHON) tools/deliver_handoff.py --year $(YEAR) --handoff $(HANDOFF) --qa $(QA) --dest $(DELIVERY) \
+		$(if $(REPLACE),--replace,)
 
 # Unit tests against synthetic fixtures (no downloads needed).
 test:

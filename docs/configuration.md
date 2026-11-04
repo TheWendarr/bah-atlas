@@ -126,7 +126,7 @@ A13 sets the class breaks, colours and labels for every mapped metric, and the c
 | Field | Meaning |
 |---|---|
 | `_doc` | Pointer to this page. |
-| `version` | Schema version. Version 2 (18 Oct 2026) moved the explanations here and added the D2 and D3 entries. |
+| `version` | Schema version. Version 2 (18 Oct 2026) moved the explanations here and added the D2 and D3 entries. Version 3 (3 Nov 2026) added `ramp_labels`, `off_standard` and `clusters.out_of_scope_label`. |
 | `coverage_target` | Must equal A12's value (0.95). Used only by the flat-95% reading. |
 | `no_data_color` | Fill for areas with no value: CCGs (decision N1), MHAs without a benchmark, and the territory bucket. |
 | `palette_source` | Attribution for the palette. ColorBrewer requires credit, so this text is shown on the map. |
@@ -136,14 +136,21 @@ A13 sets the class breaks, colours and labels for every mapped metric, and the c
 | `metrics.<name>.modes` | Which modes have this metric. The SAFMR layers are rent only, because HUD publishes rents, not ownership costs. |
 | `metrics.<name>.format` | `percent` or `usd`, for legend and popup formatting. |
 | `metrics.<name>.method`, `neutral`, `breaks`, `colors`, `class_labels` | Fixed half-open classes `[lower, upper)`. There is one more colour and label than breaks, and `neutral` must sit in the middle class. |
+| `metrics.<name>.ramp_labels` | Three short strings for a compact legend: low end, middle, high end. |
+| `metrics.<name>.off_standard` | The second scale for the four grid metrics (D27): `label`, `short_label`, `neutral`, `breaks`, `class_labels`, `ramp_labels`. It shares the metric's colours. |
 | `clusters.variable`, `alpha` | The cluster test: `adequacy_gap` at pseudo p < 0.05. |
 | `clusters.legend_title` | Labels every local class as exploratory (decision D2). |
 | `clusters.classes` | LISA quadrant codes with their label and colour. |
+| `clusters.out_of_scope_label` | Legend text for areas outside the cluster analysis. |
 | `clusters.fdr_marker` | Outline that marks MHAs still significant after the Benjamini–Hochberg false-discovery-rate correction (decision D2). |
 
 **Why fixed breaks rather than quantiles.** The research question asks whether BAH meets its statutory design, a fixed point. Fixed breaks keep that point visible as the near-white middle class and make maps comparable across profiles and modes. Quantile breaks would always paint the same share of MHAs red, whether or not any MHA misses the design.
 
 The palette is ColorBrewer RdBu, 7 classes, which is colour-blind safe: red for shortfall, blue for surplus.
+
+### The second scale (decision D27, 3 Nov 2026)
+
+The main breaks sit around the statutory design point. A view of a home DoD does not prescribe for a rank can land far from that point, and on the main breaks 124 of 266 such rent views and 121 of 266 buy views put at least 90% of areas in one class. `off_standard` spreads the classes across the range those views reach, so the geography stays visible, and its labels drop the word "statutory" because these views are not the statutory test. The breaks are still fixed, so every off-standard map is comparable with every other. The counts for each metric are in [data contract section 6.2](data-contract.md#62-the-second-colour-scale).
 
 ### The seven map layers
 
@@ -221,11 +228,15 @@ The wording the map shows, read only by B21 (`build_ui_metadata.py`), which copi
 | Field | Meaning |
 |---|---|
 | `_doc`, `version` | Pointer to this page; schema version of this file. |
+| `no_data_label` | Legend text for `no_data_color`. |
+| `display_names` | By area code, the name the map shows where the DTMO name reads badly: `XX499` is "UNKNOWN, NA", and `GA073` is "FORT GORDON, AL" in DTMO's file. B3 and `name` keep the DTMO text. |
 | `modes` | Display label for `rent` and `buy`. |
 | `statuses` | A `label` and a `text` for each status code in data contract section 5.4. B21 stops if a code is missing or an extra one appears. |
 | `caveats` | A `title` and a `text` for each caveat id in section 5.5; B21 adds each id's level from the contract. Same check. |
 | `global_caveats` | Limitations that apply to the whole map: `id`, `title`, `text`. |
 | `geometry` | `method` and `authority` statements for the area outlines. |
+| `grid.titles` | Control titles beyond `rank` and `home_type`: `dependents`, `metric`, `mode`. |
+| `grid.off_standard_scale` | `title` and `subtitle` for the legend when the second scale is active. |
 | `sources` | One entry per incorporated source shown in the map's attribution (C20): `id` (node), `title`, `provider`, `url`, `license`, `used_for`. Follows [SOURCES.md](SOURCES.md). |
 
 **Wording rules.** Each text says what the reader is looking at and why a value is missing or qualified, in plain language, without the project's node ids. A text that states a number (a year, a count) is avoided where B21 already carries it, so the file does not go stale when a window changes; `insurance_2022_dollars` names its year because the caveat id does.

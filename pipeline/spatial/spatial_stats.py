@@ -235,10 +235,10 @@ def run_test(ids: list[str], y: "np.ndarray", gi_y: "np.ndarray", xy: "np.ndarra
         gz, gp = float(gi.Zs[i]), float(gi.p_sim[i])
         rows.append({
             "mha": m, "status": "tested", "neighbors": k,
-            "lisa_i": f"{float(lisa.Is[i]):.4f}", "lisa_quadrant": quad, "lisa_p_sim": f"{lisa_p[i]:.4f}",
+            "lisa_i": f"{float(lisa.Is[i]):.4f}", "lisa_quadrant": quad, "lisa_p_sim": f"{lisa_p[i]:.5f}",
             "lisa_fdr_significant": str(bool(fdr_mask[i])).lower(),
             "cluster": quad if sig else "NS",
-            "gi_z": f"{gz:.3f}", "gi_p_sim": f"{gp:.4f}",
+            "gi_z": f"{gz:.3f}", "gi_p_sim": f"{gp:.5f}",
             "gi_class": ("hot" if gz > 0 else "cold") if gp < args.alpha else "ns"})
 
     clusters = {c: sum(r["cluster"] == c for r in rows) for c in ("HH", "LL", "HL", "LH", "NS")}

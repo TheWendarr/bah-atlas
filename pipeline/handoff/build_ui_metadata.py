@@ -6,7 +6,8 @@ Everything the map needs to label and colour the B20 payload, so no wording or
 class break is hard-coded in Layer 3 (data contract section 6): profiles (A12),
 the seven map layers with their classes and colours and the cluster legend (A13),
 area names (B3), status and caveat texts and source attributions
-(config/ui_text.json), the benchmark windows from the stage manifests, and the
+(config/ui_text.json), the benchmark windows from the stage manifests, the H1 and H2
+findings from the B17-B19 manifests, and the
 grid block for the rank, dependents and home-type dropdowns with the plain-language
 DoD standard for each of the 46 cells (A14, decision D18, ICD 6.1).
 
@@ -14,6 +15,8 @@ DoD standard for each of the 46 cells (A14, decision D18, ICD 6.1).
         --names data/interim/bah_2026/mha_names.csv \
         --coverage-manifest data/interim/metrics_2026/coverage_metrics_manifest.json \
         --tax-manifest data/interim/benchmarks_2026/mha_tax_insurance_manifest.json \
+        --spatial-manifest data/interim/spatial_2026/spatial_stats_manifest.json \
+        --regression-manifest data/interim/spatial_2026/regression_manifest.json \
         --build-manifest data/processed/handoff/build_manifest_2026.json \
         --out data/processed/handoff/ui_metadata_2026.json
 
@@ -33,7 +36,8 @@ TOOL = "build_ui_metadata"
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "pipeline" / "benchmarks"))
 import home_types as ht  # noqa: E402
-METRIC_KEYS = ("label", "short_label", "role", "modes", "format", "neutral", "breaks", "colors", "class_labels")
+METRIC_KEYS = ("label", "short_label", "role", "modes", "format", "neutral", "breaks", "colors", "class_labels",
+               "ramp_labels")
 PROFILE_KEYS = ("id", "label", "role", "pay_grade", "has_dependents", "anchor_dwelling", "anchor_bedrooms",
                 "cost_share_monthly")
 
@@ -44,6 +48,8 @@ def main() -> None:
     ap.add_argument("--names", type=Path, required=True, help="B3 mha_names.csv")
     ap.add_argument("--coverage-manifest", type=Path, required=True, help="B12-B15 manifest (windows)")
     ap.add_argument("--tax-manifest", type=Path, required=True, help="A8 rollup manifest (ACS and FIO years)")
+    ap.add_argument("--spatial-manifest", type=Path, required=True, help="B17-B18 manifest (H1 finding)")
+    ap.add_argument("--regression-manifest", type=Path, required=True, help="B19 manifest (H2 finding)")
     ap.add_argument("--build-manifest", type=Path, required=True, help="B22, whose hash is the build_id")
     ap.add_argument("--profiles", type=Path, default=ROOT / "config" / "profiles.json")
     ap.add_argument("--classification", type=Path, default=ROOT / "config" / "classification.json")
@@ -80,12 +86,28 @@ def main() -> None:
         problems.append("ui_text.json grid.notice needs a 'standard' text with {standard} and an 'off_standard' "
                         "text with {standard} and {home_type}")
 
+    titles = gt.get("titles", {})
+    missing_titles = [k for k in c.GRID_TITLES if k not in ("rank", "home_type") and not titles.get(k)]
+    if missing_titles:
+        problems.append(f"ui_text.json grid.titles lacks {missing_titles}")
+    scale = gt.get("off_standard_scale", {})
+    if not scale.get("title") or not scale.get("subtitle"):
+        problems.append("ui_text.json grid.off_standard_scale needs a title and a subtitle")
+    if not text.get("no_data_label"):
+        problems.append("ui_text.json needs a no_data_label")
+
     metrics = {}
     for mid, m in cls_cfg.get("metrics", {}).items():
         missing = [k for k in METRIC_KEYS if k not in m]
         if missing:
             problems.append(f"A13 metric {mid} lacks {missing}")
         metrics[mid] = {k: m.get(k) for k in METRIC_KEYS}
+        if mid in c.GRID_METRICS:
+            off = m.get("off_standard", {})
+            lacking = [k for k in c.OFF_STANDARD_KEYS if k not in off]
+            if lacking:
+                problems.append(f"A13 metric {mid} off_standard lacks {lacking}")
+            metrics[mid]["off_standard"] = {k: off.get(k) for k in c.OFF_STANDARD_KEYS}
     if len(metrics) != 7:
         problems.append(f"A13 has {len(metrics)} metrics; the contract's map has 7 layers")
     c.fail_if(problems, TOOL)
@@ -97,6 +119,11 @@ def main() -> None:
 
     def span(months: list[str]) -> str | None:
         return f"{months[0]} to {months[-1]}" if months else None
+
+    overrides = text.get("display_names", {})
+    unknown = sorted(set(overrides) - {r["mha"] for r in names})
+    if unknown:
+        print(f"note: display_names for codes not in B3: {unknown}")
 
     std = ht.load(args.standards)
     labels = gt["home_types"]
@@ -114,7 +141,8 @@ def main() -> None:
         "standards_text": {g: {d: ht.describe(std["standards"][g][d], labels) for d in c.GRID_DEPENDENTS}
                            for g in std["grades"]},
         "notice": notice,
-        "titles": {k: gt[k] for k in ("rank", "home_type")},
+        "titles": {**{k: gt[k] for k in ("rank", "home_type")}, **titles},
+        "off_standard_scale": scale,
     }
 
     meta = {
@@ -125,8 +153,10 @@ def main() -> None:
         "metrics": metrics,
         "default_metric": cls_cfg["default_metric"],
         "no_data_color": cls_cfg["no_data_color"],
+        "no_data_label": text["no_data_label"],
         "clusters": cls_cfg["clusters"],
-        "areas": {r["mha"]: {"name": r["name"], "class": r["mha_class"]}
+        "areas": {r["mha"]: {"name": r["name"], "display_name": overrides.get(r["mha"], r["name"]),
+                             "class": r["mha_class"]}
                   for r in sorted(names, key=lambda r: r["mha"])},
         "statuses": {code: statuses[code] for code in c.ALL_STATUSES},
         "caveats": {cid: {**caveats[cid], "level": level} for cid, level in c.CAVEATS.items()},
@@ -142,6 +172,7 @@ def main() -> None:
         },
         "sources": text.get("sources", []),
         "geometry": text.get("geometry", {}),
+        "findings": c.findings(c.read_json(args.spatial_manifest, TOOL), c.read_json(args.regression_manifest, TOOL)),
         "grid": grid,
     }
     c.write_json(args.out, meta)

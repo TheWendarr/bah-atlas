@@ -103,6 +103,10 @@ class Fixture(unittest.TestCase):
         bah_rows = [{"mha": code, "pay_grade": g, "has_dependents": str(dep), "monthly_rate": f"{rate(code, g, dep):.1f}"}
                     for code in ("AK400", "CO001", "CO002", "ZZ001") for g in GRADES for dep in (True, False)]
         write_csv(interim / "bah_rates.csv", ["mha", "pay_grade", "has_dependents", "monthly_rate"], bah_rows)
+        write_csv(interim / "zip_mha.csv", ["zip", "mha", "mha_class"], [
+            {"zip": "99701", "mha": "AK400", "mha_class": "mha"}, {"zip": "80901", "mha": "CO001", "mha_class": "mha"},
+            {"zip": "80902", "mha": "CO001", "mha_class": "mha"}, {"zip": "81001", "mha": "CO002", "mha_class": "mha"},
+            {"zip": "00901", "mha": "XX001", "mha_class": "unknown"}, {"zip": "59001", "mha": "ZZ001", "mha_class": "ccg"}])
 
         rent, buy, own = [], [], []
         for pid, (grade, share, bah) in PROFILES.items():
@@ -154,7 +158,16 @@ class Fixture(unittest.TestCase):
                                       "lisa_fdr_significant": "true" if t else "", "gi_class": "hot" if t else ""})
         write_csv(spatial / "mha_spatial_stats.csv", ["profile", "mode", "variable", "mha", "status", "cluster",
                                                       "lisa_p_sim", "lisa_fdr_significant", "gi_class"], stats)
+        write_json(spatial / "regression_manifest.json", {
+            "nodes": ["B19"], "headline": {
+                "test": "e5_dep rent adequacy_gap", "n": 2, "model": "error", "ols_r2": 0.29271,
+                "ambiguous_form": {"models": ["ML_Error", "ML_Lag"]}, "sample_selection": {"eligible": 3},
+                "predictors": [{"predictor": "ln_rent", "b": -0.210614, "p": 2.6e-05, "reading": "negative association",
+                                "model_form_agrees": True, "alternative": {"model": "ML_Lag", "b": -0.151069,
+                                                                           "p": 5.8e-05, "reading": "negative association"}}]}})
         write_json(spatial / "spatial_stats_manifest.json", {
+            "headline": {"test": "e5_dep rent adequacy_gap", "n": 1, "moran_I": 0.1515, "p_sim": 1e-05,
+                         "lisa_clusters": {"HH": 1, "LL": 0, "HL": 0, "LH": 0, "NS": 0}, "lisa_fdr_significant": 1},
             "nodes": ["B17", "B18"], "scope": {"excluded": ["AK400"]},
             "method": {"permutations": 99999, "seed": 2026, "alpha": 0.05, "software": {"esda": "2.10.0"}},
             "tests": tests})
@@ -211,6 +224,8 @@ class Fixture(unittest.TestCase):
             ("build_ui_metadata.py", "--year", y, "--names", str(interim / "mha_names.csv"),
              "--coverage-manifest", str(met / "coverage_metrics_manifest.json"),
              "--tax-manifest", str(bench / "mha_tax_insurance_manifest.json"),
+             "--spatial-manifest", str(spatial / "spatial_stats_manifest.json"),
+             "--regression-manifest", str(spatial / "regression_manifest.json"),
              "--build-manifest", str(b22), "--out", str(o / f"ui_metadata_{y}.json"),
              *(["--ui-text", str(ui_text)] if ui_text else [])),
             ("build_hotspots.py", "--year", y, "--spatial-stats", str(spatial / "mha_spatial_stats.csv"),
@@ -221,6 +236,8 @@ class Fixture(unittest.TestCase):
              "--bah-rates", str(interim / "bah_rates.csv"), "--rent-by-type", str(bench / "mha_rent_by_type.csv"),
              "--own-by-type", str(bench / "mha_ownership_by_type.csv"), "--ownership", str(bench / "mha_ownership.csv"),
              "--build-manifest", str(b22), "--out", str(o / f"grid_{y}.json")),
+            ("build_zip_lookup.py", "--year", y, "--zip-mha", str(interim / "zip_mha.csv"),
+             "--build-manifest", str(b22), "--out", str(o / f"zips_{y}.json")),
         ]
         for script, *args in steps:
             p = self.run_py(script, *args)
@@ -231,7 +248,7 @@ class Fixture(unittest.TestCase):
         y = YEAR
         lines = [f"{hashlib.sha256((self.out / n).read_bytes()).hexdigest()}  {n}"
                  for n in (f"areas_{y}.pmtiles", f"payload_{y}.json", f"ui_metadata_{y}.json",
-                           f"hotspots_{y}.json", f"grid_{y}.json", f"build_manifest_{y}.json")]
+                           f"hotspots_{y}.json", f"grid_{y}.json", f"zips_{y}.json", f"build_manifest_{y}.json")]
         (self.out / "SHA256SUMS").write_text("\n".join(lines) + "\n")
 
     def validate(self) -> subprocess.CompletedProcess:
@@ -253,7 +270,7 @@ class TestHandoff(Fixture):
         self.build()
         pay = self.payload()
         b22 = hashlib.sha256((self.out / f"build_manifest_{YEAR}.json").read_bytes()).hexdigest()
-        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.1.0", 2026, b22))
+        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.2.0", 2026, b22))
         self.assertEqual(list(pay["areas"]), ["AK400", "CO001", "CO002", "XX001", "ZZ001"])
         co = pay["areas"]["CO001"]
         self.assertEqual((co["class"], co["cluster_scope"], co["caveats"]), ("mha", True, []))
@@ -286,7 +303,8 @@ class TestHandoff(Fixture):
         ui = json.loads((self.out / f"ui_metadata_{YEAR}.json").read_text())
         self.assertEqual(len(ui["metrics"]), 7)
         self.assertEqual(ui["caveats"]["lisa_exploratory"]["level"], "overlay")
-        self.assertEqual(ui["areas"]["CO001"], {"name": "COLORADO SPRINGS, CO", "class": "mha"})
+        self.assertEqual(ui["areas"]["CO001"], {"name": "COLORADO SPRINGS, CO", "display_name": "COLORADO SPRINGS, CO",
+                                               "class": "mha"})
         self.assertEqual(ui["windows"]["property_tax_acs"], "2020-2024")
         hot = json.loads((self.out / f"hotspots_{YEAR}.json").read_text())
         self.assertEqual(set(hot["areas"]), {"CO001", "CO002"})                 # cluster scope only
@@ -297,6 +315,59 @@ class TestHandoff(Fixture):
         self.assertEqual(hot["tests"]["e5_dep"]["rent"],
                          {"n": 1, "k": 6, "permutations": 99999, "alpha": 0.05, "moran_i": 0.1515,
                           "moran_p_sim": 1e-05, "fdr_cutoff": 0.00011})
+
+    def test_zip_lookup_matches_b1(self) -> None:
+        self.build()
+        zips = json.loads((self.out / f"zips_{YEAR}.json").read_text())
+        self.assertEqual(zips["areas"]["CO001"], ["80901", "80902"])
+        self.assertEqual(list(zips["areas"]), sorted(zips["areas"]))
+        self.assertEqual(self.validate().returncode, 0)
+
+    def test_changed_zip_fails_check_5(self) -> None:
+        self.build()
+        path = self.out / f"zips_{YEAR}.json"
+        doc = json.loads(path.read_text())
+        doc["areas"]["CO001"][1] = "80903"
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("B32 differs from B1", p.stdout)
+
+    def test_ui_metadata_additions(self) -> None:
+        self.build()
+        ui = json.loads((self.out / f"ui_metadata_{YEAR}.json").read_text())
+        self.assertEqual(ui["no_data_label"], "No adequacy measure")
+        self.assertEqual(ui["areas"]["CO001"]["display_name"], "COLORADO SPRINGS, CO")
+        self.assertEqual(ui["grid"]["titles"]["metric"], "Show")
+        self.assertEqual(ui["metrics"]["adequacy_ratio"]["off_standard"]["breaks"], [0.5, 0.7, 0.9, 1.1, 1.4, 1.8])
+        self.assertNotIn("off_standard", ui["metrics"]["flat95_gap"])
+        self.assertEqual(len(ui["metrics"]["flat95_gap"]["ramp_labels"]), 3)
+        self.assertEqual(ui["findings"]["h1"]["moran_i"], 0.1515)
+        self.assertEqual(ui["findings"]["h2"]["predictors"][0]["b"], -0.2106)
+        self.assertEqual(ui["findings"]["h2"]["predictors"][0]["p"], 0.00003)
+
+    def test_changed_finding_fails_check_5(self) -> None:
+        self.build()
+        path = self.out / f"ui_metadata_{YEAR}.json"
+        doc = json.loads(path.read_text())
+        doc["findings"]["h1"]["moran_i"] = 0.2
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("findings differ", p.stdout)
+
+    def test_zero_p_value_fails_check_3(self) -> None:
+        self.build()
+        path = self.out / f"hotspots_{YEAR}.json"
+        doc = json.loads(path.read_text())
+        doc["areas"]["CO001"]["e5_dep"]["rent"]["lisa_p_sim"] = 0.0
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("cannot be 0", p.stdout)
 
     def test_changed_value_fails_check_5(self) -> None:
         self.build()
@@ -344,7 +415,7 @@ class TestHandoff(Fixture):
         self.build()
         g = self.grid()
         self.assertEqual((g["schema_version"], g["ranks"][:5], g["home_types"], g["dependents"]),
-                         ("1.1.0", GRADES[:5], TYPES, ["with", "without"]))
+                         ("1.2.0", GRADES[:5], TYPES, ["with", "without"]))
         self.assertEqual((g["cost_share_monthly"]["with"][4], g["cost_share_monthly"]["without"][22]), (126, 187))
         self.assertEqual(g["standards"]["with"][GRADES.index("O3")], {"lower": "th3", "upper": "sfh3", "share": 0.98})
         co = g["areas"]["CO001"]

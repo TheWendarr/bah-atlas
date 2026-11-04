@@ -53,6 +53,7 @@ def stage_paths(data: Path, year: int) -> list[tuple[str, Path]]:
         ("B12-B15", metrics / "coverage_metrics_manifest.json"),
         ("B16", spatial / "weights_manifest.json"),
         ("B17-B18", spatial / "spatial_stats_manifest.json"),
+        ("B19", spatial / "regression_manifest.json"),
     ]
 
 

@@ -414,11 +414,12 @@ growth check. Then the headline H2 reading, output SHA-256, and warnings (VIF ab
 
 The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI
 metadata, B22 build manifest, B27 hotspot overlay, B31 rank × dependents × home
-type grid) are specified field by field in
+type grid, B32 ZIP lookup) are specified field by field in
 the [data contract (Layer 2 → Layer 3 ICD)](data-contract.md), which governs
 them. `make handoff` writes them, with `SHA256SUMS`, to `data/processed/handoff/`
 (`pipeline/handoff/`: `build_manifest.py` B22, `build_payload.py` B20,
-`build_ui_metadata.py` B21, `build_hotspots.py` B27, `build_grid.py` B31) and then runs
+`build_ui_metadata.py` B21, `build_hotspots.py` B27, `build_grid.py` B31,
+`build_zip_lookup.py` B32) and then runs
 `validate_handoff.py`, which applies contract checks 3–8. The names, codes and
 rounding rules all builders share are in `pipeline/handoff/contract.py`, with
 `grid_view`, the reference implementation of the browser formula for B31 (ICD 5b.4). B28 (County Cost Group and territory polygons) is merged into B7 under
@@ -439,7 +440,7 @@ both research profiles, and two off-standard cells recomputed from B4, A14, B29
 and B30), ZORI against SAFMR, the H1 and H2 caveats, and the caveat texts from B21. Git-ignored until the D10 delivery commit copies it to `delivery/`.
 
 ### `qa_YYYY_manifest.json` (node B23)
-The six delivered files and the B8, B11, B12, B14, B29 and B30 tables and A14 with SHA-256; the
+The seven delivered files and the B8, B11, B12, B14, B29 and B30 tables and A14 with SHA-256; the
 `build_id`; `verdict` and one entry per check; provenance (B22 commit, `dirty`
 flag, result of the committed-code check); file sizes; areas by class; status
 counts; `rounding_class_differences`; `codes_without_polygon`; the traces; `grid`

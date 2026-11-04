@@ -41,6 +41,7 @@ SAFMR_BEDROOMS = range(0, 5)   # HUD publishes 0-4 bedroom SAFMRs
 CONFIG_DOC = ROOT / "docs" / "configuration.md"
 METRIC_ROLES = ("primary", "descriptive", "sensitivity")
 MODES = ("rent", "buy")
+GRID_METRICS = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")   # D27: these carry off_standard
 CLUSTER_CODES = ("HH", "LL", "HL", "LH", "NS")
 # A14 (D18): DoD's six housing profiles, cheapest first. A standard interpolates from a
 # lower to a higher profile, so `upper` must come after `lower` in this order.
@@ -130,6 +131,26 @@ def check_profiles(cfg: dict, grades: list[str], errors: list[str]) -> None:
         errors.append("profiles.json: coverage_target must be a number in (0, 1]")
 
 
+def check_off_standard(off: dict, classes: int, where: str, errors: list[str]) -> None:
+    """D27: the second scale, for grid views that are not the statutory test."""
+    breaks, labels = off.get("breaks", []), off.get("class_labels", [])
+    if any(b2 <= b1 for b1, b2 in zip(breaks, breaks[1:])):
+        errors.append(f"{where} off_standard: breaks must be strictly ascending: {breaks}")
+    if len(breaks) + 1 != classes or len(labels) != classes:
+        errors.append(f"{where} off_standard: needs {classes - 1} breaks and {classes} class labels to share the "
+                      f"metric's colours, found {len(breaks)} and {len(labels)}")
+    for key in ("label", "short_label"):
+        if not off.get(key):
+            errors.append(f"{where} off_standard: missing {key}")
+    if len(off.get("ramp_labels") or []) != 3:
+        errors.append(f"{where} off_standard: ramp_labels needs 3 entries")
+    neutral = off.get("neutral")
+    if neutral is None or not breaks:
+        errors.append(f"{where} off_standard: neutral and breaks are required")
+    elif len(breaks) % 2 == 0 and not breaks[len(breaks) // 2 - 1] <= neutral < breaks[len(breaks) // 2]:
+        errors.append(f"{where} off_standard: neutral {neutral} is outside the middle class")
+
+
 def check_classification(cfg: dict, target: float | None, errors: list[str]) -> None:
     if not HEX.match(cfg.get("no_data_color", "")):
         errors.append("classification.json: no_data_color must be #RRGGBB")
@@ -162,6 +183,10 @@ def check_classification(cfg: dict, target: float | None, errors: list[str]) -> 
         modes = m.get("modes")
         if not isinstance(modes, list) or not modes or any(x not in MODES for x in modes):
             errors.append(f"{where}: modes must be a non-empty list drawn from {MODES}, found {modes!r}")
+        if len(m.get("ramp_labels") or []) != 3:
+            errors.append(f"{where}: ramp_labels needs 3 entries (low end, middle, high end)")
+        if name in GRID_METRICS:
+            check_off_standard(m.get("off_standard") or {}, len(colors), where, errors)
     if cfg.get("default_metric") not in metrics:
         errors.append(f"classification.json: default_metric '{cfg.get('default_metric')}' is not a metric")
     clusters = cfg.get("clusters") or {}
@@ -174,6 +199,8 @@ def check_classification(cfg: dict, target: float | None, errors: list[str]) -> 
             errors.append(f"classification.json [clusters.{code}]: invalid colour {c.get('color')}")
         if not c.get("label"):
             errors.append(f"classification.json [clusters.{code}]: missing label")
+    if not clusters.get("out_of_scope_label"):
+        errors.append("classification.json [clusters]: out_of_scope_label is required (the hotspot legend's grey areas)")
     if not clusters.get("legend_title"):
         errors.append("classification.json [clusters]: legend_title is required (decision D2: label clusters exploratory)")
     alpha = clusters.get("alpha")

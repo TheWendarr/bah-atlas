@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 03 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 1  ·  🟣 In progress: 7  ·  🔴 Not started: 19  ·  ⚪ Scrapped: 4
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 1  ·  🟣 In progress: 8  ·  🔴 Not started: 18  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -23,6 +23,7 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 
 ## In progress now
 
+- 🟣 **B32** ZIP to area lookup — due 16 Nov (M7)
 - 🟣 **C1** MHA PMTiles (served) — due 16 Nov (M7)
 - 🟣 **C2** Attribute payload JSON (served) — due 16 Nov (M7)
 - 🟣 **C3** UI metadata JSON (served) — due 16 Nov (M7)
@@ -285,8 +286,8 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
     class W1 week
-    class C1,C2,C3,C5,C14,C22,C24 prog
-    class B32,W3,C4,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C23,C25 todo
+    class B32,C1,C2,C3,C5,C14,C22,C24 prog
+    class W3,C4,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C23,C25 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
@@ -370,7 +371,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 |:---:|---|---|---|---|---|
 | ⚫ | **B16** | Spatial weights matrix | required | B6 | completed 18 Oct |
 | ⚫ | **B17** | Global Moran's I | required | B12, B16 | completed 18 Oct |
-| ⚫ | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | completed 18 Oct |
+| ⚫ | **B18** | LISA / Getis-Ord Gi* clusters | required | B12, B16 | 3 Nov: the table now writes p-values at 5 decimals; ten delivered lisa_p_sim values read 0 before this (ICD 1.2.0); completed 18 Oct |
 | ⚫ | **B19** | Spatial regression | optional | B12, B16, B8, A3, B24 | Reduced H2 (18 Oct): adequacy gap against rent level (B8), rent growth (A3 history) and urbanicity (B24); 18 Oct: brought into M6 so H2 is tested before Layers 1-2 close, rent growth over 5 years; code ready 18 Oct: regression.py (make regression), OLS + LM diagnostics, Anselin rule, ML lag/error; first 2026 run: n = 201 of 283 (82 MHAs lack 5-year ZORI growth and are less dense and nearer the design point), robust LM tests ambiguous; 18 Oct: both forms fitted when ambiguous, selection check, 3-year growth sensitivity; completed 18 Oct |
 
 #### 2.7 Front-End Payload — due 30 October 2026 (M6)
@@ -378,12 +379,12 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | ⚫ | **B20** | Attribute payload JSON (data contract) | required | B12, B13, B14, B15, B3, B4, A12, B28, B22 | Spec: ICD (docs/data-contract.md) section 5. Keyed by area code: MHAs, CCGs (BAH rate only, N1), territory bucket and AK/HI; sensitivity values as map layers (D3); conventions D6; build_id = SHA-256 of B22; code ready 18 Oct: pipeline/handoff/build_payload.py (make handoff); completed 18 Oct |
-| ⚫ | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12); completed 18 Oct |
+| ⚫ | **B21** | UI metadata JSON | required | A12, A13, B1, B3, B28, B22 | Spec: ICD section 6; code ready 18 Oct: build_ui_metadata.py; map text in config/ui_text.json (D12); ICD 1.2.0 (3 Nov): findings, display_name, off_standard scale, ramp labels and added titles; completed 18 Oct |
 | ⚫ | **B22** | Build manifest JSON | required | B7, B28 | Spec: ICD section 8. Also reads every pipeline manifest. Written before B20, B21 and B27, which carry its hash as build_id; SHA256SUMS over all delivered files is written last; code ready 18 Oct: build_manifest.py; completed 18 Oct |
 | ⚫ | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | ⚫ | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20; code ready 24 Oct: build_grid.py in make handoff, ICD 1.1.0 section 5b; costs carry cents so the browser formula reproduces B20 exactly (contract.grid_view, tested); completed 24 Oct |
-| 🔴 | **B32** | ZIP to area lookup | required | B1, B22 | D26 (3 Nov): delivered file zips_2026.json from B1, keyed by area code, about 102 KB gzipped; serves C15; tracked under M7, in Delivery 2 (ICD 1.2.0) |
-| ⚫ | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; 24 Oct: ICD 1.1.0 written (B31, B21 grid block, caveat type_factor_national, obligations 8-9, check 10); awaits author approval; 1 Nov: D22 wording added to ICD 1.1.0 (values only); ICD 1.0.3 and 1.1.0 approved by the author 1 Nov 2026; completed 18 Oct |
+| 🟣 | **B32** | ZIP to area lookup | required | B1, B22 | D26 (3 Nov): delivered file zips_2026.json from B1, keyed by area code, about 102 KB gzipped; serves C15; tracked under M7, in Delivery 2 (ICD 1.2.0); code ready 3 Nov: build_zip_lookup.py in make handoff, ICD 1.2.0 section 7b; 40,959 ZIPs in 339 areas on the DTMO crosswalk |
+| ⚫ | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; 24 Oct: ICD 1.1.0 written (B31, B21 grid block, caveat type_factor_national, obligations 8-9, check 10); awaits author approval; 1 Nov: D22 wording added to ICD 1.1.0 (values only); ICD 1.0.3 and 1.1.0 approved by the author 1 Nov 2026; ICD 1.2.0 approved by the author 3 Nov 2026 (D26, D27, D29); completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)
 

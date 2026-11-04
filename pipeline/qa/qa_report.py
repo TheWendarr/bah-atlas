@@ -19,7 +19,7 @@ What it checks and reports
                    uncommitted now: the handoff was built from committed code.
                    B22's own `dirty` flag is shown but not judged, because a
                    rebuild rewrites the docs/evidence copies before B22 runs.
-  3  files         size, gzip size and SHA-256 of the six delivered files
+  3  files         size, gzip size and SHA-256 of the seven delivered files
                    (check 9), and SHA256SUMS
   4  status        area counts by class, and value-block counts by profile,
                    mode and status (check 9)
@@ -52,7 +52,7 @@ Output (written to --out; data/processed/ is git-ignored, so the report enters
 the repository only with the D10 delivery commit)
 ------------------------------------------------------------------------------
   qa_<year>.md               the report
-  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the six delivered
+  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the seven delivered
                              files among them), verdict per check, the counts,
                              class differences, traces, output SHA-256
 
@@ -644,7 +644,7 @@ def main() -> None:
         "before B22 runs, so `dirty: true` alone does not mean code was uncommitted; the check above compares the "
         "code paths directly.", "",
         "## 3. Delivered files (check 9)", "", md_table(["Node", "File", "Bytes", "gzip bytes", "SHA-256"], file_rows), "",
-        f"`SHA256SUMS` matches all six: {'yes' if sums_ok else '**no**'}.", "",
+        f"`SHA256SUMS` matches all seven: {'yes' if sums_ok else '**no**'}.", "",
         "## 4. Counts by status (check 9)", "",
         "Areas by class: " + ", ".join(f"{k} {v}" for k, v in sorted(by_class.items())) + ".", "",
         md_table(["Profile", "Mode", "Status", "Areas"], status_rows), "",

@@ -41,7 +41,8 @@ class QAFixture(th.Fixture):
         th.write_csv(interim / "zip_mha.csv", ["zip", "mha", "mha_class"], [
             {"zip": z, "mha": m, "mha_class": k} for z, m, k in (
                 ("80901", "CO001", "mha"), ("80902", "CO001", "mha"), ("80903", "CO001", "mha"),
-                ("81001", "CO002", "mha"), ("99701", "AK400", "mha"), ("50001", "ZZ001", "ccg"))])
+                ("81001", "CO002", "mha"), ("99701", "AK400", "mha"), ("50001", "ZZ001", "ccg"),
+                ("00901", "XX001", "unknown"))])
         th.write_csv(bench / "mha_zori.csv", ["mha", "zori_median", "rent_share", "zori_utilities_adjusted"], [
             {"mha": "AK400", "zori_median": "1920.00", "rent_share": "0.8000", "zori_utilities_adjusted": "2400.00"},
             {"mha": "CO001", "zori_median": "1818.15", "rent_share": "0.8500", "zori_utilities_adjusted": "2139.00"},
@@ -107,7 +108,8 @@ class TestQA(QAFixture):
                                                                    "no_rate": 1})
         self.assertEqual((man["codes_without_polygon"], man["rounding_class_differences"]), ([], []))
         self.assertEqual(set(man["files"]), {f"areas_{Y}.pmtiles", f"payload_{Y}.json", f"ui_metadata_{Y}.json",
-                                             f"hotspots_{Y}.json", f"grid_{Y}.json", f"build_manifest_{Y}.json"})
+                                             f"hotspots_{Y}.json", f"grid_{Y}.json", f"zips_{Y}.json",
+                                             f"build_manifest_{Y}.json"})
         # 9b: the browser formula on B31 equals B20 for both profiles in all 5 areas x 2 modes
         self.assertEqual((man["grid"]["views_compared"], man["grid"]["views_identical"]), (20, 20))
         gt = man["grid"]["traces"]

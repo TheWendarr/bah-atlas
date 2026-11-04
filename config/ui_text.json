@@ -1,6 +1,11 @@
 {
   "_doc": "A13 (display text). The wording shown on the map for modes, statuses, caveats, boundaries and sources; read only by B21. Field meanings: docs/configuration.md#configui_textjson-a13-display-text. Validate with `make check-config`.",
-  "version": 1,
+  "version": 2,
+  "no_data_label": "No adequacy measure",
+  "display_names": {
+    "GA073": "FORT GORDON, GA",
+    "XX499": "U.S. TERRITORIES"
+  },
   "modes": {
     "rent": "Rent",
     "buy": "Buy (VA loan)"
@@ -96,7 +101,7 @@
     {
       "id": "zip_zcta_dropout",
       "title": "Boundaries are approximate",
-      "text": "Area outlines are built from Census ZIP Code Tabulation Areas. PO-box and single-site ZIP codes have no tabulation area and are not drawn, although the areas they belong to still have outlines."
+      "text": "Area outlines are built from Census ZIP Code Tabulation Areas. PO-box and single-site ZIP codes have no tabulation area and are not drawn, although the areas they belong to still have outlines. Tabulation areas also leave out much unpopulated land, mostly in the West, so those places appear blank on the map."
     },
     {
       "id": "home_type_benchmarks",
@@ -229,6 +234,15 @@
       "without": "Without dependents"
     },
     "home_type": "Home type",
+    "titles": {
+      "dependents": "Dependents",
+      "metric": "Show",
+      "mode": "Housing"
+    },
+    "off_standard_scale": {
+      "title": "How far BAH goes",
+      "subtitle": "Wider scale for affordability views"
+    },
     "home_types": {
       "standard": "DoD standard for this rank",
       "apt1": "1-bedroom apartment",

@@ -18,7 +18,7 @@ handoff files contain: [data contract](data-contract.md) · table layouts:
 - the rent and home-value benchmarks, ownership cost and adequacy metrics for every
   MHA (B8–B15), and the benchmarks for each of DoD's six home types (B29, B30)
 - the spatial statistics (B16–B18), population density (B24) and the H2 regression (B19)
-- the six handoff files for Layer 3, validated against the data contract (B20–B22, B27, B31)
+- the seven handoff files for Layer 3, validated against the data contract (B7, B20–B22, B27, B31, B32)
 - the QA report (B23), which re-checks every recorded hash and traces three MHAs by hand
 
 Two levels of replication are possible:
@@ -167,7 +167,7 @@ make layer2
 
 This runs, in order: `make all` (configs, ingest, geometry, tiles, benchmarks, metrics,
 spatial statistics; `make benchmarks` includes the A14 standards check and B29, B30),
-`make regression` (B24 and B19), `make handoff` (the six Layer 3 files, validated), `make evidence` and `make verify`, `make qa` (B23), and
+`make regression` (B24 and B19), `make handoff` (the seven Layer 3 files, validated), `make evidence` and `make verify`, `make qa` (B23), and
 `make evidence` and `make verify` again. It stops at the first failure.
 
 The slowest step is the spatial statistics: 99,999 permutations per test (the
@@ -185,7 +185,7 @@ commit, software versions and the test log; any changed SHA-256 or count means a
 ```bash
 make verify                                        # every recorded SHA-256 agrees
 less data/processed/qa/qa_2026.md                  # the QA report: verdict at the top
-cat data/processed/handoff/SHA256SUMS              # the six handoff files
+cat data/processed/handoff/SHA256SUMS              # the seven handoff files
 ```
 
 With exact inputs:

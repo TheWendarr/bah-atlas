@@ -1,7 +1,7 @@
 """
 contract.py — the Layer 2 -> Layer 3 data contract (docs/data-contract.md) in code.
 
-Every handoff builder (B20, B21, B22, B27, B31) and the validator import their names,
+Every handoff builder (B20, B21, B22, B27, B31, B32) and the validator import their names,
 codes and rounding rules from here, so the files and the checks cannot drift
 apart. When the ICD changes, this module changes in the same commit, and
 SCHEMA_VERSION follows the ICD's versioning rules (section 10).
@@ -20,8 +20,9 @@ from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 CODE = re.compile(r"^[A-Z]{2}[0-9]{3}$")
+ZIP = re.compile(r"^[0-9]{5}$")
 CLASSES = ("mha", "ccg", "unknown")
 MODES = ("rent", "buy")
 
@@ -81,11 +82,14 @@ HOME_TYPES = ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")
 STANDARD = "standard"                      # the home-type dropdown's default: the grade's DoD standard
 GRID_METRICS = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
 GRID_CENTS = 2                             # B31 benchmark costs carry cents (ICD 5b.3)
+OFF_STANDARD_KEYS = ("label", "short_label", "neutral", "breaks", "class_labels", "ramp_labels")  # ICD 6.2 (D27)
+GRID_TITLES = ("rank", "dependents", "home_type", "metric", "mode")
 
 # ICD 2: the delivered files, by node.
 def file_names(year: int) -> dict[str, str]:
     return {"B7": f"areas_{year}.pmtiles", "B20": f"payload_{year}.json", "B21": f"ui_metadata_{year}.json",
-            "B27": f"hotspots_{year}.json", "B31": f"grid_{year}.json", "B22": f"build_manifest_{year}.json"}
+            "B27": f"hotspots_{year}.json", "B31": f"grid_{year}.json", "B32": f"zips_{year}.json",
+            "B22": f"build_manifest_{year}.json"}
 
 
 # --- rounding (ICD 3) -------------------------------------------------------
@@ -176,6 +180,36 @@ def grid_view(grid: dict, code: str, rank: str, dependents: str, home_type: str,
                 "coverage_ratio": ratio(Decimal(bah / cost)),
                 "surplus_usd": dollars(Decimal(bah - cost))})
     return out
+
+
+# --- research findings (ICD 6.3) ------------------------------------------------
+
+def findings(spatial: dict, regression: dict) -> dict:
+    """The H1 and H2 headlines for B21, from the B17-B18 and B19 manifests.
+
+    Built here so B21 and the validator derive the block the same way, with no number
+    typed by hand. Coefficients to 4 places, p-values to 5.
+    """
+    h1, h2 = spatial["headline"], regression["headline"]
+    profile1, mode1, variable1 = h1["test"].split()
+    profile2, mode2, variable2 = h2["test"].split()
+    sample = h2.get("sample_selection") or regression.get("sample_selection") or {}
+    predictors = []
+    for p in h2["predictors"]:
+        alt = p.get("alternative")
+        predictors.append({
+            "id": p["predictor"], "b": ratio(p["b"]), "p": ratio(p["p"], P_PLACES), "reading": p["reading"],
+            "model_form_agrees": p.get("model_form_agrees"),
+            "alternative": None if not alt else {"model": alt["model"], "b": ratio(alt["b"]),
+                                                 "p": ratio(alt["p"], P_PLACES), "reading": alt["reading"]}})
+    return {
+        "h1": {"profile": profile1, "mode": mode1, "variable": variable1, "n": h1["n"],
+               "moran_i": ratio(h1["moran_I"]), "p_sim": ratio(h1["p_sim"], P_PLACES),
+               "clusters": h1["lisa_clusters"], "fdr_significant": h1["lisa_fdr_significant"]},
+        "h2": {"profile": profile2, "mode": mode2, "variable": variable2, "n": h2["n"],
+               "eligible": sample.get("eligible"), "model": h2["model"], "ols_r2": ratio(h2["ols_r2"]),
+               "ambiguous_form": bool(h2.get("ambiguous_form")), "predictors": predictors},
+    }
 
 
 # --- small I/O helpers -------------------------------------------------------

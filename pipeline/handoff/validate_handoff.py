@@ -9,12 +9,14 @@ they were built from, independently of the builders:
      ratios have at most 4 decimals (p-values 5), dollars are whole (B31 benchmark
      costs: cents)
   4  the area codes in B7 (the B6 and B28 polygons it was tiled from) match the
-     codes in B20, apart from codes with no polygon, which B28 lists
+     codes in B20, apart from codes with no polygon, which B28 lists; B31 and B32
+     hold exactly the B20 codes
   5  every non-null B20 value equals its source row (B4, B12-B15) after rounding,
-     and every B31 value its source (B4, A14, B29, B30)
+     every B31 value its source (B4, A14, B29, B30), every B32 pair B1, and the
+     B21 findings the B17-B19 manifests
   6  every status code and caveat id in B20, B27 and B31 has an entry in B21
-  7  B20, B21, B27 and B31 carry one build_id, equal to the SHA-256 of B22
-  8  SHA256SUMS matches the six delivered files (skipped with --no-sums)
+  7  B20, B21, B27, B31 and B32 carry one build_id, equal to the SHA-256 of B22
+  8  SHA256SUMS matches the seven delivered files (skipped with --no-sums)
 
     python pipeline/handoff/validate_handoff.py --year 2026 --handoff data/processed/handoff
 
@@ -133,13 +135,26 @@ def check_ui(ck: Check, ui: dict) -> None:
     for cid, cv in ui.get("caveats", {}).items():
         ck.expect(3, cv.get("level") == c.CAVEATS.get(cid) and cv.get("title") and cv.get("text"),
                   f"B21: caveat {cid} needs title, text and level {c.CAVEATS.get(cid)}")
-    for key in ("profiles", "default_profile", "modes", "metrics", "default_metric", "no_data_color", "clusters",
-                "areas", "global_caveats", "windows", "sources", "geometry"):
+    for key in ("profiles", "default_profile", "modes", "metrics", "default_metric", "no_data_color", "no_data_label",
+                "clusters", "areas", "global_caveats", "windows", "sources", "geometry", "findings"):
         ck.expect(3, key in ui, f"B21: missing {key}")
     for mid, m in ui.get("metrics", {}).items():
         n = len(m.get("breaks") or [])
         ck.expect(3, len(m.get("colors") or []) == n + 1 == len(m.get("class_labels") or []),
                   f"B21: metric {mid} has {n} breaks but {len(m.get('colors') or [])} colours")
+        ck.expect(3, len(m.get("ramp_labels") or []) == 3, f"B21: metric {mid} needs 3 ramp_labels")
+        if mid in c.GRID_METRICS:
+            off = m.get("off_standard") or {}
+            ck.expect(3, all(off.get(k) is not None for k in c.OFF_STANDARD_KEYS)
+                      and len(off.get("breaks") or []) + 1 == len(m.get("colors") or []) == len(off.get("class_labels") or [])
+                      and len(off.get("ramp_labels") or []) == 3, f"B21: metric {mid} off_standard is incomplete")
+    for code, a in ui.get("areas", {}).items():
+        ck.expect(3, a.get("name") and a.get("display_name"), f"B21: area {code} needs name and display_name")
+    ck.expect(3, ui.get("clusters", {}).get("out_of_scope_label"), "B21: clusters lacks out_of_scope_label")
+    gui = ui.get("grid") or {}
+    ck.expect(3, all((gui.get("titles") or {}).get(k) for k in c.GRID_TITLES), f"B21 grid: titles need {c.GRID_TITLES}")
+    scale = gui.get("off_standard_scale") or {}
+    ck.expect(3, scale.get("title") and scale.get("subtitle"), "B21 grid: off_standard_scale is incomplete")
 
 
 def check_hotspots(ck: Check, h: dict, payload: dict) -> None:
@@ -161,9 +176,25 @@ def check_hotspots(ck: Check, h: dict, payload: dict) -> None:
                     ck.expect(3, e.get("cluster") in c.CLUSTER_CODES and e.get("gi_class") in c.GI_CLASSES
                               and isinstance(e.get("lisa_fdr_significant"), bool)
                               and is_ratio(e.get("lisa_p_sim"), c.P_PLACES), f"{w}: fields or rounding")
+                    ck.expect(3, (e.get("lisa_p_sim") or 0) > 0, f"{w}: a permutation p-value cannot be 0")
                 else:
                     ck.expect(3, all(e.get(k) is None for k in ("cluster", "lisa_p_sim", "lisa_fdr_significant",
                                                                  "gi_class")), f"{w}: untested area has values")
+
+
+def check_zips(ck: Check, z: dict, payload: dict, crosswalk: dict[str, str]) -> None:
+    """ICD 7b: B32's shape (check 3), its codes (check 4) and its pairs against B1 (check 5)."""
+    areas = z.get("areas", {})
+    codes = list(areas)
+    ck.expect(3, codes == sorted(codes), "B32: areas are not sorted by code")
+    ck.expect(4, set(codes) == set(payload.get("areas", {})), "B32 and B20 hold different area codes")
+    pairs = {}
+    for code, zips in areas.items():
+        ck.expect(3, zips == sorted(zips) and all(c.ZIP.match(str(n)) for n in zips), f"B32 {code}: ZIPs malformed or unsorted")
+        for n in zips:
+            ck.expect(5, n not in pairs, f"B32: ZIP {n} appears twice")
+            pairs[n] = code
+    ck.expect(5, pairs == crosswalk, f"B32 differs from B1: {len(pairs)} ZIPs against {len(crosswalk)}")
 
 
 def is_cents(v: object) -> bool:
@@ -268,10 +299,10 @@ def main() -> None:
         c.die(TOOL, f"delivered file(s) missing: {', '.join(missing)}")
     ck = Check()
     build_id = c.sha256(files["B22"])
-    payload, ui, hot, grid = (c.read_json(files[n], TOOL) for n in ("B20", "B21", "B27", "B31"))
+    payload, ui, hot, grid, zips = (c.read_json(files[n], TOOL) for n in ("B20", "B21", "B27", "B31", "B32"))
     b22 = c.read_json(files["B22"], TOOL)
     ck.expect(3, b22.get("node") == "B22" and b22.get("stages"), "B22: not a build manifest")
-    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot), ("B31", grid)):
+    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot), ("B31", grid), ("B32", zips)):
         check_header(ck, name, doc, y, build_id)
 
     interim, metrics = d / "interim" / f"bah_{y}", d / "interim" / f"metrics_{y}"
@@ -295,6 +326,11 @@ def main() -> None:
     caveats |= g_caveats
     check_ui(ck, ui)
     check_hotspots(ck, hot, payload)
+    check_zips(ck, zips, payload, {r["zip"]: r["mha"] for r in c.read_csv(interim / "zip_mha.csv", {"zip", "mha"}, TOOL)})
+    spatial_dir = d / "interim" / f"spatial_{y}"
+    ck.expect(5, ui.get("findings") == c.findings(c.read_json(spatial_dir / "spatial_stats_manifest.json", TOOL),
+                                                  c.read_json(spatial_dir / "regression_manifest.json", TOOL)),
+              "B21: findings differ from the B17-B19 manifests")
 
     # Check 6: everything referenced resolves in B21.
     for st in statuses:
