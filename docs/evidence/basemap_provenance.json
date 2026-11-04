@@ -1,0 +1,14 @@
+{
+  "node": "A11",
+  "served_as": "C4",
+  "source": "Protomaps basemap daily build (OpenStreetMap-derived)",
+  "source_url": "https://build.protomaps.com/20261103.pmtiles",
+  "build_date": "20261103",
+  "area": "region config/basemap_region.geojson",
+  "maxzoom": 9,
+  "output_file": "basemap.pmtiles",
+  "output_sha256": "7ae93271e5eadaa104bf84c8ea2e270e67a7492b0254a045f5c0bb7c8c255a58",
+  "output_bytes": 185256690,
+  "license": "ODbL Produced Work; attribution: (c) OpenStreetMap contributors, Protomaps",
+  "generated_at": "2026-11-04T04:48:11Z"
+}
