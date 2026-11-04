@@ -341,6 +341,16 @@ with B19.
 - **Role:** Bundles the static site and serves it locally (C22). Build-time only.
 - **License:** MIT.
 
+### Cloudflare Pages and R2  `[incorporated]`
+- **Provider:** Cloudflare, Inc. — https://developers.cloudflare.com/pages/ · https://developers.cloudflare.com/r2/
+- **Role:** Hosting (C1, C4, C24, D24). Pages serves the site and JSON; R2 serves the PMTiles archives by HTTP range request.
+- **License:** Commercial service, free tier.
+
+### Wrangler  `[incorporated]`
+- **Provider:** Cloudflare, Inc. — https://github.com/cloudflare/workers-sdk
+- **Role:** Uploads the tile archives and deploys the site (C23). Deploy-time only.
+- **License:** MIT or Apache-2.0.
+
 ### Playwright  `[incorporated]`
 - **Provider:** Microsoft — https://github.com/microsoft/playwright
 - **Role:** Runs the built site in a real browser for the end-to-end tests. Test-time only.

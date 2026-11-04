@@ -289,7 +289,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check web-deps web-build web-dev web-golden web-test web-e2e
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-golden web-test web-e2e
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
@@ -326,6 +326,13 @@ HOST_LOCAL ?= delivery/$(YEAR)/areas_$(YEAR).pmtiles
 HOST_ORIGIN ?= https://bah-atlas.mcgowanserver.com
 host-check:
 	$(PYTHON) tools/check_host.py --url $(URL) --local $(HOST_LOCAL) --origin $(HOST_ORIGIN)
+
+# After a deployment: the live site against web/dist, then the browser tests against it.
+site-check:
+	$(PYTHON) tools/check_host.py --site $(HOST_ORIGIN) --dist web/dist --wait 180
+
+web-e2e-live:
+	cd web && SITE_URL=$(HOST_ORIGIN) node --test test/e2e/*.test.mjs
 
 # Check every recorded SHA-256: evidence copies, config hashes, the hash chain
 # between manifests, and (where data/ holds pipeline output) the live files.

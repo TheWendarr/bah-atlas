@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""C1, C4, C24: check that a host serves a PMTiles archive the way the map needs.
+"""C1, C4, C24: check that the hosts serve the tiles and the site the way the map needs.
 
 PMTiles reads a file by HTTP range request. Some hosts answer with the whole file,
 or with a slice of a compressed copy that the browser cannot decode, and a page
@@ -21,6 +21,15 @@ Checks:
   cors       the origin is allowed on GET, ETag is exposed, and a preflight allows
              the `range` and `if-match` request headers
 
+Site mode compares the deployed site with web/dist, after a deployment:
+
+    python tools/check_host.py --site https://bah-atlas.mcgowanserver.com --dist web/dist --wait 120
+
+  files      every file in dist answers 200 with the same bytes and the right type
+  headers    each header in dist/_headers is on the live response, unchanged
+
+--wait retries until the deployment has reached the site, then reports what still fails.
+
 Exit status 1 if any check fails. Stdlib only.
 """
 from __future__ import annotations
@@ -28,6 +37,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -127,12 +137,86 @@ def check(url: str, local: Path, origin: str | None) -> list[str]:
     return problems
 
 
+def read_header_rules(path: Path) -> dict[str, dict[str, str]]:
+    """Cloudflare's _headers file: a path rule, then its indented `Name: value` lines."""
+    rules: dict[str, dict[str, str]] = {}
+    current: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith((" ", "\t")) and line.strip():
+            name, value = line.strip().split(":", 1)
+            current[name.strip().lower()] = value.strip()
+        elif line.strip():
+            current = rules.setdefault(line.strip(), {})
+    return rules
+
+
+def expected_type(path: str) -> str | None:
+    for suffix, kind in ((".mjs", "javascript"), (".js", "javascript"), (".css", "text/css"),
+                         (".json", "json"), (".html", "text/html")):
+        if path.endswith(suffix):
+            return kind
+    return None
+
+
+def check_site(site: str, dist: Path) -> list[str]:
+    site = site.rstrip("/")
+    rules = read_header_rules(dist / "_headers")
+    problems: list[str] = []
+    for file in sorted(p for p in dist.rglob("*") if p.is_file() and p.name != "_headers"):
+        path = file.relative_to(dist).as_posix()
+        reply = request(f"{site}/{'' if path == 'index.html' else path}")
+        if reply.status != 200:
+            problems.append(f"{path}: HTTP {reply.status}")
+            continue
+        if reply.body != file.read_bytes():
+            problems.append(f"{path}: the live bytes differ from dist")
+        kind = expected_type(path)
+        if kind and kind not in reply.headers.get("content-type", ""):
+            problems.append(f"{path}: Content-Type is {reply.headers.get('content-type')!r}, expected {kind}")
+        wanted = dict(rules.get("/*", {}))
+        for rule, headers in rules.items():
+            if rule != "/*" and path.startswith(rule.strip("/*") + "/"):
+                wanted.update(headers)
+        for name, value in wanted.items():
+            if reply.headers.get(name) != value:
+                problems.append(f"{path}: {name} is {reply.headers.get(name)!r}, expected {value!r}")
+    return problems
+
+
+def run_site(site: str, dist: Path, wait: float) -> int:
+    deadline = time.monotonic() + wait
+    while True:
+        problems = check_site(site, dist)
+        if not problems or time.monotonic() >= deadline:
+            break
+        time.sleep(10)
+    for line in problems:
+        print(f"FAIL  {line}")
+    if problems:
+        print(f"check_host: {len(problems)} problem(s) at {site}")
+        return 1
+    print(f"check_host: {site} matches {dist}, files and headers")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--url", required=True, help="the archive on the host")
-    ap.add_argument("--local", required=True, type=Path, help="the same archive on disk")
+    ap.add_argument("--url", help="the archive on the host")
+    ap.add_argument("--local", type=Path, help="the same archive on disk")
     ap.add_argument("--origin", help="the site origin that will read it (enables the CORS checks)")
+    ap.add_argument("--site", help="the deployed site, compared with --dist")
+    ap.add_argument("--dist", type=Path, help="the built site on disk")
+    ap.add_argument("--wait", type=float, default=0, help="seconds to keep retrying the site check")
     args = ap.parse_args()
+    if args.site:
+        if not args.dist or not (args.dist / "_headers").is_file():
+            sys.exit("check_host: --site needs --dist, a built site with a _headers file")
+        try:
+            return run_site(args.site, args.dist, args.wait)
+        except OSError as err:
+            sys.exit(f"check_host: could not reach {args.site}: {err}")
+    if not args.url or not args.local:
+        sys.exit("check_host: give --url and --local, or --site and --dist")
     if not args.local.is_file():
         sys.exit(f"check_host: {args.local} not found")
     try:

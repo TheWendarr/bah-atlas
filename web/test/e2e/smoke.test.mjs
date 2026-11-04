@@ -1,4 +1,5 @@
-// The built site in a real browser. Run after `node build.mjs --dev`.
+// The built site in a real browser. Run after `node build.mjs --dev`, or set SITE_URL
+// to test a deployed site, where the tiles come from the real host.
 
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -11,15 +12,21 @@ const WEBGL = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--igno
 
 let browser;
 let site;
+let origin;
 
 before(async () => {
-  site = await serve(DIST);
+  if (process.env.SITE_URL) {
+    origin = process.env.SITE_URL;
+  } else {
+    site = await serve(DIST);
+    origin = site.origin;
+  }
   browser = await chromium.launch({ args: WEBGL });
 });
 
 after(async () => {
   await browser.close();
-  site.server.close();
+  site?.server.close();
 });
 
 async function open(context = {}, change = null) {
@@ -35,7 +42,7 @@ async function open(context = {}, change = null) {
       await route.fulfill({ response, json: change(await response.json()) });
     });
   }
-  await page.goto(site.origin);
+  await page.goto(origin);
   await page.waitForFunction(() => document.documentElement.dataset.state, null, { timeout: 60_000 });
   return { page, errors };
 }

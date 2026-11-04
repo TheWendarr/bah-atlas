@@ -112,5 +112,72 @@ class TestCheckHost(unittest.TestCase):
             self.assertLess(end, 100)
 
 
+def site_server(root: Path, fault: str | None = None) -> ThreadingHTTPServer:
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *args) -> None:
+            pass
+
+        def do_GET(self) -> None:
+            path = self.path.lstrip("/") or "index.html"
+            file = root / path
+            if not file.is_file() or (fault == "missing" and path.endswith(".mjs")):
+                self.send_response(404)
+                self.end_headers()
+                return
+            body = file.read_bytes()
+            if fault == "stale" and path.endswith(".json"):
+                body = b"{}"
+            self.send_response(200)
+            kinds = {".html": "text/html", ".mjs": "text/javascript", ".json": "application/json"}
+            kind = "text/plain" if fault == "bad_type" else kinds[file.suffix]
+            self.send_header("Content-Type", kind)
+            if fault != "no_nosniff":
+                self.send_header("X-Content-Type-Options", "nosniff")
+            if path.startswith("assets/"):
+                self.send_header("Cache-Control", "immutable")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
+
+
+class TestCheckSite(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dist = Path(self.tmp.name)
+        (self.dist / "assets").mkdir()
+        (self.dist / "index.html").write_text("<!doctype html>")
+        (self.dist / "assets" / "worker.mjs").write_text("export {}")
+        (self.dist / "data.json").write_text('{"a": 1}')
+        (self.dist / "_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n/assets/*\n  Cache-Control: immutable\n")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def problems(self, fault: str | None) -> list[str]:
+        server = site_server(self.dist, fault)
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        return ch.check_site(f"http://127.0.0.1:{server.server_address[1]}/", self.dist)
+
+    def test_matching_site_passes(self) -> None:
+        self.assertEqual(self.problems(None), [])
+
+    def test_missing_file_fails(self) -> None:
+        self.assertTrue(any("HTTP 404" in p for p in self.problems("missing")))
+
+    def test_stale_bytes_fail(self) -> None:
+        self.assertTrue(any("differ from dist" in p for p in self.problems("stale")))
+
+    def test_wrong_type_fails(self) -> None:
+        self.assertTrue(any("Content-Type" in p for p in self.problems("bad_type")))
+
+    def test_missing_header_fails(self) -> None:
+        self.assertTrue(any("x-content-type-options" in p for p in self.problems("no_nosniff")))
+
+
 if __name__ == "__main__":
     unittest.main()

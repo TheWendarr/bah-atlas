@@ -11,6 +11,8 @@ It reads only `delivery/<year>/` and follows the
 | `make web-build` | Builds the production site in `web/dist` |
 | `make web-test` | Formula parity on all 218,316 views, the class rule and the contract gate |
 | `make web-e2e` | The built site in a real browser (first run: `cd web && npx playwright install chromium`) |
+| `make site-check` | The deployed site against `web/dist`: files, types and security headers |
+| `make web-e2e-live` | The same browser tests against the deployed site and the real tile host |
 
 `python -m http.server` cannot run this site, because it ignores the HTTP range
 requests PMTiles depends on. `make web-dev` serves ranges correctly.
@@ -27,4 +29,8 @@ requests PMTiles depends on. `make web-dev` serves ranges correctly.
 | `src/map.js` | MapLibre setup, area layers and the value join |
 
 The two tile archives live on Cloudflare R2, and the site and its JSON on Cloudflare
-Pages. Wording about the data comes from `ui_metadata_<year>.json`, never from this folder.
+Pages. A push to `main` that touches the site runs `.github/workflows/web.yml`: unit
+and browser tests, then deployment and the two live checks. Tiles are uploaded by hand
+(`make host-check` tests them), because they change only at a deliberate delivery.
+
+Wording about the data comes from `ui_metadata_<year>.json`, never from this folder.
