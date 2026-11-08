@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 07 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 17  ·  🟣 In progress: 3  ·  🔴 Not started: 7  ·  ⚪ Scrapped: 4
+**Status as of:** 08 November 2026  
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 46  ·  🟢 Completed this week: 19  ·  🟣 In progress: 1  ·  🔴 Not started: 6  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -19,12 +19,10 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 14 / 14 | `██████████ 100%` | ✅ Complete |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 16 / 21 | `████████░░ 76%` | 🗓️ Upcoming |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 19 / 21 | `█████████░ 90%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **C10** Legend — due 16 Nov (M7)
-- 🟣 **C11** MHA detail popup/panel — due 16 Nov (M7)
 - 🟣 **C20** Attribution + methodology — due 16 Nov (M7)
 
 ## Nodal map
@@ -279,10 +277,10 @@ flowchart LR
     classDef todo fill:#c62828,stroke:#000,color:#ffffff
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
-    class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
-    class B32,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C13,C14,C22,C23,C24,C25 week
-    class C10,C11,C20 prog
-    class W3,C12,C15,C16,C17,C19,C21 todo
+    class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W1,W2 done
+    class B32,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C22,C23,C24,C25 week
+    class C20 prog
+    class W3,C15,C16,C17,C19,C21 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
@@ -390,7 +388,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚪ | **B25** | BEA RPP context join | optional | A10, B1 | Scrapped 18 Oct 2026 with A10 (reduced H2) |
 | ⚪ | **B26** | H3 hex overlay (future) | optional | B6 | Scrapped 18 Oct 2026: H3 removed from the project (BAH is tied to administrative areas, not a continuous field) |
 | ⚫ | **B27** | Hotspot overlay payload | optional | B18, B22 | Spec: ICD section 7. Separate overlay file (D5). LISA classes at p < 0.05 shown as exploratory; FDR-significant MHAs marked (D2 option C); code ready 18 Oct: build_hotspots.py; p-values to 5 decimals (ICD 1.0.2); completed 18 Oct |
-| 🟢 | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline; scaffold 18 Oct: docs/layer2-writeup.md (headings, evidence, prompts; section 7 records actions and decisions per D10); completed in the delivery commit; completed 01 Nov |
+| ⚫ | **W1** | Layer 2 writeup (how Layer 1 becomes Layer 3) | required | B23 | Deliverable rather than a pipeline node; author-written from the plan outline; scaffold 18 Oct: docs/layer2-writeup.md (headings, evidence, prompts; section 7 records actions and decisions per D10); completed in the delivery commit; completed 01 Nov |
 
 ### Layer 3 — Front-End
 
@@ -414,9 +412,9 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🟢 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown; D29 (3 Nov): adds the metric selector as a fourth dropdown; D32 (2 Nov): bar above the map on laptops, summary chip and sheet on phones; 7 Nov: native selects for rank, dependents, home type and metric (D29) built from B21; desktop top bar (layout A), phone summary chip that opens a sheet (layout C, D32); E2E at 1280 x 800 and 360 x 640; completed 07 Nov |
 | 🟢 | **C8** | Feature-state join | required | C14, C2 | 7 Nov: setFeatureState keyed on code, writing only changed classes; E2E: after a rank change, sampled areas hold the computed class; completed 07 Nov |
 | 🟢 | **C9** | Choropleth paint expression | required | C14, C3 | Mock-ups: outline class mha only, County Cost Groups fill only; D27 adds a second scale for views that are not the statutory test; 7 Nov: match on class index with B21 colours and no_data_color; both D27 scales share the colours; class rule unit-tested at every break (test/unit.test.mjs); the X7 source scan is an exit check; completed 07 Nov |
-| 🟣 | **C10** | Legend | required | C14 | D27 (3 Nov): the legend names the active scale; off-standard views use their own class labels; 7 Nov: built (web/src/legend.js): active-scale title, class labels, no-data label, D27 scale note; compact ramp on phones. Remaining: the E2E check of labels for every metric |
-| 🟣 | **C11** | MHA detail popup/panel | required | C14 | D32 (2 Nov): side panel on laptops, bottom sheet on phones; D26: display_name when present; 7 Nov: built (web/src/panel.js): click an area for BAH, cost share, local cost to rent and to buy and the four grid metrics; B21 status and caveat texts; County Cost Groups open with the boundary note; selected outline; on phones a bottom sheet that pans the area into view. Remaining: E2E for no_zori, piti_only_no_zori and no_rate (ok and ccg_no_benchmark tested), and the buy-mode PITI/utilities split |
-| 🔴 | **C12** | A/B comparison panel | required | C14 |  |
+| 🟢 | **C10** | Legend | required | C14 | D27 (3 Nov): the legend names the active scale; off-standard views use their own class labels; 7 Nov: built (web/src/legend.js): active-scale title, class labels, no-data label, D27 scale note; compact ramp on phones. 8 Nov: E2E checks title, short title, class labels, colours, no-data entry, phone ramp ends and scale note against B21 for all seven metrics on both scales (web/test/e2e/smoke.test.mjs); completed 08 Nov |
+| 🟢 | **C11** | MHA detail popup/panel | required | C14 | D32 (2 Nov): side panel on laptops, bottom sheet on phones; D26: display_name when present; 7 Nov: built (web/src/panel.js): click an area for BAH, cost share, local cost to rent and to buy and the four grid metrics; B21 status and caveat texts; County Cost Groups open with the boundary note; selected outline; on phones a bottom sheet that pans the area into view. 8 Nov: buy mode splits the local cost into PITI (B31 own_housing, blended by the 5b.4 step-4 rule; equals B20 own_housing_monthly in all 678 research-profile views, test/ui.test.mjs) and utilities; E2E for no_zori with piti_only_no_zori (AK400) and no_rate (XX499); a pin button for C12; completed 08 Nov |
+| 🟢 | **C12** | A/B comparison panel | required | C14 | 8 Nov: web/src/compare.js; pin up to two areas from the detail panel (state.compare in C6), compared side by side in the current rank, dependents, home type and mode, with the dollar difference in gap and surplus; B21 status and caveat texts per area; pinned areas keep a dashed outline; pinning the second area clears the selection so the comparison has the panel; E2E: both columns equal gridView in rent and buy, including AK400 with null rent metrics; fits 360 px; keyboard focus kept on pin; completed 08 Nov |
 | 🟢 | **C13** | Rent/Buy toggle | required | — | 7 Nov: two-option radio group labelled from B21 modes; E2E: the mode changes and the panel highlights it; completed 07 Nov |
 | 🟢 | **C14** | Render function | required | C6, C2, C3 | D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles; 7 Nov: web/src/render.js, the one path from state to classes, scale, notice and panel values; grid parity on all 218,316 views runs in CI (test/grid.test.mjs); the notice is unit-tested on all 322 selections; completed 07 Nov |
 | 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6, B32 | D26 (3 Nov): needs B32; included in M7 scope (D30) |
