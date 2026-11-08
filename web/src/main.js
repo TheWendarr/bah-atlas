@@ -4,12 +4,13 @@ import "./app.css";
 import { classIndex } from "./classify.js";
 import { checkContract, loadFiles } from "./contract.js";
 import { gridView } from "./grid.js";
-import { addAreaLayers, applyClasses, createMap } from "./map.js";
+import { addAreaLayers, applyClasses, createMap, jumpTo } from "./map.js";
 
 const SITE = __SITE__;
 
 function showError(detail) {
   document.getElementById("map").hidden = true;
+  document.getElementById("jump").hidden = true;
   document.getElementById("error").hidden = false;
   document.getElementById("error-detail").textContent = detail;
   document.documentElement.dataset.state = "error";
@@ -52,6 +53,12 @@ async function start() {
   });
   addAreaLayers(map, { colors: ui.metrics[view.metric].colors, noDataColor: ui.no_data_color });
   const classes = applyClasses(map, classesFor(files, view));
+  const jump = document.getElementById("jump");
+  jump.hidden = false;
+  jump.addEventListener("click", (event) => {
+    const region = event.target.closest("button")?.dataset.region;
+    if (region) jumpTo(map, region);
+  });
   map.once("idle", () => {
     document.documentElement.dataset.state = "ready";
   });
@@ -60,6 +67,8 @@ async function start() {
   window.bahAtlas = {
     classOf: (code) => classes.get(code),
     featureState: (code) => map.getFeatureState({ source: "areas", sourceLayer: "areas", id: code }),
+    center: () => map.getCenter().toArray(),
+    moving: () => map.isMoving(),
     layerOrder: () => map.getLayersOrder(),
     basemapFeatures: (sourceLayer) => map.querySourceFeatures("basemap", { sourceLayer }).length,
     attribution: () => document.querySelector(".maplibregl-ctrl-attrib-inner")?.textContent ?? "",

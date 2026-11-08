@@ -89,6 +89,22 @@ test("the live basemap draws and is credited", { skip: !LIVE }, async () => {
   await page.close();
 });
 
+test("the jump buttons move the map to Alaska, Hawaii and back", async () => {
+  const { page } = await open();
+  const centerAfter = async (name) => {
+    await page.getByRole("button", { name }).click();
+    await page.waitForFunction(() => !window.bahAtlas.moving());
+    return page.evaluate(() => window.bahAtlas.center());
+  };
+  const [alaskaLng, alaskaLat] = await centerAfter("Alaska");
+  assert.ok(alaskaLng < -140 && alaskaLat > 55);
+  const [hawaiiLng, hawaiiLat] = await centerAfter("Hawaii");
+  assert.ok(hawaiiLng < -150 && hawaiiLat < 25);
+  const [lng, lat] = await centerAfter("Lower 48");
+  assert.ok(lng > -110 && lng < -85 && lat > 30 && lat < 45);
+  await page.close();
+});
+
 test("the map fits a phone with no horizontal scroll", async () => {
   const { page } = await open({ viewport: { width: 360, height: 640 } });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

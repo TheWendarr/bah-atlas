@@ -5,7 +5,13 @@ import { Protocol } from "pmtiles";
 import { NO_CLASS } from "./classify.js";
 
 const SOURCE = "areas";
-const CONUS_BOUNDS = [-124.9, 24.4, -66.9, 49.5]; // D29: opens on the 48 states
+// D29: the map opens on the 48 states; the jump buttons reach the rest.
+const REGIONS = {
+  conus: [-124.9, 24.4, -66.9, 49.5],
+  alaska: [-168.5, 51.2, -129.5, 71.6],
+  hawaii: [-160.7, 18.8, -154.7, 22.3],
+};
+const CONUS_BOUNDS = REGIONS.conus;
 const MAX_ZOOM = 12;
 
 // C4: public/basemap/style.json holds relative addresses, and the tile address changes
@@ -37,6 +43,14 @@ export async function createMap({ container, areasUrl, basemapPath, basemapUrl, 
   // ICD section 4. promoteId makes `code` the feature id that every join uses.
   map.addSource(SOURCE, { type: "vector", url: `pmtiles://${new URL(areasUrl, location.href).href}`, promoteId: "code" });
   return map;
+}
+
+// C5: move the view to one of the regions above.
+export function jumpTo(map, region) {
+  const bounds = REGIONS[region];
+  if (!bounds) return;
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  map.fitBounds(bounds, { padding: 16, duration: still ? 0 : 600 });
 }
 
 // Each area's feature-state holds a class index, so the class rule lives in one tested
