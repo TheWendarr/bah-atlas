@@ -12,6 +12,8 @@
   <h1 class="site-title">BAH Atlas</h1>
   <p class="site-tagline">2026 housing allowance against local cost</p>
 </header>
+<section id="controls" class="controls" aria-label="Map selection" hidden></section>
+<p id="notice" class="notice" aria-live="polite" hidden></p>
 <main class="site-main">
   <div id="map" class="map" aria-label="Map of BAH adequacy by Military Housing Area"></div>
   <nav id="jump" class="jump" aria-label="Go to a region" hidden>
@@ -19,6 +21,8 @@
     <button type="button" data-region="alaska">Alaska</button>
     <button type="button" data-region="hawaii">Hawaii</button>
   </nav>
+  <div id="legend" class="legend" role="group" aria-label="Legend" hidden></div>
+  <aside id="panel" class="panel" aria-labelledby="panel-title" hidden></aside>
   <section id="error" class="error" hidden>
     <h2>The map could not start</h2>
     <p>The data files on this page do not come from the same build, so showing them together could mix results. No values are shown until they match.</p>
