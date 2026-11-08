@@ -223,7 +223,7 @@ class TestChain(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("name metros differently", p.stderr)
 
-    def run_b30(self, config: Path | None = None) -> subprocess.CompletedProcess:
+    def run_b30(self, config: Path | None = None, condo: dict | None = None) -> subprocess.CompletedProcess:
         """B29, B11 and B30 on the fixture. A16 is built so each Zillow series sits at a realistic size:
         the all-homes value equals the 3 BR value ZIP by ZIP (as the 2026 data measure), single-family
         homes sit near 3 BR and condos near 2 BR."""
@@ -245,7 +245,7 @@ class TestChain(unittest.TestCase):
         all_homes = {"00501": 200000, "00502": 400000, "10001": 500000, "10002": 300000}
         sfr = {"00501": 1.05, "00502": 1.15, "10001": 1.02, "10002": 0.98}
         a16 = {"sfr": {z: all_homes[z] * k for z, k in sfr.items()},
-               "condo": {"00501": 160000, "00502": 280000}}
+               "condo": condo or {"00501": 160000, "00502": 280000}}
         br2 = {z: v / 1.25 for z, v in all_homes.items()}
         for n, k in ((1, 0.8), (2, 1.0), (3, 1.25), (4, 1.5)):
             a16[f"br{n}"] = {z: v * k for z, v in br2.items()}
@@ -311,6 +311,30 @@ class TestChain(unittest.TestCase):
         self.assertEqual(man["reference_check"]["all_homes_over_3br"]["median"], 1.0)
         self.assertEqual({k: v["nearest_bedrooms"] for k, v in man["reference_check"]["series"].items()},
                          {"all_homes": 3, "condo": 2, "single_family": 3})
+
+    def test_b30_keeps_dod_order_where_condos_cost_more(self) -> None:
+        # AA002 gains condo ZIPs at 0.85 x all homes: at equal bedrooms 0.85 x 1.25 = 1.0625, above its
+        # single-family factor 1.00. The single-family factor is raised to 1.0625, and the townhouse
+        # midpoint lands there too, so a 2 BR apartment, townhouse and (scaled) house share one level.
+        condo = {"00501": 160000, "00502": 280000, "10001": 425000, "10002": 255000}
+        p = self.run_b30(condo=condo)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        rows = read(self.out / "mha_ownership_by_type.csv")
+        b = {t: rows[("AA002", t)] for t in ht.TYPE_IDS}
+        self.assertEqual({t: b[t]["building_factor"] for t in ("apt2", "th2", "sfh3")},
+                         {"apt2": "1.062500", "th2": "1.062500", "sfh3": "1.062500"})
+        self.assertEqual((b["apt2"]["floored"], b["th2"]["floored"], b["sfh3"]["floored"]), ("0", "1", "1"))
+        self.assertEqual((b["apt2"]["home_value"], b["th2"]["home_value"], b["sfh3"]["home_value"]),
+                         ("340000.00", "340000.00", "425000.00"))      # 400k x 1.0625 / 1.25; 400k x 1.0625
+        self.assertEqual(rows[("AA001", "sfh3")]["floored"], "0")
+        for m in ("AA001", "AA002", "AA003"):
+            vals = [float(rows[(m, t)]["home_value"]) for t in ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")]
+            self.assertEqual(vals, sorted(vals), m)
+        man = json.loads((self.out / "mha_ownership_by_type_manifest.json").read_text())
+        th = man["ratios"]["building_townhouse"]
+        self.assertEqual((th["mhas_condo_above_single_family"], th["mhas_floored_to_condo"]), (1, 1))
+        self.assertTrue(man["keep_dod_order"])
+        self.assertFalse(any("not between the two" in w for w in man["warnings"]))
 
     def test_b30_stops_when_a_series_size_is_misconfigured(self) -> None:
         cfg = json.loads((ROOT / "config" / "ownership.json").read_text(encoding="utf-8"))

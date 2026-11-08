@@ -160,6 +160,7 @@ identity check, warnings.
 | mha, home_type  | str   | as B29 |
 | building_factor, building_source | float, str | the building difference at equal bedrooms (D34): zillow_type_ratio × h(3) ÷ h(*k*), *k* = the series' typical bedrooms (condo 2, single-family 3; `config/ownership.json`), h = ZHVI n BR ÷ 2 BR; townhouse = condo factor + 0.5 × (single-family factor − condo factor) per MHA (D22); `zip` or `national` (`zip` only when every ratio in it is) |
 | zillow_type_ratio | float | condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; blank for townhouses |
+| floored         | int   | 1 on townhouse and single-family rows of an MHA where the condo factor was above the single-family factor and `keep_dod_order` raised the single-family factor to it (D34) |
 | bedroom_ratio, bedroom_source | float, str | h(n) ÷ h(3): bedrooms scaled from the 3 BR home B9 stands for (D34); `reference` (3 BR), `zip` or `national` |
 | home_value      | float | B9 `zhvi_median` × building_factor × bedroom_ratio |
 | rate_pct, pi_monthly, tax_monthly, tax_source, insurance_monthly, insurance_source, mi_monthly, own_housing_monthly | | B11's model on `home_value` (see `mha_ownership.csv`); the premium is the MHA average for every type |

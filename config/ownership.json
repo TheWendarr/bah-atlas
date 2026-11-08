@@ -30,6 +30,7 @@
     "townhouse_position": 0.5,
     "all_homes_bedrooms": 3,
     "condo_bedrooms": 2,
-    "single_family_bedrooms": 3
+    "single_family_bedrooms": 3,
+    "keep_dod_order": true
   }
 }

@@ -414,7 +414,7 @@ $$
 \text{Condo} < \text{Townhouse} < \text{SingleFamily}
 $$
 
-The ordering holds in every MHA except 10 where the condo/co-op value is above the single-family value (IN338, KY430, MD458, MI148, MI156, NY215, OH233, PA253, WI318, WV322). B30 flags these MHAs, and their townhouse cannot sit between the two in DoD's order.
+Since D34 the ordering is enforced at equal bedrooms. Compared at the same size, condos cost more than single-family homes in 94 MHAs, mostly coastal and urban markets. There the single-family factor is raised to the condo factor, so a 2-bedroom apartment, a 2-bedroom townhouse and a single-family home with the same bedrooms share one level, and costs never fall as DoD's standard rises with rank. B30 marks these rows `floored`.
 
 The project also distinguishes between:
 
@@ -427,7 +427,7 @@ For MHAs with home-value data but no usable ZORI data, the project falls back to
 
 **Correction (D34, 7 Nov 2026).** The same review found two faults here. First, the method scaled bedrooms from two, but Zillow's all-homes value matches the three-bedroom value almost exactly (ratio 1.003, median of 20,431 ZIPs), so every home with more than two bedrooms was priced as if its extra rooms came on top of a three-bedroom value. Second, as in B29, the single-family ÷ all-homes ratio already carried a size difference before the bedroom ratio was applied.
 
-B30 now treats the all-homes value as a three-bedroom home and places each Zillow type series at its own typical size (condo/co-op two bedrooms, single-family three), so the townhouse midpoint is taken between condo and single-family values of the same size. The pipeline measures these sizes on every run and stops if the data no longer sit nearest the configured counts. Apartments do not change; townhouses and single-family homes fall, by roughly a sixth and a quarter at the national median.
+B30 now treats the all-homes value as a three-bedroom home and places each Zillow type series at its own typical size (condo/co-op two bedrooms, single-family three), so the townhouse midpoint is taken between condo and single-family values of the same size, and, as in rent mode, a house is never priced below a townhouse with the same bedrooms. The pipeline measures these sizes on every run and stops if the data no longer sit nearest the configured counts. Apartments do not change; townhouses and single-family homes fall, by roughly a sixth and a quarter at the national median.
 
 > **Why this stage matters:** It creates an ownership benchmark that can be compared against BAH using the same general adequacy framework as rental housing.
 

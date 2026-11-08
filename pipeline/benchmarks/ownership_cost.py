@@ -134,6 +134,9 @@ def load_config(path: Path) -> dict:
         if not isinstance(n, int) or isinstance(n, bool) or not 1 <= n <= 4:
             problems.append(f"home_types.{key} = {n!r}; expected a bedroom count 1-4, one Zillow publishes "
                             "a ZHVI series for (D34)")
+    if not isinstance(cfg.get("home_types", {}).get("keep_dod_order"), bool):
+        problems.append("home_types.keep_dod_order must be true or false (D34: at equal bedrooms a townhouse is "
+                        "not below an apartment, nor a single-family home below a townhouse)")
     agg.fail_if(problems, TOOL)
     return cfg
 

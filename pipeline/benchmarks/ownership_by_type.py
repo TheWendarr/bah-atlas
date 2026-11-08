@@ -40,6 +40,10 @@ Method (per MHA m and home type t = building b, n bedrooms), D34 (7 Nov 2026)
        townhouse (D22 option B) = a_apartment + p x (a_single_family - a_apartment),
        p = home_types.townhouse_position (0.5), so the townhouse sits between the
        apartment and the single-family home of the same bedrooms.
+       With home_types.keep_dod_order (as in rent mode), a_single_family is first
+       raised to a_apartment where the condo factor is higher, so at equal bedrooms
+       a townhouse is never below an apartment, nor a house below a townhouse; in
+       those MHAs the three share the condo level, and the rows say `floored`.
   An MHA with no ZIP holding both series of a ratio takes the national median of
   the ZIP ratios; building_source and bedroom_source say which (zip | national), and
   a factor is `zip` only when every ratio in it is.
@@ -142,6 +146,7 @@ def main() -> None:
     series_bedrooms = {"all_homes": own_cfg["home_types"]["all_homes_bedrooms"],
                        "condo": own_cfg["home_types"]["condo_bedrooms"],
                        "single_family": own_cfg["home_types"]["single_family_bedrooms"]}
+    keep_order = own_cfg["home_types"]["keep_dod_order"]
     spec = args.window or oc.window_from_b9(args.zhvi)
     if spec is None:
         agg.die(TOOL, f"mha_zhvi_manifest.json not found beside {args.zhvi} (run `make zhvi`)")
@@ -236,19 +241,26 @@ def main() -> None:
         vals = [v[0] for v in size_matched[b].values()]
         stats[f"building_{b}"]["size_matched_median"] = round(statistics.median(vals), 4)
     # D22 option B, at equal bedrooms (D34): the townhouse between the MHA's two size-matched factors.
+    # keep_dod_order: where the condo factor is above the single-family one, the single-family
+    # factor takes the condo value first, so the three types share it instead of falling with rank.
     size_matched["townhouse"], inverted = {}, []
     for m in members:
         (aa, sa, za), (as_, ss, zs) = size_matched["apartment"][m], size_matched["single_family"][m]
-        size_matched["townhouse"][m] = (aa + th_pos * (as_ - aa), combined(sa, ss), min(za, zs))
         if aa > as_:
             inverted.append(m)
+            if keep_order:
+                as_, ss = aa, combined(sa, ss)
+                size_matched["single_family"][m] = (as_, ss, zs)
+        size_matched["townhouse"][m] = (aa + th_pos * (as_ - aa), combined(sa, ss), min(za, zs))
+    floored = set(inverted) if keep_order else set()
     th_vals = [v[0] for v in size_matched["townhouse"].values()]
     stats["building_townhouse"] = {
         "method": f"apartment factor + {th_pos} x (single-family factor - apartment factor), per MHA, "
                   "both at equal bedrooms (D34)",
         "townhouse_position": th_pos, "median_factor": round(statistics.median(th_vals), 4),
         "mhas_national_fallback": sum(v[1] == "national" for v in size_matched["townhouse"].values()),
-        "mhas_condo_above_single_family": len(inverted)}
+        "mhas_condo_above_single_family": len(inverted),
+        "mhas_floored_to_condo": len(floored)}
 
     rate, weeks, rates = oc.read_pmms(args.pmms, window)
     n_months = int(loan["term_years"] * 12)
@@ -278,6 +290,7 @@ def main() -> None:
             hsrc = "reference" if n == k_all else combined(s_n, s_all)
             out = {"mha": m, "home_type": t["id"], "building_factor": f"{g:.6f}", "building_source": gsrc,
                    "zillow_type_ratio": "" if b == "townhouse" else f"{building[b][m][0]:.6f}",
+                   "floored": int(m in floored and b != "apartment"),
                    "bedroom_ratio": f"{h:.6f}", "bedroom_source": hsrc, "rate_pct": f"{rate:.3f}"}
             if not raw:
                 out["status"] = "no_home_value"
@@ -305,8 +318,8 @@ def main() -> None:
                  f"{', '.join(identity_fail[:10])} (rebuild B11 and B30 from the same inputs)"]
                 if identity_fail else [], TOOL)
 
-    fields = ["mha", "home_type", "building_factor", "building_source", "zillow_type_ratio", "bedroom_ratio",
-              "bedroom_source",
+    fields = ["mha", "home_type", "building_factor", "building_source", "zillow_type_ratio", "floored",
+              "bedroom_ratio", "bedroom_source",
               "home_value", "rate_pct", "pi_monthly", "tax_monthly", "tax_source", "insurance_monthly",
               "insurance_source", "mi_monthly", "own_housing_monthly", "utilities_usd", "own_total_monthly",
               "status"]
@@ -334,7 +347,7 @@ def main() -> None:
             warnings.append(f"median PITI of {dearer} ({medians[dearer]:,.0f}) is below {cheaper} "
                             f"({medians[cheaper]:,.0f}): the home types are out of DoD's order in buy mode "
                             "(see reference_check)")
-    if inverted:
+    if inverted and not keep_order:
         warnings.append(f"{len(inverted)} MHA(s) have a condo/co-op factor above the single-family factor, so "
                         f"their townhouse is not between the two in DoD's order: {', '.join(sorted(inverted)[:10])}")
     warnings += [f"{s['zips_outside_range']} ZIP {k.replace('_', ' ')} ratio(s) outside {FACTOR_RANGE}; kept, "
@@ -356,13 +369,16 @@ def main() -> None:
         "decision": "D34 (7 Nov 2026): B9 and each Zillow type series are placed at their measured typical "
                     "bedroom count before bedrooms are scaled",
         "series_bedrooms": series_bedrooms,
+        "keep_dod_order": keep_order,
         "method": {
             "home_value": "B9 zhvi_median x building_factor x bedroom_ratio",
             "building_factor": "at equal bedrooms: zillow_type_ratio x h(all-homes size) / h(series size); "
                                "zillow_type_ratio = condo/co-op ZHVI / all-homes ZHVI (apartment) or SFR ZHVI / "
                                "all-homes ZHVI (single-family), per ZIP, median over the MHA, national median "
                                f"fallback; townhouse = apartment + {th_pos} x (single-family - apartment) per MHA "
-                               "(D22 option B)",
+                               "(D22 option B)" + ("; single-family not below apartment first, so at equal "
+                                                   "bedrooms apartment <= townhouse <= single-family (D34)"
+                                                   if keep_order else ""),
             "bedroom_ratio": f"h(n) / h({k_all}), h = ZHVI n BR / 2 BR per ZIP, median over the MHA; national "
                              f"median fallback; B9 stands for a {k_all} BR home",
             "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities",
@@ -395,7 +411,8 @@ def main() -> None:
     for k, s in stats.items():
         if k == "building_townhouse":
             print(f"  {k:24} MHA median {s['median_factor']} (position {s['townhouse_position']}); "
-                  f"{s['mhas_national_fallback']} MHA(s) with a national side")
+                  f"{s['mhas_national_fallback']} MHA(s) with a national side; condo above single-family in "
+                  f"{s['mhas_condo_above_single_family']}, {s['mhas_floored_to_condo']} set to the condo level (D34)")
             continue
         print(f"  {k:24} national median {s['national_median']}; {s['zips_with_both']:,} ZIPs; "
               f"{s['mhas_national_fallback']} MHA(s) on the national ratio")
