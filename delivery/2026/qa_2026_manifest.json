@@ -2,8 +2,8 @@
   "nodes": [
     "B23"
   ],
-  "generated_at": "2026-11-04T03:18:47+00:00",
-  "build_id": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86",
+  "generated_at": "2026-11-08T03:38:31+00:00",
+  "build_id": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce",
   "schema_version": "1.2.0",
   "inputs": {
     "B7": "areas_2026.pmtiles",
@@ -23,12 +23,12 @@
   },
   "input_sha256": {
     "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
-    "B20": "6e1041238a29d88fe57b6e80427c6feba2c9b37c32ba4e9c5201724e8936cc07",
-    "B21": "f560219fbd1867c0ce46d14914503a1b14c0efdfaabbcc5d23851e20b2770f46",
-    "B27": "4de8b0587a37e4de61cac34bc83bc6ff2de6a3bc17024ee7f691b59f5933759d",
-    "B31": "13a2c6db3fdf928a38d5f41522b004b2f062306476a6628010f9c27a5364695f",
-    "B32": "bbb8b0508fbab98ad31059ebfe992d689e971ffcea96e1a3912ec8719b4de720",
-    "B22": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86",
+    "B20": "42220235ed0461b83466a2707c3ecd7e14f2cbd639fd7842a4e8bef5708f010c",
+    "B21": "fa9d8bba0635135b45e89cec85b22559e5c0cff982daeda699dba3e9bab649d9",
+    "B27": "0356d5eff8d57d9837709ca4a0d7b5738473aea4c91abef6faab614109dff454",
+    "B31": "9cdb6294c90440f0167ba3ba4c7959789d333cccfb73fa50d15849da71301dc8",
+    "B32": "03cde2e51893b430180eccf11f2b7ddc47e2026ae8b43f12f9e9c1409eb26e88",
+    "B22": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce",
     "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
     "B14": "69ac7453c1eba7248752ca05e39fb1dd373d09692f0d048fc804870e29775748",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
@@ -52,7 +52,7 @@
     {
       "check": "Provenance: built from committed code",
       "result": "PASS",
-      "detail": "B22 commit 5940dd448489 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+      "detail": "B22 commit 59e093204f68 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
     },
     {
       "check": "Check 9: file sizes recorded; SHA256SUMS matches",
@@ -106,9 +106,9 @@
     }
   ],
   "provenance": {
-    "b22_commit": "5940dd448489af8405adb052ff99f9474c763300",
+    "b22_commit": "59e093204f68fb22cd14c0e9d38642538fccf35e",
     "b22_dirty": true,
-    "detail": "B22 commit 5940dd448489 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    "detail": "B22 commit 59e093204f68 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
   },
   "files": {
     "areas_2026.pmtiles": {
@@ -118,33 +118,33 @@
     },
     "payload_2026.json": {
       "bytes": 463206,
-      "gzip_bytes": 45446,
-      "sha256": "6e1041238a29d88fe57b6e80427c6feba2c9b37c32ba4e9c5201724e8936cc07"
+      "gzip_bytes": 45443,
+      "sha256": "42220235ed0461b83466a2707c3ecd7e14f2cbd639fd7842a4e8bef5708f010c"
     },
     "ui_metadata_2026.json": {
       "bytes": 51965,
-      "gzip_bytes": 11801,
-      "sha256": "f560219fbd1867c0ce46d14914503a1b14c0efdfaabbcc5d23851e20b2770f46"
+      "gzip_bytes": 11800,
+      "sha256": "fa9d8bba0635135b45e89cec85b22559e5c0cff982daeda699dba3e9bab649d9"
     },
     "hotspots_2026.json": {
       "bytes": 134305,
-      "gzip_bytes": 7416,
-      "sha256": "4de8b0587a37e4de61cac34bc83bc6ff2de6a3bc17024ee7f691b59f5933759d"
+      "gzip_bytes": 7415,
+      "sha256": "0356d5eff8d57d9837709ca4a0d7b5738473aea4c91abef6faab614109dff454"
     },
     "grid_2026.json": {
       "bytes": 358353,
-      "gzip_bytes": 58961,
-      "sha256": "13a2c6db3fdf928a38d5f41522b004b2f062306476a6628010f9c27a5364695f"
+      "gzip_bytes": 58957,
+      "sha256": "9cdb6294c90440f0167ba3ba4c7959789d333cccfb73fa50d15849da71301dc8"
     },
     "zips_2026.json": {
       "bytes": 331193,
-      "gzip_bytes": 101898,
-      "sha256": "bbb8b0508fbab98ad31059ebfe992d689e971ffcea96e1a3912ec8719b4de720"
+      "gzip_bytes": 101886,
+      "sha256": "03cde2e51893b430180eccf11f2b7ddc47e2026ae8b43f12f9e9c1409eb26e88"
     },
     "build_manifest_2026.json": {
       "bytes": 15842,
-      "gzip_bytes": 5175,
-      "sha256": "3373f5a57f0eff6a639178f936a2557318f9b603b66531d1e9e6e5445d5fbf86"
+      "gzip_bytes": 5192,
+      "sha256": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce"
     }
   },
   "areas_by_class": {
@@ -450,6 +450,6 @@
     "qa_2026_manifest.json"
   ],
   "output_sha256": {
-    "qa_2026.md": "ac6dab62d30aa7189cf0b3727b6d6c1530f1f28a80e134a2a50075f011121572"
+    "qa_2026.md": "c793a1383725f10f79604451010f4d26b95c173796d7985f736cca3fb764a29c"
   }
 }

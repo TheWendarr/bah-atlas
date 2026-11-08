@@ -1,7 +1,7 @@
 {
   "node": "A14",
   "check": "housing standards table reproduces the 2026 BAH rates",
-  "generated_at": "2026-11-04T03:17:07+00:00",
+  "generated_at": "2026-11-08T03:35:54+00:00",
   "inputs": {
     "B4": "bah_rates.csv",
     "A14": "housing_standards.json"

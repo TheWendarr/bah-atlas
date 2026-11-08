@@ -2,8 +2,8 @@
 
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
-**Status as of:** 03 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 3  ·  🟣 In progress: 8  ·  🔴 Not started: 16  ·  ⚪ Scrapped: 4
+**Status as of:** 07 November 2026  
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 10  ·  🟣 In progress: 1  ·  🔴 Not started: 16  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -19,18 +19,11 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 14 / 14 | `██████████ 100%` | ✅ Complete |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 2 / 21 | `█░░░░░░░░░ 10%` | 🗓️ Upcoming |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 9 / 21 | `████░░░░░░ 43%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **C2** Attribute payload JSON (served) — due 16 Nov (M7)
-- 🟣 **C3** UI metadata JSON (served) — due 16 Nov (M7)
-- 🟣 **C4** Basemap PMTiles (served) — due 16 Nov (M7)
-- 🟣 **C5** App bootstrap + MapLibre init — due 16 Nov (M7)
 - 🟣 **C14** Render function — due 16 Nov (M7)
-- 🟣 **C22** Build bundler — due 16 Nov (M7)
-- 🟣 **C23** CI/CD (GitHub Actions) — due 16 Nov (M7)
-- 🟣 **C24** CDN hosting + security headers — due 16 Nov (M7)
 
 ## Nodal map
 
@@ -285,8 +278,8 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
-    class B32,W1,C1 week
-    class C2,C3,C4,C5,C14,C22,C23,C24 prog
+    class B32,W1,C1,C2,C3,C4,C5,C22,C23,C24 week
+    class C14 prog
     class W3,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C25 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
@@ -405,16 +398,16 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 at bah-atlas-tiles.mcgowanserver.com under a content-hashed name; tools/check_host.py is the gate; 3 Nov: uploaded to R2; make host-check passes on the real host (ranges, no compression, ETag, CORS); completed 03 Nov |
-| 🟣 | **C2** | Attribute payload JSON (served) | required | B20, B31 | D29 (3 Nov): ICD section 2 routes B31 through C2 as well; B20, B27, B31 and B32 served from Pages under a build-id path |
-| 🟣 | **C3** | UI metadata JSON (served) | required | B21 |  |
-| 🟣 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2; 3 Nov: maxzoom 9 from the dry run (185 MB, under the 315 MB Wrangler limit; zoom 10 is 448 MB); uploaded to R2 as basemap_2026.7ae93271.pmtiles; check_host passes; style, fonts and sprites in web/public/basemap |
+| 🟢 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 at bah-atlas-tiles.mcgowanserver.com under a content-hashed name; tools/check_host.py is the gate; 3 Nov: uploaded to R2; make host-check passes on the real host (ranges, no compression, ETag, CORS); completed 07 Nov |
+| 🟢 | **C2** | Attribute payload JSON (served) | required | B20, B31 | D29 (3 Nov): ICD section 2 routes B31 through C2 as well; B20, B27, B31 and B32 served from Pages under a build-id path; completed 07 Nov |
+| 🟢 | **C3** | UI metadata JSON (served) | required | B21 | completed 07 Nov |
+| 🟢 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2; 3 Nov: maxzoom 9 from the dry run (185 MB, under the 315 MB Wrangler limit; zoom 10 is 448 MB); uploaded to R2 as basemap_2026.7ae93271.pmtiles; check_host passes; style, fonts and sprites in web/public/basemap; completed 07 Nov |
 
 #### 3.2 Map and UI Runtime — due 16 November 2026 (M7)
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟣 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 | D23 (3 Nov): vanilla ES modules, MapLibre GL JS 6 and pmtiles only; D29: opens on CONUS with Alaska and Hawaii jump buttons |
+| 🟢 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 | D23 (3 Nov): vanilla ES modules, MapLibre GL JS 6 and pmtiles only; D29: opens on CONUS with Alaska and Hawaii jump buttons; completed 07 Nov |
 | 🔴 | **C6** | UI state object | required | C7, C13 |  |
 | 🔴 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown; D29 (3 Nov): adds the metric selector as a fourth dropdown; D32 (2 Nov): bar above the map on laptops, summary chip and sheet on phones |
 | 🔴 | **C8** | Feature-state join | required | C14, C2 |  |
@@ -438,9 +431,9 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | 🔴 | **W3** | Layer 3 writeup | optional | C21 | D31 (3 Nov): author-written, matching W1, due after the site is live; optional so it does not gate M7 unless the instructor expects it by 16 Nov |
-| 🟣 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile |
-| 🟣 | **C23** | CI/CD (GitHub Actions) | required | C22 | 3 Nov: .github/workflows/web.yml: tests, then deploy from main, then make site-check and the browser tests against the live site; actions pinned by commit |
-| 🟣 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error; Web Analytics is off for the site, because the policy blocks it too |
+| 🟢 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile; completed 07 Nov |
+| 🟢 | **C23** | CI/CD (GitHub Actions) | required | C22 | 3 Nov: .github/workflows/web.yml: tests, then deploy from main, then make site-check and the browser tests against the live site; actions pinned by commit; completed 07 Nov |
+| 🟢 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error; Web Analytics is off for the site, because the policy blocks it too; completed 07 Nov |
 
 ## Weekly progress log
 

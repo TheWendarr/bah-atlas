@@ -3,7 +3,7 @@
     "B24"
   ],
   "role": "population density per MHA (urbanicity) for the B19 spatial regression (reduced H2, D8)",
-  "generated_at": "2026-11-04T03:17:57+00:00",
+  "generated_at": "2026-11-08T03:37:06+00:00",
   "inputs": {
     "A9": "acs5_2024_zcta.json",
     "A2": "cb_2020_us_zcta520_500k.zip",

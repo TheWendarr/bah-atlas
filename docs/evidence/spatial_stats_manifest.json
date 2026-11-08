@@ -3,7 +3,7 @@
     "B17",
     "B18"
   ],
-  "generated_at": "2026-11-04T03:17:57+00:00",
+  "generated_at": "2026-11-08T03:37:05+00:00",
   "inputs": {
     "A12": "profiles.json",
     "A13": "classification.json",
@@ -15,9 +15,9 @@
   "input_sha256": {
     "A12": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
     "A13": "db6d31cc8daa7887bf6c1bc96f81f236fc551d6f3737ca501ce36dcb96bf7ab7",
-    "B6": "457cb4d56e8ac12b77f791022bdaac2f285721e477878d39490770f11d7fd176",
+    "B6": "46c13f022d1a8c023037a66d9deeb7a76186fea688c5295b503d23135351d99e",
     "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
-    "B16": "14bfe52739d51d0af5b6b51d3281e318575149ed7f565188fa667c9c9c3692da",
+    "B16": "f247afc0182cd82f4911e82afbce0764d6d87cd70f02779ad63ca2ef6b9c7469",
     "B14": "69ac7453c1eba7248752ca05e39fb1dd373d09692f0d048fc804870e29775748"
   },
   "hypothesis": "H1: adequacy gaps are spatially autocorrelated across CONUS MHAs, not randomly placed",
