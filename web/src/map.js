@@ -13,6 +13,9 @@ const REGIONS = {
 };
 const CONUS_BOUNDS = REGIONS.conus;
 const MAX_ZOOM = 12;
+// The area tiles start at zoom 2, and MapLibre draws nothing from a vector source below
+// its minzoom. On a phone the lower 48 fit at about zoom 1.99, which left the map empty.
+const MIN_ZOOM = 2;
 
 // The PMTiles protocol passes no attribution from the archive, so the credit OpenStreetMap's
 // licence requires is set on the source here, where it cannot drop out with a new extract.
@@ -41,6 +44,7 @@ export async function createMap({ container, areasUrl, basemapPath, basemapUrl, 
     container,
     style: await basemapStyle(basemapPath, basemapUrl),
     bounds: CONUS_BOUNDS,
+    minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
     fitBoundsOptions: { padding: 16 },
   });
@@ -80,6 +84,65 @@ export function addAreaLayers(map, { colors, noDataColor }) {
     },
     before,
   );
+}
+
+// C11: the selected area gets a dark outline drawn above the fills and below the labels,
+// driven by feature-state so selection never rebuilds a layer.
+export function addSelectionLayer(map) {
+  const before = map.getStyle().metadata["bah-atlas:areas-before"];
+  map.addLayer(
+    {
+      id: "area-selected",
+      type: "line",
+      source: SOURCE,
+      "source-layer": SOURCE,
+      paint: {
+        "line-color": "#1b2327",
+        "line-width": 2.5,
+        "line-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0],
+      },
+    },
+    before,
+  );
+}
+
+export function setSelected(map, code, previous) {
+  if (previous !== null && previous !== code) {
+    map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: previous }, { selected: false });
+  }
+  if (code !== null) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { selected: true });
+}
+
+// Calls back with the clicked area's code, or null for a click outside every area, and
+// the clicked point in map pixels.
+export function onAreaClick(map, callback) {
+  map.on("click", (event) => {
+    const [feature] = map.queryRenderedFeatures(event.point, { layers: ["area-fill"] });
+    callback(feature ? String(feature.id) : null, event.point);
+  });
+  map.on("mouseenter", "area-fill", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", "area-fill", () => {
+    map.getCanvas().style.cursor = "";
+  });
+}
+
+// Pans the map so a point hidden under the detail panel moves into the open part of the
+// map: above the panel on a phone, where it is a bottom sheet, and to its left elsewhere.
+export function reveal(map, point, panel) {
+  const box = map.getContainer().getBoundingClientRect();
+  const sheet = panel.getBoundingClientRect();
+  const x = box.left + point.x;
+  const y = box.top + point.y;
+  const covered = x >= sheet.left && x <= sheet.right && y >= sheet.top && y <= sheet.bottom;
+  if (!covered) return;
+  const bottomSheet = sheet.left <= box.left + 1 && sheet.right >= box.right - 1;
+  const target = bottomSheet
+    ? { x: box.width / 2, y: (sheet.top - box.top) / 2 }
+    : { x: (sheet.left - box.left) / 2, y: box.height / 2 };
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  map.panBy([point.x - target.x, point.y - target.y], { duration: still ? 0 : 400 });
 }
 
 // Writes only the areas whose class changed.

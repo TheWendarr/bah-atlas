@@ -8,3 +8,20 @@ export function classIndex(value, breaks) {
   if (value === null) return NO_CLASS;
   return breaks.filter((limit) => limit <= value).length;
 }
+
+// D27: a view that is not the statutory test reads on the metric's wider off-standard
+// scale, with its own labels. Both scales share the metric's colours.
+export function scaleFor(metric, standardView) {
+  const source = !standardView && metric.off_standard ? metric.off_standard : metric;
+  return {
+    offStandard: source !== metric,
+    label: source.label,
+    shortLabel: source.short_label,
+    breaks: source.breaks,
+    classLabels: source.class_labels,
+    rampLabels: source.ramp_labels,
+    colors: metric.colors,
+    format: metric.format,
+    neutral: source.neutral,
+  };
+}

@@ -118,6 +118,79 @@ test("the map fits a phone with no horizontal scroll", async () => {
   await page.close();
 });
 
+test("a phone draws the areas on the opening view", async () => {
+  // The area tiles start at zoom 2; below it MapLibre draws nothing (fixed by minZoom).
+  const { page } = await open({ viewport: { width: 360, height: 640 } });
+  assert.ok((await page.evaluate(() => window.bahAtlas.renderedAreas())) > 0);
+  await page.close();
+});
+
+test("changing rank recolours the map from the grid (C7, C8)", async () => {
+  const { page } = await open();
+  await page.selectOption("#rank", "O3");
+  const result = await page.evaluate(() =>
+    ["CO046", "NC182", "CA038"].map((code) => [window.bahAtlas.classOf(code), window.bahAtlas.featureState(code).class]),
+  );
+  for (const [computed, painted] of result) assert.equal(painted, computed);
+  assert.equal((await page.evaluate(() => window.bahAtlas.state())).rank, "O3");
+  await page.close();
+});
+
+test("an off-standard home type switches the notice, scale and metric names (C25, D27)", async () => {
+  const { page } = await open();
+  await page.selectOption("#rank", "E1");
+  await page.selectOption("#home-type", "sfh4");
+  assert.equal(await page.evaluate(() => window.bahAtlas.standardView()), false);
+  assert.match(await page.textContent("#notice"), /not the statutory test/);
+  assert.match(await page.textContent("#legend"), /Below 50%/);
+  assert.equal(await page.locator("#metric option:checked").textContent(), "BAH + cost share covers");
+  await page.selectOption("#home-type", "standard");
+  assert.match(await page.textContent("#notice"), /its statutory target/);
+  await page.close();
+});
+
+test("the rent/buy control changes the mode (C13)", async () => {
+  const { page } = await open();
+  await page.getByRole("radio", { name: "Buy (VA loan)" }).check({ force: true });
+  assert.equal((await page.evaluate(() => window.bahAtlas.state())).mode, "buy");
+  await page.close();
+});
+
+test("clicking an area opens its panel with BAH against rent and buy (C11)", async () => {
+  const { page } = await open();
+  const [x, y] = await page.evaluate(() => window.bahAtlas.pointOf([-104.75, 38.85]));
+  const box = await page.locator("#map").boundingBox();
+  await page.mouse.click(box.x + x, box.y + y);
+  await page.waitForSelector("#panel:not([hidden])");
+  assert.equal(await page.textContent("#panel-title"), "COLORADO SPRINGS, CO");
+  const text = await page.textContent("#panel");
+  // E-5 with dependents: BAH $2,358; rent $2,163; buy $2,944 (payload_2026.json).
+  for (const value of ["$2,358", "$2,163", "$2,944", "+$321"]) assert.ok(text.includes(value), value);
+  assert.equal((await page.evaluate(() => window.bahAtlas.featureState("CO046"))).selected, true);
+  await page.keyboard.press("Escape");
+  assert.equal(await page.isVisible("#panel"), false);
+  await page.close();
+});
+
+test("a County Cost Group shows its BAH rate, status text and boundary note (C11, must 4)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "ZZ580" }));
+  assert.equal(await page.locator("[data-status=ccg_no_benchmark]").count(), 1);
+  assert.equal(await page.isVisible("[data-caveat=ccg_geometry]"), true);
+  assert.match(await page.textContent("#panel"), /\$1,380/);
+  await page.close();
+});
+
+test("on a phone the controls open from the summary chip (D32 layout C)", async () => {
+  const { page } = await open({ viewport: { width: 360, height: 640 } });
+  assert.equal(await page.isVisible("#rank"), false);
+  await page.locator(".controls-chip").click();
+  assert.equal(await page.isVisible("#rank"), true);
+  await page.selectOption("#rank", "E7");
+  assert.match(await page.textContent(".controls-chip"), /E-7/);
+  await page.close();
+});
+
 test("a mismatched build id shows the error screen and no map", async () => {
   const { page } = await open({}, (grid) => ({ ...grid, build_id: "0".repeat(64) }));
   assert.equal(await state(page), "error");
