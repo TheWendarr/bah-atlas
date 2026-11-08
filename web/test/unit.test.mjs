@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { NO_CLASS, classIndex } from "../src/classify.js";
-import { checkContract } from "../src/contract.js";
+import { checkContract, checkManifest, sha256Hex } from "../src/contract.js";
 
 const BREAKS = [-500, -250, -50, 50, 250, 500];
 
@@ -46,4 +46,26 @@ test("a different build id is refused", () => {
 
 test("another major version is refused", () => {
   assert.match(checkContract(files({ schema_version: "2.0.0" })).join(), /schema_version 2\.0\.0/);
+});
+
+// C20: B22's own hash is the build id (ICD section 8).
+const manifest = (overrides = {}) => ({ name: "build_manifest_2026.json", sha256: "aaaa", content: { schema_version: "1.2.1" }, ...overrides });
+
+test("the build manifest whose hash is the build id passes", () => {
+  assert.deepEqual(checkManifest(manifest(), "aaaa"), []);
+});
+
+test("a build manifest from another build is refused", () => {
+  assert.match(checkManifest(manifest({ sha256: "bbbb" }), "aaaa").join(), /SHA-256 begins bbbb/);
+});
+
+test("a build manifest of another major version is refused", () => {
+  assert.match(checkManifest(manifest({ content: { schema_version: "2.0.0" } }), "aaaa").join(), /schema_version 2\.0\.0/);
+});
+
+test("the delivered build manifest hashes to the delivered build id", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (name) => readFileSync(new URL(`../../delivery/2026/${name}`, import.meta.url));
+  const ui = JSON.parse(read("ui_metadata_2026.json"));
+  assert.equal(await sha256Hex(read("build_manifest_2026.json")), ui.build_id);
 });

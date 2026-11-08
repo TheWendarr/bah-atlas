@@ -7,6 +7,7 @@ import test from "node:test";
 import { scaleFor } from "../src/classify.js";
 import { noticeText } from "../src/notice.js";
 import { gridView } from "../src/grid.js";
+import { WINDOW_SOURCE, areaAttribution } from "../src/sources.js";
 import { computeView } from "../src/render.js";
 import { createStore, initialState, validate } from "../src/state.js";
 
@@ -138,4 +139,21 @@ test("each pinned area is computed in the current mode and follows the controls 
   }
   // AK400 has a home value but no rent index: PITI alone, with its own status.
   assert.equal(compared[1].view.status, "piti_only_no_zori");
+});
+
+test("every B21 data window belongs to a B21 source (C20)", () => {
+  const ids = new Set(ui.sources.map((source) => source.id));
+  for (const key of Object.keys(ui.windows)) {
+    assert.ok(key in WINDOW_SOURCE, `window ${key} has no source in sources.js`);
+    assert.ok(ids.has(WINDOW_SOURCE[key]), `window ${key}: unknown source ${WINDOW_SOURCE[key]}`);
+  }
+});
+
+test("the map credits each provider whose licence asks for attribution, once (C20)", () => {
+  const html = areaAttribution(ui);
+  assert.equal((html.match(/Zillow Group/g) ?? []).length, 1);
+  assert.match(html, /Freddie Mac/);
+  // The basemap source credits OpenStreetMap itself.
+  assert.doesNotMatch(html, /OpenStreetMap/);
+  assert.doesNotMatch(html, /Census|Defense Travel/);
 });

@@ -419,3 +419,135 @@ body {
 .jump button:hover { background: #f1f3f4; }
 
 .jump button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* C20: the footer and the sources dialog. */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 6px 20px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule);
+}
+
+.disclaimer { margin: 0; }
+
+.footer-build-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+
+.footer-build-line:empty { display: none; }
+
+.footer-sources {
+  min-height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid #b9c0c3;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.footer-sources:hover { background: #f1f3f4; }
+
+.footer-build { font-variant-numeric: tabular-nums; }
+
+.sources {
+  width: min(680px, calc(100% - 32px));
+  max-height: calc(100% - 48px);
+  padding: 0 22px 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.sources::backdrop { background: rgba(27, 35, 39, 0.4); }
+
+.sources-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 0 8px;
+  background: var(--ground);
+  border-bottom: 1px solid var(--rule);
+}
+
+.sources-head h2 { margin: 0; font-size: 20px; }
+
+.sources-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sources-close:hover { background: #f1f3f4; }
+
+.sources-section h3 { margin: 18px 0 6px; font-size: 15px; }
+
+.sources-section p { margin: 0 0 8px; }
+
+.sources-list { margin: 0; padding: 0; list-style: none; }
+
+.sources-item { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+
+.sources-item > a { font-weight: 600; color: var(--ink); }
+
+.sources-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.sources-facts dt { color: var(--ink-muted); }
+
+.sources-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+.sources-id { font-family: ui-monospace, monospace; font-size: 12px; }
+
+.footer-sources:focus-visible,
+.sources-close:focus-visible,
+.sources a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  /* One flowing line on phones: the disclaimer, then the dialog link. The build id and
+     date stay in the dialog. */
+  .site-footer { display: block; padding: 5px 12px; font-size: 11px; line-height: 1.4; }
+
+  .disclaimer, .footer-build-line { display: inline; }
+
+  .footer-sources {
+    display: inline-block;
+    min-height: 24px;
+    margin-left: 4px;
+    padding: 0 2px;
+    text-decoration: underline;
+    background: none;
+    border: 0;
+  }
+
+  .footer-build { display: none; }
+
+  .sources { width: calc(100% - 16px); max-height: calc(100% - 24px); padding: 0 14px 14px; }
+
+  .sources-facts { grid-template-columns: 1fr; gap: 0; }
+
+  .sources-facts dd { margin-bottom: 4px; }
+}

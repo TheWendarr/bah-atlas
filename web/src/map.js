@@ -36,7 +36,7 @@ async function basemapStyle(basemapPath, basemapUrl) {
   return style;
 }
 
-export async function createMap({ container, areasUrl, basemapPath, basemapUrl, workerPath }) {
+export async function createMap({ container, areasUrl, areasAttribution, basemapPath, basemapUrl, workerPath }) {
   setWorkerUrl(new URL(workerPath, location.href).href);
   addProtocol("pmtiles", new Protocol().tile);
 
@@ -51,7 +51,13 @@ export async function createMap({ container, areasUrl, basemapPath, basemapUrl, 
   await new Promise((resolve) => map.once("load", resolve));
 
   // ICD section 4. promoteId makes `code` the feature id that every join uses.
-  map.addSource(SOURCE, { type: "vector", url: `pmtiles://${new URL(areasUrl, location.href).href}`, promoteId: "code" });
+  // C20: the area layer credits the data sources whose licences ask for it.
+  map.addSource(SOURCE, {
+    type: "vector",
+    url: `pmtiles://${new URL(areasUrl, location.href).href}`,
+    promoteId: "code",
+    attribution: areasAttribution,
+  });
   return map;
 }
 

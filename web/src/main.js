@@ -1,7 +1,7 @@
 // C5: start the app. Nothing renders until the delivered files pass the contract gate.
 
 import "./app.css";
-import { checkContract, loadFiles } from "./contract.js";
+import { checkContract, checkManifest, loadFiles } from "./contract.js";
 import { createControls } from "./controls.js";
 import { renderLegend } from "./legend.js";
 import { renderCompare } from "./compare.js";
@@ -19,6 +19,7 @@ import {
 } from "./map.js";
 import { renderDetail } from "./panel.js";
 import { computeView } from "./render.js";
+import { areaAttribution, renderFooterBuild, renderSources } from "./sources.js";
 import { MAX_COMPARE, createStore } from "./state.js";
 
 const SITE = __SITE__;
@@ -34,8 +35,9 @@ function showError(detail) {
 }
 
 async function start() {
-  const files = await loadFiles(SITE.dataPath, SITE.year);
+  const { files, manifest } = await loadFiles(SITE.dataPath, SITE.year);
   const problems = checkContract(files);
+  if (!problems.length) problems.push(...checkManifest(manifest, files.ui.build_id));
   if (problems.length) {
     showError(problems.join("\n"));
     return;
@@ -47,6 +49,7 @@ async function start() {
   const map = await createMap({
     container: "map",
     areasUrl: SITE.areasUrl,
+    areasAttribution: areaAttribution(ui),
     basemapPath: SITE.basemapPath,
     basemapUrl: SITE.basemapUrl,
     workerPath: SITE.workerPath,
@@ -123,7 +126,22 @@ async function start() {
     else if (action === "clear-compare") store.set({ compare: [] });
   });
   document.addEventListener("keydown", (event) => {
+    // The open sources dialog handles its own Escape.
+    if (document.getElementById("sources").open) return;
     if (event.key === "Escape" && store.get().selected !== null) store.set({ selected: null });
+  });
+
+  // C20: the footer and the sources dialog.
+  const footerBuild = document.getElementById("footer-build");
+  const sourcesDialog = document.getElementById("sources");
+  renderFooterBuild(footerBuild, ui, manifest);
+  renderSources(sourcesDialog, ui, manifest);
+  footerBuild.addEventListener("click", (event) => {
+    if (event.target.closest("[data-action=open-sources]")) sourcesDialog.showModal();
+  });
+  sourcesDialog.addEventListener("click", (event) => {
+    // A click on the close button, or on the backdrop outside the dialog box, closes it.
+    if (event.target.closest("[data-action=close-sources]") || event.target === sourcesDialog) sourcesDialog.close();
   });
 
   const jump = document.getElementById("jump");

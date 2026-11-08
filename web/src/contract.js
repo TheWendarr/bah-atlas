@@ -10,15 +10,36 @@ const fileNames = (year) => ({
   grid: `grid_${year}.json`,
 });
 
+// C20: B22 has no build_id of its own. Its SHA-256 is the build id the other files carry
+// (ICD section 8), so the page checks that hash before it shows B22's date and commit.
+const manifestName = (year) => `build_manifest_${year}.json`;
+
+async function fetchOk(url, name) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
+  return response;
+}
+
+export async function sha256Hex(buffer) {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 export async function loadFiles(dataPath, year) {
   const entries = await Promise.all(
     Object.entries(fileNames(year)).map(async ([key, name]) => {
-      const response = await fetch(`${dataPath}/${name}`);
-      if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
+      const response = await fetchOk(`${dataPath}/${name}`, name);
       return [key, await response.json()];
     }),
   );
-  return Object.fromEntries(entries);
+  const name = manifestName(year);
+  const bytes = await (await fetchOk(`${dataPath}/${name}`, name)).arrayBuffer();
+  const manifest = {
+    name,
+    sha256: await sha256Hex(bytes),
+    content: JSON.parse(new TextDecoder().decode(bytes)),
+  };
+  return { files: Object.fromEntries(entries), manifest };
 }
 
 export function checkContract(files) {
@@ -33,6 +54,19 @@ export function checkContract(files) {
   const ids = new Set(names.map((name) => files[name].build_id));
   if (ids.size !== 1) {
     problems.push(`Expected one build id. Found ${[...ids].map((id) => String(id).slice(0, 8)).join(" and ")}.`);
+  }
+  return problems;
+}
+
+// The build manifest must be the one the other files name, and of a major version the map reads.
+export function checkManifest(manifest, buildId) {
+  const problems = [];
+  const major = Number(String(manifest.content.schema_version).split(".")[0]);
+  if (major !== SUPPORTED_MAJOR) {
+    problems.push(`${manifest.name}: schema_version ${manifest.content.schema_version}, this map reads major version ${SUPPORTED_MAJOR}`);
+  }
+  if (manifest.sha256 !== buildId) {
+    problems.push(`${manifest.name}: its SHA-256 begins ${manifest.sha256.slice(0, 8)}, but the build id begins ${String(buildId).slice(0, 8)}.`);
   }
   return problems;
 }

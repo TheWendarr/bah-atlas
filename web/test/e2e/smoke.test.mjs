@@ -381,3 +381,54 @@ test("pinning keeps keyboard focus on the pin button (C12, X10)", async () => {
   assert.equal(await page.evaluate(() => document.activeElement.textContent), "Pin to compare");
   await page.close();
 });
+
+test("the map credits OpenStreetMap, Protomaps, Zillow and Freddie Mac on a laptop and a phone (C20)", async () => {
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 360, height: 640 }]) {
+    const { page } = await open({ viewport });
+    const credit = page.locator(".maplibregl-ctrl-attrib-inner");
+    assert.equal(await credit.isVisible(), true, `${viewport.width} px`);
+    const text = await credit.textContent();
+    for (const name of ["OpenStreetMap", "Protomaps", "Zillow Group", "Freddie Mac"]) assert.ok(text.includes(name), `${viewport.width} px: ${name}`);
+    assert.match(await page.textContent(".site-footer"), /not affiliated with or endorsed by the Department of Defense/);
+    await page.close();
+  }
+});
+
+test("the sources dialog lists every B21 source, the geometry statements and the build (C20, must 7)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "CO046" }));
+  await page.getByRole("button", { name: "Sources and method" }).click();
+  const dialog = page.getByRole("dialog", { name: "Sources and method" });
+  assert.equal(await dialog.isVisible(), true);
+  assert.equal(await page.locator("#sources [data-source]").count(), UI.sources.length);
+  assert.equal(UI.sources.length, 14);
+  const text = await dialog.textContent();
+  for (const source of UI.sources) assert.ok(text.includes(source.title), source.id);
+  for (const period of Object.values(UI.windows)) assert.ok(text.includes(period), period);
+  assert.ok(text.includes(UI.geometry.method) && text.includes(UI.geometry.authority));
+  const manifest = delivered("build_manifest_2026.json");
+  assert.ok(text.includes(UI.build_id));
+  assert.ok(text.includes(manifest.git.commit.slice(0, 12)));
+  assert.match(await page.textContent(".footer-build"), new RegExp(`${UI.build_id.slice(0, 8)} · \\d{1,2} \\w{3} 2026`));
+  // Escape closes the dialog and leaves the selected area alone.
+  await page.keyboard.press("Escape");
+  assert.equal(await dialog.isVisible(), false);
+  assert.equal((await page.evaluate(() => window.bahAtlas.state())).selected, "CO046");
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), "Sources and method");
+  await page.close();
+});
+
+test("a build manifest from another build shows the error screen and no map (C20, must 6)", async () => {
+  const page = await browser.newPage();
+  await page.route("**/build_manifest_2026.json", async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    await route.fulfill({ response, body: body.replace('"bah_year"', '"bah_year" ') });
+  });
+  await page.goto(origin);
+  await page.waitForFunction(() => document.documentElement.dataset.state, null, { timeout: 60_000 });
+  assert.equal(await state(page), "error");
+  assert.match(await page.textContent("#error-detail"), /build_manifest_2026\.json: its SHA-256/);
+  assert.equal(await page.isVisible(".disclaimer"), true);
+  await page.close();
+});
