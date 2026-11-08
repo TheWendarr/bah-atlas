@@ -2,12 +2,14 @@
 // to test a deployed site, where the tiles come from the real host.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { serve } from "../serve.mjs";
 
 const DIST = fileURLToPath(new URL("../../dist", import.meta.url));
+const PAYLOAD = JSON.parse(readFileSync(new URL("../../../delivery/2026/payload_2026.json", import.meta.url), "utf8"));
 // D33: Bot Fight Mode adds an inline script to the live page, and the site's policy blocks
 // it. Only a live run forgives that one error; make site-check has already shown that the
 // script is the only change to the page, and a local run allows no inline script at all.
@@ -164,8 +166,12 @@ test("clicking an area opens its panel with BAH against rent and buy (C11)", asy
   await page.waitForSelector("#panel:not([hidden])");
   assert.equal(await page.textContent("#panel-title"), "COLORADO SPRINGS, CO");
   const text = await page.textContent("#panel");
-  // E-5 with dependents: BAH $2,358; rent $2,163; buy $2,944 (payload_2026.json).
-  for (const value of ["$2,358", "$2,163", "$2,944", "+$321"]) assert.ok(text.includes(value), value);
+  // E-5 with dependents is a research profile, so the panel must show its payload values.
+  const { rent, buy } = PAYLOAD.areas.CO046.e5_dep;
+  const usd = (value) => `${value < 0 ? "\u2212" : ""}$${Math.abs(value).toLocaleString("en-US")}`;
+  for (const value of [usd(rent.bah_monthly), usd(rent.cost_monthly), usd(buy.cost_monthly), `${rent.design_gap_usd > 0 ? "+" : ""}${usd(rent.design_gap_usd)}`]) {
+    assert.ok(text.includes(value), value);
+  }
   assert.equal((await page.evaluate(() => window.bahAtlas.featureState("CO046"))).selected, true);
   await page.keyboard.press("Escape");
   assert.equal(await page.isVisible("#panel"), false);

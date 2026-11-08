@@ -328,6 +328,16 @@ Zillow publishes single-family and multifamily rents only by metro area, so each
 
 Where metro-level information is unavailable, the pipeline uses a national fallback and records a caveat.
 
+**Correction (D34, 7 Nov 2026).** A sense check against local rents in Colorado Springs showed the first method overstated single-family homes. Zillow's single-family ÷ all-homes ratio compares a typical single-family rental (about three bedrooms) with a typical home of any kind (smaller), so it already contains a size difference. Multiplying it by the HUD bedroom ratio counted the extra bedrooms twice: Colorado Springs' 3-bedroom single-family rent came out at $2,163 × 1.391 × 1.324 = $3,982 a month, against about $2,000–$2,800 asked locally and a HUD 3-bedroom Fair Market Rent of $2,420.
+
+B29 now compares building types at equal bedrooms. Each Zillow type series is placed at its own typical bedroom count (multifamily two, single-family three) and the size difference is taken out before the bedroom ratio is applied:
+
+$$
+\text{factor}_{\text{equal size}} = \frac{\text{ZORI}_{\text{type}}}{\text{ZORI}_{\text{all}}} \times \frac{\text{SAFMR}_{2\text{BR}}}{\text{SAFMR}_{k\text{BR}}}
+$$
+
+At equal bedrooms Zillow's single-family rents sit at or slightly below the all-homes rent scaled by HUD's ratios (192 of 289 MHAs, median 5% below). A house that rents for less than a townhouse with the same bedrooms would make DoD's ladder fall with rank, so B29 holds a single-family home at the townhouse of the same bedrooms in those MHAs and records the measured value beside it. Colorado Springs is one of them: its 3-bedroom single-family rent is now $3,008, the same as its 3-bedroom townhouse (the measured value is $2,863). Across all MHAs, single-family rents fall by a median of 18%. Apartments and townhouses, and with them E-5's rent benchmark and the research findings, do not change.
+
 > **Why B29 matters:** It allows the system to evaluate BAH against different housing standards instead of assuming every service member occupies the same type of residence.
 
 ## 5. Stage 2.4 — Homeownership costs (B11, B30)
@@ -414,6 +424,10 @@ The project also distinguishes between:
 This distinction matters because the overall affordability comparison should account for housing-related expenses beyond the mortgage itself.
 
 For MHAs with home-value data but no usable ZORI data, the project falls back to PITI alone and explicitly labels the result `piti_only_no_zori`.
+
+**Correction (D34, 7 Nov 2026).** The same review found two faults here. First, the method scaled bedrooms from two, but Zillow's all-homes value matches the three-bedroom value almost exactly (ratio 1.003, median of 20,431 ZIPs), so every home with more than two bedrooms was priced as if its extra rooms came on top of a three-bedroom value. Second, as in B29, the single-family ÷ all-homes ratio already carried a size difference before the bedroom ratio was applied.
+
+B30 now treats the all-homes value as a three-bedroom home and places each Zillow type series at its own typical size (condo/co-op two bedrooms, single-family three), so the townhouse midpoint is taken between condo and single-family values of the same size. The pipeline measures these sizes on every run and stops if the data no longer sit nearest the configured counts. Apartments do not change; townhouses and single-family homes fall, by roughly a sixth and a quarter at the national median.
 
 > **Why this stage matters:** It creates an ownership benchmark that can be compared against BAH using the same general adequacy framework as rental housing.
 

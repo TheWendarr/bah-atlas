@@ -73,13 +73,17 @@ go to `data/interim/benchmarks_YYYY/`.
 - `home_types.py` — the six DoD home types and the one blend formula (anchor,
   interpolated, markup above the top profile) shared by B12-B15, B23 and the map.
 - `rent_by_type.py` — B29 (`make rent-types`): rent for each home type =
-  B8 × the A15 metro building-type ratio × the B10 SAFMR bedroom ratio; the
-  2 BR townhouse equals B8 (checked on every run).
-- `ownership_by_type.py` — B30 (`make own-types`): home value for each type =
-  B9 × the A16 ZIP building-type and bedroom ratios, then B11's own model and
-  B29 utilities. The townhouse sits halfway between the condo/co-op and
-  single-family factors (D22); the all-homes value reproduces B11 (checked on
+  B8 × the A15 metro building-type ratio, size-matched to equal bedrooms
+  (D34), × the B10 SAFMR bedroom ratio. A single-family home is never below
+  the townhouse of the same bedrooms; the 2 BR townhouse equals B8 (checked on
   every run).
+- `ownership_by_type.py` — B30 (`make own-types`): home value for each type =
+  B9 (a 3 BR home, D34) × the A16 ZIP building-type ratio at equal bedrooms ×
+  the bedroom ratio from 3 BR, then B11's own model and B29 utilities. The
+  townhouse sits halfway between the condo/co-op and single-family factors
+  (D22). The typical size of each Zillow series is re-measured every run and
+  the build stops if it no longer matches `config/ownership.json`; the
+  all-homes value reproduces B11 (checked on every run).
 
 - `density_to_mha.py` — B24: population density per MHA (urbanicity for the
   B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,

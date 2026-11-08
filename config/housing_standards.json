@@ -35,6 +35,11 @@
     }
   ],
   "reference_type": "th2",
+  "rent_type_series": {
+    "multifamily_bedrooms": 2,
+    "single_family_bedrooms": 3,
+    "single_family_not_below_townhouse": true
+  },
   "grades": [
     "E1",
     "E2",

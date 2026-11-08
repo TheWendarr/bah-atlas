@@ -17,14 +17,30 @@ research profile can be measured against its own DoD standard.
         --out data/interim/benchmarks_2026
 
 ------------------------------------------------------------------------------
-Method (per MHA m and home type t = building b, n bedrooms)
+Method (per MHA m and home type t = building b, n bedrooms), D34 (7 Nov 2026)
 ------------------------------------------------------------------------------
-  rent(t)  = B8 zori_utilities_adjusted(m) x f_b(m) x s_n(m)
+  rent(t)  = B8 zori_utilities_adjusted(m) x a_b(m) x s_n(m)
 
-  f_b  building-type factor. B8 is the all-homes ZORI and stands for a 2 BR
-       townhouse (A14 reference_type), so f = 1 for townhouses. For apartments
-       and single-family homes it is the ratio of Zillow's multifamily or
-       single-family ZORI to its all-homes ZORI, both over B8's months:
+  s_n  bedroom ratio: HUD SAFMR n BR / 2 BR within the MHA (B10 medians).
+
+  a_b  building factor at equal bedrooms. B8 is the all-homes ZORI and stands
+       for a 2 BR townhouse (A14 reference_type), so a = 1 for townhouses. For
+       apartments and single-family homes it starts from f_b, Zillow's
+       multifamily or single-family ZORI over its all-homes ZORI. Zillow's
+       typical single-family rental is larger than its typical home, so f_b
+       carries a size difference as well as a building difference. D34 removes
+       the size part before s_n adds bedrooms back:
+
+         a_b = f_b x s_2 / s_k     k = the series' typical bedroom count
+                                       (A14 rent_type_series: multifamily 2,
+                                       single-family 3; s_2 = 1)
+
+       and, when A14 sets single_family_not_below_townhouse, a single-family
+       home is never priced below the townhouse of the same bedrooms:
+       a_single_family = max(a_single_family, 1). Before D34, rent(t) used f_b
+       itself, which counted a single-family home's extra bedrooms twice.
+
+  f_b  is built from Zillow's series, both over B8's months:
          Zillow publishes those two series at metro level only (A15), so each ZIP
          takes the ratio of its metro (the Metro column of the A4 ZIP file names
          it), and the MHA takes the median over its ZIPs (mha_agg rule). The ZIP
@@ -34,9 +50,8 @@ Method (per MHA m and home type t = building b, n bedrooms)
          shared by two A15 metros is never used. An MHA
          with no ZIP in a metro that has the series takes the national ratio
          (the A15 row with RegionType "country"); factor_source says which.
-  s_n  bedroom ratio: HUD SAFMR n BR / 2 BR within the MHA (B10 medians).
 
-  utilities_usd(t) = B8 utilities_usd(m) x f_b(m) x s_n(m)   (B30 adds these to PITI)
+  utilities_usd(t) = B8 utilities_usd(m) x a_b(m) x s_n(m)   (B30 adds these to PITI)
 
 The 2-bedroom townhouse therefore equals B8 exactly in every MHA; the script
 checks this and stops if it does not hold. An MHA with no B8 value (status
@@ -46,9 +61,11 @@ no_zori) has no value for any type.
 Output (written to --out)
 ------------------------------------------------------------------------------
   mha_rent_by_type.csv            long: one row per MHA x home type
-                                  mha, home_type, building, bedrooms, building_factor,
+                                  mha, home_type, building, bedrooms, building_factor (f_b),
                                   factor_source (reference|metro|national), factor_zips,
-                                  bedroom_ratio, rent_monthly, utilities_usd, status
+                                  series_bedrooms (k), size_matched_factor (f_b x s_2 / s_k),
+                                  applied_factor (a_b), floored (1 when the townhouse floor
+                                  set a_b), bedroom_ratio, rent_monthly, utilities_usd, status
   mha_rent_by_type_manifest.json  inputs and hashes, window, metro match counts,
                                   factor summaries, coverage by type, the B8 identity
                                   check, warnings
@@ -185,6 +202,16 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = ht.load(args.standards)
+    series_cfg = cfg.get("rent_type_series") or {}
+    series_bedrooms = {"townhouse": next(t["bedrooms"] for t in ht.types(cfg) if t["id"] == ht.REFERENCE),
+                       "apartment": series_cfg.get("multifamily_bedrooms"),
+                       "single_family": series_cfg.get("single_family_bedrooms")}
+    floor = series_cfg.get("single_family_not_below_townhouse")
+    bad_cfg = [f"rent_type_series {k}: {v!r}, expected a bedroom count 1-4" for k, v in series_bedrooms.items()
+               if not isinstance(v, int) or isinstance(v, bool) or not 1 <= v <= 4]
+    if not isinstance(floor, bool):
+        bad_cfg.append(f"rent_type_series single_family_not_below_townhouse: {floor!r}, expected true or false")
+    agg.fail_if([f"{args.standards.name}: {b} (D34; run `make check-config`)" for b in bad_cfg], TOOL)
     crosswalk, cw_stats = agg.load_crosswalk(args.crosswalk, TOOL)
     window = b8_window(args.zori)
     print(f"B29 rent benchmark by home type: B8 months {window[0]} to {window[1]}")
@@ -203,8 +230,8 @@ def main() -> None:
             if r["safmr_median"].strip():
                 safmr[(r["mha"], int(r["bedrooms"]))] = float(r["safmr_median"])
     mhas = sorted(b8)
-    problems = [f"{m}: B10 has no {n} BR SAFMR" for m in mhas for n in {t["bedrooms"] for t in ht.types(cfg)} | {2}
-                if (m, n) not in safmr]
+    needed = {t["bedrooms"] for t in ht.types(cfg)} | set(series_bedrooms.values()) | {2}
+    problems = [f"{m}: B10 has no {n} BR SAFMR" for m in sorted(b8) for n in sorted(needed) if (m, n) not in safmr]
     if set(mhas) != set(crosswalk.values()):
         problems.append("B8 and B1 cover different MHAs; rebuild B8 from this crosswalk")
     agg.fail_if(problems[:25], TOOL)
@@ -246,21 +273,30 @@ def main() -> None:
             factors[(m, building)] = ((statistics.median(vals), "metro", len(vals)) if vals
                                       else (national[key], "national", 0))
 
+    def bedroom_ratio(m: str, n: int) -> float:
+        return 1.0 if n == 2 else safmr[(m, n)] / safmr[(m, 2)]
+
     rows, identity_fail = [], []
     for m in mhas:
         adj, util = num(b8[m]["zori_utilities_adjusted"]), num(b8[m]["utilities_usd"])
         for t in ht.types(cfg):
             b, n = t["building"], t["bedrooms"]
             f, src, nz = (1.0, "reference", 0) if b == "townhouse" else factors[(m, b)]
-            s = 1.0 if n == 2 else safmr[(m, n)] / safmr[(m, 2)]
+            k = series_bedrooms[b]
+            # D34: remove the size difference the Zillow ratio carries, then add bedrooms back once.
+            equal_size = f * bedroom_ratio(m, series_bedrooms["townhouse"]) / bedroom_ratio(m, k)
+            floored = b == "single_family" and floor and equal_size < 1.0
+            a = 1.0 if floored else equal_size
+            s = bedroom_ratio(m, n)
             out = {"mha": m, "home_type": t["id"], "building": b, "bedrooms": n,
                    "building_factor": f"{f:.6f}", "factor_source": src, "factor_zips": nz,
-                   "bedroom_ratio": f"{s:.6f}"}
+                   "series_bedrooms": k, "size_matched_factor": f"{equal_size:.6f}",
+                   "applied_factor": f"{a:.6f}", "floored": int(floored), "bedroom_ratio": f"{s:.6f}"}
             if adj is None:
                 out.update({"rent_monthly": "", "utilities_usd": "", "status": "no_zori"})
             else:
-                out.update({"rent_monthly": agg.fmt(adj * f * s),
-                            "utilities_usd": agg.fmt(util * f * s) if util is not None else "", "status": "ok"})
+                out.update({"rent_monthly": agg.fmt(adj * a * s),
+                            "utilities_usd": agg.fmt(util * a * s) if util is not None else "", "status": "ok"})
             if t["id"] == ht.REFERENCE and (out["rent_monthly"], out["utilities_usd"]) != (
                     b8[m]["zori_utilities_adjusted"].strip(), b8[m]["utilities_usd"].strip()):
                 identity_fail.append(m)
@@ -269,7 +305,8 @@ def main() -> None:
                  f"{', '.join(identity_fail[:10])}"] if identity_fail else [], TOOL)
 
     fields = ["mha", "home_type", "building", "bedrooms", "building_factor", "factor_source", "factor_zips",
-              "bedroom_ratio", "rent_monthly", "utilities_usd", "status"]
+              "series_bedrooms", "size_matched_factor", "applied_factor", "floored", "bedroom_ratio",
+              "rent_monthly", "utilities_usd", "status"]
     agg.write_csv(args.out / "mha_rent_by_type.csv", fields, rows)
 
     coverage = {}
@@ -285,10 +322,18 @@ def main() -> None:
     fac_summary = {}
     for building in SERIES_FOR:
         vals = [factors[(m, building)][0] for m in mhas]
+        mine = [r for r in rows if r["building"] == building and r["bedrooms"] == series_bedrooms[building]
+                and r["status"] == "ok"]                       # one row per MHA with a rent value
+        matched_vals = [float(r["size_matched_factor"]) for r in mine]
         fac_summary[building] = {"median": round(statistics.median(vals), 4), "min": round(min(vals), 4),
                                  "max": round(max(vals), 4),
                                  "national": round(national[SERIES_FOR[building]], 4),
-                                 "mhas_national_fallback": sum(factors[(m, building)][1] == "national" for m in mhas)}
+                                 "mhas_national_fallback": sum(factors[(m, building)][1] == "national" for m in mhas),
+                                 "series_bedrooms": series_bedrooms[building],
+                                 "size_matched": ({"median": round(statistics.median(matched_vals), 4),
+                                                   "min": round(min(matched_vals), 4),
+                                                   "max": round(max(matched_vals), 4)} if matched_vals else None),
+                                 "mhas_floored_to_townhouse": sum(int(r["floored"]) for r in mine)}
     warnings = []
     for building, sm in fac_summary.items():
         if sm["mhas_national_fallback"]:
@@ -310,14 +355,22 @@ def main() -> None:
         "inputs": {k: v.name for k, v in inputs.items()},
         "input_sha256": {k: agg.sha256(v) for k, v in inputs.items()},
         "window_months": f"{window[0]}:{window[1]}",
+        "decision": "D34 (7 Nov 2026): the Zillow type ratio is size-matched before the bedroom ratio is applied",
         "method": {
-            "rent": "B8 zori_utilities_adjusted x building_factor x bedroom_ratio",
-            "utilities": "B8 utilities_usd x building_factor x bedroom_ratio",
+            "rent": "B8 zori_utilities_adjusted x applied_factor x bedroom_ratio",
+            "utilities": "B8 utilities_usd x applied_factor x bedroom_ratio",
             "building_factor": "townhouse 1 (B8 stands for a 2 BR townhouse); apartment = metro MFR / all-homes "
                                "ZORI, single-family = metro SFR / all-homes ZORI, median over the MHA's ZIPs; "
                                "national ratio where no ZIP lies in a metro with the series",
+            "size_matched_factor": "building_factor x SAFMR 2 BR / SAFMR k BR, k = the series' typical bedrooms "
+                                   f"(A14 rent_type_series: apartment {series_bedrooms['apartment']}, "
+                                   f"single-family {series_bedrooms['single_family']})",
+            "applied_factor": "size_matched_factor; single-family not below 1, the townhouse of the same bedrooms"
+                              if floor else "size_matched_factor",
             "bedroom_ratio": "B10 SAFMR n BR / 2 BR within the MHA",
         },
+        "series_bedrooms": series_bedrooms,
+        "single_family_not_below_townhouse": floor,
         "crosswalk": cw_stats,
         "metros": {"A15.all_with_value": len(all_m), **{f"A15.{k}": v for k, v in series_rows.items()},
                    "zip_metro_names": len(named), "zip_metro_names_matched": len(matched),
@@ -338,6 +391,10 @@ def main() -> None:
     for building, sm in fac_summary.items():
         print(f"  {building} factor: median {sm['median']} (min {sm['min']}, max {sm['max']}); national "
               f"{sm['national']} used by {sm['mhas_national_fallback']} MHA(s)")
+        print(f"    at equal bedrooms ({sm['series_bedrooms']} BR series): median "
+              f"{(sm['size_matched'] or {}).get('median')}"
+              + (f"; {sm['mhas_floored_to_townhouse']} MHA(s) set to the townhouse" if building == "single_family"
+                 else ""))
     for tid, cv in coverage.items():
         r = cv["rent_monthly"]
         print(f"  {tid:5} {cv['mhas_with_value']} MHAs" + (f", median {r['median']:,.0f}" if r else ""))

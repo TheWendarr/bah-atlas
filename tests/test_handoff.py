@@ -270,7 +270,7 @@ class TestHandoff(Fixture):
         self.build()
         pay = self.payload()
         b22 = hashlib.sha256((self.out / f"build_manifest_{YEAR}.json").read_bytes()).hexdigest()
-        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.2.0", 2026, b22))
+        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.2.1", 2026, b22))
         self.assertEqual(list(pay["areas"]), ["AK400", "CO001", "CO002", "XX001", "ZZ001"])
         co = pay["areas"]["CO001"]
         self.assertEqual((co["class"], co["cluster_scope"], co["caveats"]), ("mha", True, []))
@@ -415,7 +415,7 @@ class TestHandoff(Fixture):
         self.build()
         g = self.grid()
         self.assertEqual((g["schema_version"], g["ranks"][:5], g["home_types"], g["dependents"]),
-                         ("1.2.0", GRADES[:5], TYPES, ["with", "without"]))
+                         ("1.2.1", GRADES[:5], TYPES, ["with", "without"]))
         self.assertEqual((g["cost_share_monthly"]["with"][4], g["cost_share_monthly"]["without"][22]), (126, 187))
         self.assertEqual(g["standards"]["with"][GRADES.index("O3")], {"lower": "th3", "upper": "sfh3", "share": 0.98})
         co = g["areas"]["CO001"]

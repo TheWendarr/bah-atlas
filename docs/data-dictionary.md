@@ -137,11 +137,15 @@ B22 stops on FAIL).
 | mha             | str   | real MHA code |
 | home_type       | str   | `apt1`, `apt2`, `th2`, `th3`, `sfh3`, `sfh4` (A14) |
 | building, bedrooms | str, int | the type's building and bedroom count |
-| building_factor | float | 1 for townhouses; metro MFR or SFR ZORI ÷ all-homes ZORI (A15), median over the MHA's ZIPs |
+| building_factor | float | Zillow's type ratio: 1 for townhouses; metro MFR or SFR ZORI ÷ all-homes ZORI (A15), median over the MHA's ZIPs. Compares typical homes, so it includes a size difference |
 | factor_source   | str   | `reference` (townhouse), `metro`, or `national` (no ZIP in a metro with the series) |
 | factor_zips     | int   | ZIPs whose metro gave a ratio |
+| series_bedrooms | int   | the bedroom count the type's Zillow series stands for: townhouse 2 (B8, D19), apartment 2, single-family 3 (A14 `rent_type_series`, D34) |
+| size_matched_factor | float | building_factor × SAFMR 2 BR ÷ SAFMR `series_bedrooms` BR: the building difference at equal bedrooms (D34) |
+| applied_factor  | float | size_matched_factor, except a single-family factor below 1 is set to 1 (not below the townhouse of the same bedrooms, D34) |
+| floored         | int   | 1 where that floor set applied_factor, else 0 |
 | bedroom_ratio   | float | B10 SAFMR n BR ÷ 2 BR in the MHA |
-| rent_monthly    | float | B8 `zori_utilities_adjusted` × building_factor × bedroom_ratio; the 2 BR townhouse equals B8 |
+| rent_monthly    | float | B8 `zori_utilities_adjusted` × applied_factor × bedroom_ratio; the 2 BR townhouse equals B8 |
 | utilities_usd   | float | B8 `utilities_usd` × the same factors (B30 adds it to PITI) |
 | status          | str   | `ok` or `no_zori` |
 
@@ -154,8 +158,9 @@ identity check, warnings.
 | column          | type  | notes |
 |-----------------|-------|-------|
 | mha, home_type  | str   | as B29 |
-| building_factor, building_source | float, str | condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; townhouse = condo factor + 0.5 × (SFR factor − condo factor) per MHA (D22); `zip` or `national` (a townhouse is `zip` only when both sides are) |
-| bedroom_ratio, bedroom_source | float, str | ZHVI n BR ÷ 2 BR per ZIP, MHA median; `reference`, `zip` or `national` |
+| building_factor, building_source | float, str | the building difference at equal bedrooms (D34): zillow_type_ratio × h(3) ÷ h(*k*), *k* = the series' typical bedrooms (condo 2, single-family 3; `config/ownership.json`), h = ZHVI n BR ÷ 2 BR; townhouse = condo factor + 0.5 × (single-family factor − condo factor) per MHA (D22); `zip` or `national` (`zip` only when every ratio in it is) |
+| zillow_type_ratio | float | condo/co-op or SFR ZHVI ÷ all-homes ZHVI per ZIP (A16, A4), MHA median; blank for townhouses |
+| bedroom_ratio, bedroom_source | float, str | h(n) ÷ h(3): bedrooms scaled from the 3 BR home B9 stands for (D34); `reference` (3 BR), `zip` or `national` |
 | home_value      | float | B9 `zhvi_median` × building_factor × bedroom_ratio |
 | rate_pct, pi_monthly, tax_monthly, tax_source, insurance_monthly, insurance_source, mi_monthly, own_housing_monthly | | B11's model on `home_value` (see `mha_ownership.csv`); the premium is the MHA average for every type |
 | utilities_usd   | float | B29 `utilities_usd` for the type |
@@ -165,7 +170,9 @@ identity check, warnings.
 `mha_ownership_by_type_manifest.json`: inputs and SHA-256 (B9, A4, the six A16
 files, B1, B29, A8 rollup, A7, B11, A14), config SHA-256, window and rate, the
 ratio statistics (ZIPs with both series, national median, MHAs on the national
-ratio), limitations, coverage per type, the B11 identity check, warnings.
+ratio, size-matched medians), the configured and measured size of each Zillow
+series (`reference_check.series`, D34), limitations, coverage per type, the B11
+identity check, warnings.
 
 ### `mha_tax_insurance.csv` (A8 rollup for B11; `make taxins`)
 One row per real MHA, from `tax_insurance_to_mha.py`.

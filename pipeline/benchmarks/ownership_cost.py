@@ -129,6 +129,11 @@ def load_config(path: Path) -> dict:
     if not isinstance(pos, (int, float)) or isinstance(pos, bool) or not 0 <= pos <= 1:
         problems.append(f"home_types.townhouse_position = {pos!r}; expected a number in [0, 1] "
                         "(D22: 0 prices the townhouse as a condo, 1 as a single-family home)")
+    for key in ("all_homes_bedrooms", "condo_bedrooms", "single_family_bedrooms"):
+        n = cfg.get("home_types", {}).get(key)
+        if not isinstance(n, int) or isinstance(n, bool) or not 1 <= n <= 4:
+            problems.append(f"home_types.{key} = {n!r}; expected a bedroom count 1-4, one Zillow publishes "
+                            "a ZHVI series for (D34)")
     agg.fail_if(problems, TOOL)
     return cfg
 

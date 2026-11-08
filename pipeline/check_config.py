@@ -228,6 +228,18 @@ def check_standards(cfg: dict, grades: list[str], profiles: dict, errors: list[s
     if not ref or (ref.get("building"), ref.get("bedrooms")) != ("townhouse", 2):
         errors.append(f"{where}: reference_type must be the 2-bedroom townhouse, the dwelling B8 stands "
                       "for in rent mode (D19)")
+    # D34: the typical size of Zillow's multifamily and single-family rent series, and the
+    # rule that a single-family home is not priced below a townhouse of the same bedrooms.
+    series = cfg.get("rent_type_series")
+    if not isinstance(series, dict):
+        errors.append(f"{where}: rent_type_series is required (D34)")
+    else:
+        for key in ("multifamily_bedrooms", "single_family_bedrooms"):
+            n = series.get(key)
+            if not isinstance(n, int) or isinstance(n, bool) or n not in SAFMR_BEDROOMS or n == 0:
+                errors.append(f"{where}: rent_type_series.{key} must be a bedroom count 1-4, found {n!r}")
+        if not isinstance(series.get("single_family_not_below_townhouse"), bool):
+            errors.append(f"{where}: rent_type_series.single_family_not_below_townhouse must be true or false")
     listed = list(cfg.get("grades") or [])
     if tuple(listed) != DROPDOWN_GRADES:
         errors.append(f"{where}: grades must be the 23 dropdown grades {list(DROPDOWN_GRADES)} in order")

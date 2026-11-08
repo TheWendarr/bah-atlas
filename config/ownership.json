@@ -1,6 +1,6 @@
 {
   "_doc": "B11. Field meanings, sources and the reasoning behind every value: docs/configuration.md#configownershipjson-b11. Validate with `make check-config`.",
-  "version": 3,
+  "version": 4,
   "loan": {
     "program": "VA purchase loan, first use",
     "term_years": 30,
@@ -27,6 +27,9 @@
     "method": "from_B8"
   },
   "home_types": {
-    "townhouse_position": 0.5
+    "townhouse_position": 0.5,
+    "all_homes_bedrooms": 3,
+    "condo_bedrooms": 2,
+    "single_family_bedrooms": 3
   }
 }

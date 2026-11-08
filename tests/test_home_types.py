@@ -1,6 +1,10 @@
 """
-Tests for the home-type benchmarks (D19): B29 rent and B30 ownership cost by home
-type, and the blend formula every stage and the map share (home_types.py).
+Tests for the home-type benchmarks (D19, D34): B29 rent and B30 ownership cost by
+home type, and the blend formula every stage and the map share (home_types.py).
+
+D34 (7 Nov 2026): a Zillow type ratio compares typical homes of different sizes, so
+it is size-matched before the bedroom ratio is applied, and buy mode treats the
+all-homes value as the 3 BR home it measures as.
 
     python -m unittest discover -s tests -v        (or: make test)
 
@@ -136,19 +140,28 @@ class TestChain(unittest.TestCase):
             for n, k in ((0, 0.64), (1, 0.8), (2, 1.0), (3, 1.3), (4, 1.5)):
                 safmr.append([m, n, f"{base * k:.2f}"])
         self.safmr = write(self.out / "mha_safmr.csv", safmr)
-        # A15: MFR / all = 0.9 in both metros and nationally; SFR / all = 1.2 in Alpha, none in Beta, 1.1 nationally
+        # A15: MFR / all = 0.9 in both metros and nationally; SFR / all = 1.43 in Alpha, none in Beta,
+        # 1.1 nationally. At equal bedrooms (D34, SFR series = 3 BR): Alpha 1.43 / 1.3 = 1.1, a 10% premium
+        # over the townhouse; national 1.1 / 1.3 = 0.846, below the townhouse, so the floor sets it to 1.
         self.metro_all = metro_file(d / "Metro_all.csv", {"United States": 1800, "Alpha, NY": 2000, "Beta, NY": 3000})
         self.metro_mfr = metro_file(d / "Metro_mfr.csv", {"United States": 1620, "Alpha, NY": 1800, "Beta, NY": 2700})
-        self.metro_sfr = metro_file(d / "Metro_sfr.csv", {"United States": 1980, "Alpha, NY": 2400})
+        self.metro_sfr = metro_file(d / "Metro_sfr.csv", {"United States": 1980, "Alpha, NY": 2860})
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def run_b29(self) -> subprocess.CompletedProcess:
+    def run_b29(self, *extra: str) -> subprocess.CompletedProcess:
         return run("rent_by_type.py", "--zori", str(self.out / "mha_zori.csv"), "--safmr", str(self.safmr),
                    "--metro-sfr", str(self.metro_sfr), "--metro-mfr", str(self.metro_mfr),
                    "--metro-all", str(self.metro_all), "--zip-metro", str(self.zhvi_all),
-                   "--crosswalk", str(self.crosswalk), "--out", str(self.out))
+                   "--crosswalk", str(self.crosswalk), "--out", str(self.out), *extra)
+
+    def standards_with(self, **series) -> Path:
+        cfg = json.loads(ht.STANDARDS.read_text(encoding="utf-8"))
+        cfg["rent_type_series"].update(series)
+        path = self.d / "housing_standards.json"
+        path.write_text(json.dumps(cfg), encoding="utf-8")
+        return path
 
     def test_b29_rent_by_type(self) -> None:
         p = self.run_b29()
@@ -160,22 +173,49 @@ class TestChain(unittest.TestCase):
             self.assertEqual(rows[(m, "th2")]["utilities_usd"], b8[m]["utilities_usd"])
         a = {t: rows[("AA001", t)] for t in ht.TYPE_IDS}
         self.assertEqual(a["th3"]["rent_monthly"], "2437.50")              # 1875 x 1.3
-        self.assertEqual(a["sfh3"]["rent_monthly"], "2925.00")             # 1875 x 1.2 (Alpha SFR) x 1.3
-        self.assertEqual(a["sfh4"]["rent_monthly"], "3375.00")             # 1875 x 1.2 x 1.5
-        self.assertEqual(a["apt1"]["rent_monthly"], "1350.00")             # 1875 x 0.9 (Alpha MFR) x 0.8
+        # D34: Alpha's SFR ratio 1.43 is a typical (3 BR) house against a typical home, so it is
+        # size-matched first: 1.43 / 1.3 = 1.1, then the bedrooms are added once.
+        self.assertEqual((a["sfh3"]["building_factor"], a["sfh3"]["size_matched_factor"],
+                          a["sfh3"]["applied_factor"], a["sfh3"]["floored"]), ("1.430000", "1.100000", "1.100000", "0"))
+        self.assertEqual(a["sfh3"]["rent_monthly"], "2681.25")             # 1875 x 1.1 x 1.3 (was 1875 x 1.43 x 1.3)
+        self.assertEqual(a["sfh4"]["rent_monthly"], "3093.75")             # 1875 x 1.1 x 1.5
+        self.assertEqual(a["sfh3"]["utilities_usd"], "536.25")             # 375 x 1.1 x 1.3
+        self.assertEqual(a["apt1"]["rent_monthly"], "1350.00")             # 1875 x 0.9 (Alpha MFR, a 2 BR series) x 0.8
         self.assertEqual(a["apt1"]["utilities_usd"], "270.00")             # 375 x 0.9 x 0.8
         self.assertEqual((a["sfh3"]["factor_source"], a["th3"]["factor_source"]), ("metro", "reference"))
-        b = rows[("AA002", "sfh3")]                                        # Beta has no SFR series
-        self.assertEqual((b["factor_source"], b["building_factor"]), ("national", "1.100000"))
-        self.assertEqual(b["rent_monthly"], "4385.34")                     # 3066.67 x 1.1 x 1.3
+        self.assertEqual(a["sfh3"]["series_bedrooms"], "3")
+        b = {t: rows[("AA002", t)] for t in ht.TYPE_IDS}                    # Beta has no SFR series
+        self.assertEqual((b["sfh3"]["factor_source"], b["sfh3"]["building_factor"]), ("national", "1.100000"))
+        # National 1.1 / 1.3 = 0.846 is below the townhouse, so the floor holds it at the 3 BR townhouse.
+        self.assertEqual((b["sfh3"]["size_matched_factor"], b["sfh3"]["applied_factor"], b["sfh3"]["floored"]),
+                         ("0.846154", "1.000000", "1"))
+        self.assertEqual(b["sfh3"]["rent_monthly"], b["th3"]["rent_monthly"])
+        self.assertEqual(b["sfh3"]["rent_monthly"], "3986.67")             # 3066.67 x 1.3 (was 3066.67 x 1.1 x 1.3)
+        for m in ("AA001", "AA002"):                                       # DoD's order holds in rent mode
+            vals = [float(rows[(m, t)]["rent_monthly"]) for t in ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")]
+            self.assertEqual(vals, sorted(vals), m)
         c = rows[("AA003", "apt2")]
         self.assertEqual((c["status"], c["rent_monthly"], c["factor_source"]), ("no_zori", "", "national"))
         man = json.loads((self.out / "mha_rent_by_type_manifest.json").read_text())
         self.assertEqual(man["building_factors"]["single_family"]["mhas_national_fallback"], 2)
+        self.assertEqual(man["building_factors"]["single_family"]["mhas_floored_to_townhouse"], 1)   # Beta
+        self.assertEqual(man["series_bedrooms"], {"townhouse": 2, "apartment": 2, "single_family": 3})
+        self.assertIn("D34", man["decision"])
         self.assertEqual(man["metros"]["zip_metro_names_matched"], 2)
         self.assertEqual((man["metros"]["matching"]["matched_exact"],
                           man["metros"]["matching"]["matched_by_principal_city"]), (1, 1))
         self.assertEqual(set(man["inputs"]), {"B8", "B10", "A15.sfr", "A15.mfr", "A15.all", "A4", "B1", "A14"})
+
+    def test_b29_without_the_floor_keeps_the_measured_factor(self) -> None:
+        p = self.run_b29("--standards", str(self.standards_with(single_family_not_below_townhouse=False)))
+        self.assertEqual(p.returncode, 0, p.stderr)
+        b = read(self.out / "mha_rent_by_type.csv")[("AA002", "sfh3")]
+        self.assertEqual((b["applied_factor"], b["floored"], b["rent_monthly"]), ("0.846154", "0", "3373.34"))
+
+    def test_b29_stops_on_a_bad_series_size(self) -> None:
+        p = self.run_b29("--standards", str(self.standards_with(single_family_bedrooms=7)))
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("rent_type_series", p.stderr)
 
     def test_b29_stops_when_metro_names_do_not_match(self) -> None:
         metro_file(self.metro_all, {"United States": 1800, "Alpha-Town": 2000, "Beta-Town": 3000})
@@ -183,12 +223,15 @@ class TestChain(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("name metros differently", p.stderr)
 
-    def test_b30_ownership_by_type(self) -> None:
+    def run_b30(self, config: Path | None = None) -> subprocess.CompletedProcess:
+        """B29, B11 and B30 on the fixture. A16 is built so each Zillow series sits at a realistic size:
+        the all-homes value equals the 3 BR value ZIP by ZIP (as the 2026 data measure), single-family
+        homes sit near 3 BR and condos near 2 BR."""
         self.assertEqual(self.run_b29().returncode, 0)
         d = self.d
         pmms = write(d / "PMMS_history.csv", [["date", "pmms30"], ["1/1/2026", "6.40"], ["1/8/2026", "6.60"],
                                                ["2/5/2026", "6.40"], ["3/5/2026", "6.60"]])
-        taxins = write(d / "mha_tax_insurance.csv", [
+        self.taxins = taxins = write(d / "mha_tax_insurance.csv", [
             ["mha", "effective_tax_rate", "tax_source", "insurance_annual_usd", "insurance_source"],
             ["AA001", "0.008900", "locality", "1569.00", "locality"],
             ["AA002", "0.012000", "locality", "2000.00", "state_fallback"],
@@ -196,61 +239,87 @@ class TestChain(unittest.TestCase):
         p = run("ownership_cost.py", "--zhvi", str(self.out / "mha_zhvi.csv"), "--zori", str(self.out / "mha_zori.csv"),
                 "--pmms", str(pmms), "--tax-insurance", str(taxins), "--out", str(self.out))
         self.assertEqual(p.returncode, 0, p.stderr)
-        # A16: SFR / all per ZIP 1.2, 1.3 (AA001 median 1.25), 1.2, 1.1 (AA002 1.15); national median 1.2.
-        # Condo only in AA001's ZIPs: 0.8, 0.7 -> 0.75, which is also the national median.
-        # Bedrooms: 1 BR 0.8x, 3 BR 1.25x, 4 BR 1.5x of 2 BR in every ZIP.
-        a16 = {"sfr": {"00501": 240000, "00502": 520000, "10001": 600000, "10002": 330000},
+        # Bedrooms: 3 BR = the all-homes value; 2 BR = all / 1.25; 1 BR 0.8x and 4 BR 1.5x of 2 BR.
+        # SFR / all per ZIP 1.05, 1.15 (AA001 median 1.10), 1.02, 0.98 (AA002 1.00); national 1.035.
+        # Condo / all only in AA001's ZIPs: 0.8, 0.7 -> 0.75, also the national median.
+        all_homes = {"00501": 200000, "00502": 400000, "10001": 500000, "10002": 300000}
+        sfr = {"00501": 1.05, "00502": 1.15, "10001": 1.02, "10002": 0.98}
+        a16 = {"sfr": {z: all_homes[z] * k for z, k in sfr.items()},
                "condo": {"00501": 160000, "00502": 280000}}
-        br2 = {"00501": 200000, "00502": 400000, "10001": 500000, "10002": 300000}
+        br2 = {z: v / 1.25 for z, v in all_homes.items()}
         for n, k in ((1, 0.8), (2, 1.0), (3, 1.25), (4, 1.5)):
             a16[f"br{n}"] = {z: v * k for z, v in br2.items()}
         files = {k: zip_file(d / f"Zip_zhvi_{k}.csv", v) for k, v in a16.items()}
-        p = run("ownership_by_type.py", "--zhvi", str(self.out / "mha_zhvi.csv"), "--zhvi-all", str(self.zhvi_all),
-                "--zhvi-sfr", str(files["sfr"]), "--zhvi-condo", str(files["condo"]),
-                *[x for n in (1, 2, 3, 4) for x in (f"--zhvi-br{n}", str(files[f"br{n}"]))],
-                "--crosswalk", str(self.crosswalk), "--rent-by-type", str(self.out / "mha_rent_by_type.csv"),
-                "--tax-insurance", str(taxins), "--pmms", str(pmms), "--ownership", str(self.out / "mha_ownership.csv"),
-                "--out", str(self.out))
+        return run("ownership_by_type.py", "--zhvi", str(self.out / "mha_zhvi.csv"), "--zhvi-all", str(self.zhvi_all),
+                   "--zhvi-sfr", str(files["sfr"]), "--zhvi-condo", str(files["condo"]),
+                   *[x for n in (1, 2, 3, 4) for x in (f"--zhvi-br{n}", str(files[f"br{n}"]))],
+                   "--crosswalk", str(self.crosswalk), "--rent-by-type", str(self.out / "mha_rent_by_type.csv"),
+                   "--tax-insurance", str(taxins), "--pmms", str(pmms), "--ownership", str(self.out / "mha_ownership.csv"),
+                   "--out", str(self.out), *(["--config", str(config)] if config else []))
+
+    def test_b30_ownership_by_type(self) -> None:
+        p = self.run_b30()
         self.assertEqual(p.returncode, 0, p.stderr)
         rows = read(self.out / "mha_ownership_by_type.csv")
         b11 = {m: r for (m, _), r in read(self.out / "mha_ownership.csv").items()}
-        # D22 option B: townhouse = apartment + 0.5 x (single-family - apartment), per MHA.
-        # AA001: 0.75 + 0.5 x (1.25 - 0.75) = 1.0, so its 2 BR townhouse lands on B11.
-        self.assertEqual(rows[("AA001", "th2")]["building_factor"], "1.000000")
-        self.assertEqual(rows[("AA001", "th2")]["own_housing_monthly"], b11["AA001"]["own_housing_monthly"])
-        self.assertEqual(rows[("AA001", "th2")]["own_total_monthly"], b11["AA001"]["own_total_monthly"])
-        # AA002: condo on the national 0.75, single-family 1.15 -> 0.95, below the all-homes value (B11).
-        a2 = {t: rows[("AA002", t)] for t in ht.TYPE_IDS}
-        self.assertEqual((a2["th2"]["building_factor"], a2["th2"]["building_source"]), ("0.950000", "national"))
-        self.assertLess(float(a2["th2"]["own_housing_monthly"]), float(b11["AA002"]["own_housing_monthly"]))
-        vals = [float(a2[t]["home_value"]) for t in ("apt2", "th2", "th3", "sfh3")]
-        self.assertEqual(vals, sorted(vals))                                # DoD's order holds in buy mode
-        # AA003: both sides national, 0.75 + 0.5 x (1.2 - 0.75) = 0.975 on a 150k all-homes value.
-        self.assertEqual((rows[("AA003", "th2")]["building_factor"], rows[("AA003", "th2")]["home_value"]),
-                         ("0.975000", "146250.00"))
-        self.assertEqual(rows[("AA001", "th3")]["home_value"], "375000.00")     # 300k x 1.25
-        self.assertEqual(rows[("AA001", "sfh3")]["home_value"], "468750.00")    # 300k x 1.25 x 1.25
-        self.assertEqual(rows[("AA001", "apt1")]["home_value"], "180000.00")    # 300k x 0.75 x 0.8
-        self.assertEqual(rows[("AA001", "sfh3")]["tax_monthly"], "347.66")      # 468,750 x 0.89% / 12
-        self.assertEqual(rows[("AA001", "sfh3")]["insurance_monthly"], "130.75")  # same premium for every type
-        total = float(rows[("AA001", "sfh3")]["own_housing_monthly"]) + 2925.00 * (375 / 1875)
-        self.assertAlmostEqual(float(rows[("AA001", "sfh3")]["own_total_monthly"]), total, delta=0.011)
-        b = rows[("AA002", "apt2")]
-        self.assertEqual((b["building_source"], b["building_factor"]), ("national", "0.750000"))
-        c = rows[("AA003", "sfh3")]                                         # no A16 ZIPs, no ZORI
-        self.assertEqual((c["building_source"], c["bedroom_source"], c["status"]),
-                         ("national", "national", "piti_only_no_zori"))
-        self.assertEqual(c["home_value"], "225000.00")                      # 150k x 1.2 x 1.25
+        a = {t: rows[("AA001", t)] for t in ht.TYPE_IDS}
+        # D34: the all-homes value (300k) is a 3 BR home. At equal bedrooms the condo factor is
+        # 0.75 x 1.25 = 0.9375 (a 2 BR series against a 3 BR base), single-family 1.10 (both 3 BR),
+        # and the townhouse halfway between them (D22): 0.9375 + 0.5 x 0.1625 = 1.01875.
+        self.assertEqual((a["apt2"]["building_factor"], a["apt2"]["zillow_type_ratio"]), ("0.937500", "0.750000"))
+        self.assertEqual((a["sfh3"]["building_factor"], a["sfh3"]["zillow_type_ratio"]), ("1.100000", "1.100000"))
+        self.assertEqual((a["th2"]["building_factor"], a["th2"]["zillow_type_ratio"]), ("1.018750", ""))
+        expected = {"apt1": "180000.00",    # 300k x 0.9375 x 0.8 / 1.25: the condo value at 1 BR, as before
+                    "apt2": "225000.00",    # 300k x 0.9375 / 1.25 = the typical condo, as before
+                    "th2": "244500.00",     # 300k x 1.01875 / 1.25
+                    "th3": "305625.00",     # 300k x 1.01875
+                    "sfh3": "330000.00",    # 300k x 1.10: the typical single-family home (was 300k x 1.25 x 1.25)
+                    "sfh4": "396000.00"}    # 300k x 1.10 x 1.5 / 1.25
+        self.assertEqual({t: a[t]["home_value"] for t in expected}, expected)
+        self.assertEqual((a["sfh3"]["bedroom_ratio"], a["sfh3"]["bedroom_source"]), ("1.000000", "reference"))
+        self.assertEqual((a["th2"]["bedroom_ratio"], a["th2"]["bedroom_source"]), ("0.800000", "zip"))
+        self.assertEqual(a["sfh3"]["tax_monthly"], "244.75")               # 330,000 x 0.89% / 12
+        self.assertEqual(a["sfh3"]["insurance_monthly"], "130.75")         # same premium for every type
+        total = float(a["sfh3"]["own_housing_monthly"]) + 536.25            # B29 sfh3 utilities (D34)
+        self.assertAlmostEqual(float(a["sfh3"]["own_total_monthly"]), total, delta=0.011)
+        # The 2 BR townhouse is no longer the all-homes value; B11 still is (model identity, checked inside).
+        self.assertLess(float(a["th2"]["own_housing_monthly"]), float(b11["AA001"]["own_housing_monthly"]))
+        for m in ("AA001", "AA002", "AA003"):                               # DoD's order holds in buy mode
+            vals = [float(rows[(m, t)]["home_value"]) for t in ("apt1", "apt2", "th2", "th3", "sfh3", "sfh4")]
+            self.assertEqual(vals, sorted(vals), m)
+        # AA002: condo on the national 0.75 -> 0.9375; single-family 1.00; townhouse 0.96875 on 400k.
+        b = {t: rows[("AA002", t)] for t in ht.TYPE_IDS}
+        self.assertEqual((b["apt2"]["building_source"], b["apt2"]["building_factor"]), ("national", "0.937500"))
+        self.assertEqual((b["th2"]["building_factor"], b["th2"]["building_source"], b["th2"]["home_value"]),
+                         ("0.968750", "national", "310000.00"))
+        self.assertEqual(b["sfh3"]["home_value"], "400000.00")
+        # AA003: no A16 ZIPs, no ZORI; every ratio national. SFR 1.035 (median of four ZIPs) on 150k.
+        c = {t: rows[("AA003", t)] for t in ht.TYPE_IDS}
+        self.assertEqual((c["sfh3"]["building_source"], c["sfh3"]["bedroom_source"], c["sfh3"]["status"]),
+                         ("national", "reference", "piti_only_no_zori"))
+        self.assertEqual(c["sfh3"]["home_value"], "155250.00")
+        self.assertEqual((c["th2"]["bedroom_source"], c["th2"]["home_value"]), ("national", "118350.00"))
         man = json.loads((self.out / "mha_ownership_by_type_manifest.json").read_text())
         self.assertEqual(man["ratios"]["building_apartment"]["mhas_national_fallback"], 2)
         self.assertEqual(man["ratios"]["building_townhouse"]["mhas_national_fallback"], 2)
         self.assertEqual(man["ratios"]["building_townhouse"]["townhouse_position"], 0.5)
         self.assertIn("reproduces B11", man["model_identity"])
+        self.assertIn("D34", man["decision"])
+        self.assertEqual(man["series_bedrooms"], {"all_homes": 3, "condo": 2, "single_family": 3})
         self.assertEqual(man["coverage"]["sfh4"]["status"], {"ok": 2, "piti_only_no_zori": 1, "no_home_value": 0})
-        # The fixture's all-homes values equal its 2 BR values ZIP by ZIP, so the D19 reference holds there
-        self.assertEqual(man["reference_check"]["all_homes_over_2br"]["median"], 1.0)
-        self.assertEqual(man["reference_check"]["all_homes_over_3br"]["median"], 0.8)
+        self.assertEqual(man["reference_check"]["all_homes_over_2br"]["median"], 1.25)
+        self.assertEqual(man["reference_check"]["all_homes_over_3br"]["median"], 1.0)
+        self.assertEqual({k: v["nearest_bedrooms"] for k, v in man["reference_check"]["series"].items()},
+                         {"all_homes": 3, "condo": 2, "single_family": 3})
 
+    def test_b30_stops_when_a_series_size_is_misconfigured(self) -> None:
+        cfg = json.loads((ROOT / "config" / "ownership.json").read_text(encoding="utf-8"))
+        cfg["home_types"]["all_homes_bedrooms"] = 2                         # the pre-D34 assumption
+        path = self.d / "ownership.json"
+        path.write_text(json.dumps(cfg), encoding="utf-8")
+        p = self.run_b30(path)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("all_homes: configured 2 BR, the data sit nearest 3 BR", p.stderr)
 
 if __name__ == "__main__":
     unittest.main()

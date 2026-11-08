@@ -21,28 +21,34 @@ values, because Zillow has no townhouse series.
         --out data/interim/benchmarks_2026
 
 ------------------------------------------------------------------------------
-Method (per MHA m and home type t = building b, n bedrooms)
+Method (per MHA m and home type t = building b, n bedrooms), D34 (7 Nov 2026)
 ------------------------------------------------------------------------------
-  value(t) = B9 zhvi_median(m) x g_b(m) x h_n(m)
+  value(t) = B9 zhvi_median(m) x a_b(m) x h_n(m) / h_K(m)
 
-  g_b  building-type factor: apartment = condo/co-op ZHVI / all-homes ZHVI;
-       single-family = SFR ZHVI / all-homes ZHVI. Each ratio is taken per ZIP (ZIPs
-       with both series over B9's months), and the MHA takes the median.
-       townhouse (D22 option B) = g_apartment + p x (g_single_family - g_apartment),
-       p = config/ownership.json home_types.townhouse_position (0.5, the midpoint),
-       built from the MHA's two factors, so in every MHA the townhouse sits between
-       the apartment and the single-family home whenever condo <= single-family.
-  h_n  bedroom ratio: ZHVI n BR / ZHVI 2 BR per ZIP, median over the MHA.
-  An MHA with no ZIP holding both series takes the national median of the ZIP
-  ratios; building_source and bedroom_source say which (zip | national). The
-  townhouse factor is `zip` only when both of its factors are.
+  h_n  bedroom ladder: ZHVI n BR / ZHVI 2 BR per ZIP, median over the MHA (h_2 = 1).
+  K    the bedroom count the all-homes value B9 stands for (config/ownership.json
+       home_types.all_homes_bedrooms, 3). Zillow's typical home is a 3 BR home:
+       all-homes / 3 BR is 1.003 (median of 20,431 ZIPs, 2026 run), and B30
+       re-measures this every run (reference_check) and stops if the configured
+       count is no longer the nearest.
+  a_b  building factor at equal bedrooms, from Zillow's type ratio g_b (condo/co-op
+       ZHVI / all-homes ZHVI for apartments, SFR ZHVI / all-homes ZHVI for
+       single-family homes; per ZIP, median over the MHA). A type series has its
+       own typical size k_b (condo 2 BR, single-family 3 BR, measured the same way),
+       so the ratio carries a size difference that D34 removes:
+         a_b = g_b x h_K / h_k_b
+       townhouse (D22 option B) = a_apartment + p x (a_single_family - a_apartment),
+       p = home_types.townhouse_position (0.5), so the townhouse sits between the
+       apartment and the single-family home of the same bedrooms.
+  An MHA with no ZIP holding both series of a ratio takes the national median of
+  the ZIP ratios; building_source and bedroom_source say which (zip | national), and
+  a factor is `zip` only when every ratio in it is.
 
-Until D22 the all-homes ZHVI (B9) itself stood for the 2 BR townhouse (D19), so
-the 2 BR townhouse equalled B11. The second grid run showed the all-homes index
-behaves like a 3 BR value and gave single-family homes no premium over
-townhouses, so the townhouse now has its own factor and E-5's buy benchmark is
-no longer B11. B11 stays the all-homes ownership cost: B30 recomputes it with
-g = h = 1 and stops if it differs, which checks that B30 and B11 run one model.
+Before D34, value(t) = B9 x g_b x h_n treated B9 and both type series as 2 BR
+homes, so every home with more than two bedrooms was priced as if its extra rooms
+came on top of a 3 BR value, and a single-family home's size was counted twice.
+B11 stays the all-homes ownership cost: B30 recomputes it with a = 1 and no bedroom
+scaling, and stops if it differs, which checks that B30 and B11 run one model.
 
   Then B11's model unchanged (config/ownership.json, the same PMMS window, the
   MHA's own tax rate and insurance premium from the A8 rollup):
@@ -64,6 +70,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
+import math
 import statistics
 import sys
 from pathlib import Path
@@ -131,6 +139,9 @@ def main() -> None:
     own_cfg = oc.load_config(args.config)
     loan = own_cfg["loan"]
     th_pos = own_cfg["home_types"]["townhouse_position"]
+    series_bedrooms = {"all_homes": own_cfg["home_types"]["all_homes_bedrooms"],
+                       "condo": own_cfg["home_types"]["condo_bedrooms"],
+                       "single_family": own_cfg["home_types"]["single_family_bedrooms"]}
     spec = args.window or oc.window_from_b9(args.zhvi)
     if spec is None:
         agg.die(TOOL, f"mha_zhvi_manifest.json not found beside {args.zhvi} (run `make zhvi`)")
@@ -171,35 +182,73 @@ def main() -> None:
         print(f"  reading {path.name}")
         series[key] = zip_series(path, window, args.min_months, nodes[key])
 
-    building, stats = {}, {}
-    for b, key in (("apartment", "condo"), ("single_family", "sfr")):
-        building[b], _, stats[f"building_{b}"] = ratio_by_mha(series[key], series["all"], members, b)
-    # D22 option B: the townhouse between the MHA's condo/co-op and single-family factors.
-    building["townhouse"], inverted = {}, []
-    for m in members:
-        (ga, sa, za), (gs, ss, zs) = building["apartment"][m], building["single_family"][m]
-        src = "zip" if sa == ss == "zip" else "national"
-        building["townhouse"][m] = (ga + th_pos * (gs - ga), src, min(za, zs))
-        if ga > gs:
-            inverted.append(m)
-    th_vals = [v[0] for v in building["townhouse"].values()]
-    stats["building_townhouse"] = {
-        "method": f"apartment factor + {th_pos} x (single-family factor - apartment factor), per MHA",
-        "townhouse_position": th_pos, "median_factor": round(statistics.median(th_vals), 4),
-        "mhas_national_fallback": sum(v[1] == "national" for v in building["townhouse"].values()),
-        "mhas_condo_above_single_family": len(inverted)}
-    bedroom = {}
+    bedroom, stats = {}, {}
     for n in (1, 3, 4):
         bedroom[n], _, stats[f"bedrooms_{n}"] = ratio_by_mha(series[f"br{n}"], series["br2"], members, f"{n} BR")
 
-    # Diagnostic behind D22: which bedroom series does the all-homes value (B9) sit closest to,
-    # ZIP by ZIP? Evidence only.
-    reference_check = {}
-    for n in (2, 3, 4):
-        both = [series["all"][z] / series[f"br{n}"][z] for z in series["all"]
-                if z in series[f"br{n}"] and series[f"br{n}"][z] > 0]
-        reference_check[f"all_homes_over_{n}br"] = ({"zips": len(both), "median": round(statistics.median(both), 4)}
-                                                    if both else None)
+    def ladder(m: str, n: int) -> tuple[float, str]:
+        """h_n for one MHA and where it came from: 2 BR is the ladder's base (h_2 = 1)."""
+        if n == 2:
+            return 1.0, "reference"
+        value, src, _ = bedroom[n][m]
+        return value, src
+
+    def combined(*sources: str) -> str:
+        return "national" if "national" in sources else "zip"
+
+    # D34: which bedroom count each Zillow series stands for, measured ZIP by ZIP (median of the
+    # series over each bedroom series). The nearest to 1, on a log scale, is its typical size;
+    # B30 stops if the configured count is not that one, so the method follows the data.
+    reference_check, measured = {}, {}
+    for name, key in (("all_homes", "all"), ("condo", "condo"), ("single_family", "sfr")):
+        per_n = {}
+        for n in (1, 2, 3, 4):
+            both = [series[key][z] / series[f"br{n}"][z] for z in series[key]
+                    if z in series[f"br{n}"] and series[f"br{n}"][z] > 0]
+            if both:
+                per_n[n] = {"zips": len(both), "median": round(statistics.median(both), 4)}
+            if name == "all_homes" and n >= 2:                             # the keys B23 and earlier runs used
+                reference_check[f"all_homes_over_{n}br"] = per_n.get(n)
+        nearest = min(per_n, key=lambda n: abs(math.log(per_n[n]["median"]))) if per_n else None
+        measured[name] = {"over_n_br": per_n, "nearest_bedrooms": nearest,
+                          "configured_bedrooms": series_bedrooms[name]}
+    mismatch = [f"{k}: configured {v['configured_bedrooms']} BR, the data sit nearest {v['nearest_bedrooms']} BR "
+                f"({json.dumps({n: x['median'] for n, x in v['over_n_br'].items()})})"
+                for k, v in measured.items() if v["nearest_bedrooms"] != v["configured_bedrooms"]]
+    agg.fail_if([f"Zillow series sizes changed (D34): {'; '.join(mismatch)}. Update config/ownership.json "
+                 "home_types and docs/configuration.md, then rerun"] if mismatch else [], TOOL)
+
+    building = {}
+    for b, key in (("apartment", "condo"), ("single_family", "sfr")):
+        building[b], _, stats[f"building_{b}"] = ratio_by_mha(series[key], series["all"], members, b)
+    k_all = series_bedrooms["all_homes"]
+    size_matched = {}
+    for b, name in (("apartment", "condo"), ("single_family", "single_family")):
+        size_matched[b] = {}
+        for m in members:
+            g, gsrc, gz = building[b][m]
+            if series_bedrooms[name] == k_all:                 # same typical size: nothing to remove
+                size_matched[b][m] = (g, gsrc, gz)
+                continue
+            h_all, s_all = ladder(m, k_all)
+            h_k, s_k = ladder(m, series_bedrooms[name])
+            size_matched[b][m] = (g * h_all / h_k, combined(gsrc, s_all, s_k), gz)
+        vals = [v[0] for v in size_matched[b].values()]
+        stats[f"building_{b}"]["size_matched_median"] = round(statistics.median(vals), 4)
+    # D22 option B, at equal bedrooms (D34): the townhouse between the MHA's two size-matched factors.
+    size_matched["townhouse"], inverted = {}, []
+    for m in members:
+        (aa, sa, za), (as_, ss, zs) = size_matched["apartment"][m], size_matched["single_family"][m]
+        size_matched["townhouse"][m] = (aa + th_pos * (as_ - aa), combined(sa, ss), min(za, zs))
+        if aa > as_:
+            inverted.append(m)
+    th_vals = [v[0] for v in size_matched["townhouse"].values()]
+    stats["building_townhouse"] = {
+        "method": f"apartment factor + {th_pos} x (single-family factor - apartment factor), per MHA, "
+                  "both at equal bedrooms (D34)",
+        "townhouse_position": th_pos, "median_factor": round(statistics.median(th_vals), 4),
+        "mhas_national_fallback": sum(v[1] == "national" for v in size_matched["townhouse"].values()),
+        "mhas_condo_above_single_family": len(inverted)}
 
     rate, weeks, rates = oc.read_pmms(args.pmms, window)
     n_months = int(loan["term_years"] * 12)
@@ -222,9 +271,13 @@ def main() -> None:
         tax_rate, premium = float(ti["effective_tax_rate"]), float(ti["insurance_annual_usd"])
         for t in ht.types(cfg):
             b, n = t["building"], t["bedrooms"]
-            g, gsrc, gz = building[b][m]
-            h, hsrc, hz = (1.0, "reference", 0) if n == 2 else bedroom[n][m]
+            g, gsrc, _ = size_matched[b][m]
+            h_n, s_n = ladder(m, n)
+            h_all, s_all = ladder(m, k_all)
+            h = h_n / h_all
+            hsrc = "reference" if n == k_all else combined(s_n, s_all)
             out = {"mha": m, "home_type": t["id"], "building_factor": f"{g:.6f}", "building_source": gsrc,
+                   "zillow_type_ratio": "" if b == "townhouse" else f"{building[b][m][0]:.6f}",
                    "bedroom_ratio": f"{h:.6f}", "bedroom_source": hsrc, "rate_pct": f"{rate:.3f}"}
             if not raw:
                 out["status"] = "no_home_value"
@@ -252,7 +305,8 @@ def main() -> None:
                  f"{', '.join(identity_fail[:10])} (rebuild B11 and B30 from the same inputs)"]
                 if identity_fail else [], TOOL)
 
-    fields = ["mha", "home_type", "building_factor", "building_source", "bedroom_ratio", "bedroom_source",
+    fields = ["mha", "home_type", "building_factor", "building_source", "zillow_type_ratio", "bedroom_ratio",
+              "bedroom_source",
               "home_value", "rate_pct", "pi_monthly", "tax_monthly", "tax_source", "insurance_monthly",
               "insurance_source", "mi_monthly", "own_housing_monthly", "utilities_usd", "own_total_monthly",
               "status"]
@@ -299,21 +353,29 @@ def main() -> None:
         "config_sha256": agg.sha256(args.config),
         "window_months": f"{window[0]}:{window[1]}",
         "rate": {"series": "pmms30", "weeks": len(rates), "mean_pct": round(rate, 4)},
+        "decision": "D34 (7 Nov 2026): B9 and each Zillow type series are placed at their measured typical "
+                    "bedroom count before bedrooms are scaled",
+        "series_bedrooms": series_bedrooms,
         "method": {
             "home_value": "B9 zhvi_median x building_factor x bedroom_ratio",
-            "building_factor": "apartment = condo/co-op ZHVI / all-homes ZHVI; single-family = SFR ZHVI / "
-                               "all-homes ZHVI; per ZIP, median over the MHA; national median fallback; "
-                               f"townhouse = apartment + {th_pos} x (single-family - apartment) per MHA (D22 option B)",
-            "bedroom_ratio": "ZHVI n BR / 2 BR per ZIP, median over the MHA; national median fallback",
+            "building_factor": "at equal bedrooms: zillow_type_ratio x h(all-homes size) / h(series size); "
+                               "zillow_type_ratio = condo/co-op ZHVI / all-homes ZHVI (apartment) or SFR ZHVI / "
+                               "all-homes ZHVI (single-family), per ZIP, median over the MHA, national median "
+                               f"fallback; townhouse = apartment + {th_pos} x (single-family - apartment) per MHA "
+                               "(D22 option B)",
+            "bedroom_ratio": f"h(n) / h({k_all}), h = ZHVI n BR / 2 BR per ZIP, median over the MHA; national "
+                             f"median fallback; B9 stands for a {k_all} BR home",
             "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities",
         },
         "ratios": stats,
-        "reference_check": {**reference_check,
-                            "reading": "all-homes ZHVI / n-bedroom ZHVI per ZIP, median; nearest 1.0 is the bedroom "
-                                       "count the all-homes value resembles. Since D22 the townhouse no longer "
-                                       "rests on it: B9 is the base the type and bedroom factors scale."},
+        "reference_check": {**reference_check, "series": measured,
+                            "reading": "series ZHVI / n-bedroom ZHVI per ZIP, median; the one nearest 1.0 (log "
+                                       "scale) is the bedroom count the series stands for. B30 stops if a "
+                                       "configured count (D34) is not that one."},
         "limitations": ["the homeowners premium is the MHA average for every home type (FIO has no premium by "
                         "dwelling type), so it is overstated for apartments and understated for 4 BR homes",
+                        "each Zillow series' typical size is taken as a whole bedroom count (the nearest one "
+                        "measured), so any remainder stays in its type ratio",
                         "a condo/co-op value stands for an apartment in buy mode",
                         "Zillow has no townhouse series: the townhouse is priced at a fixed position between the "
                         "condo/co-op and single-family values (D22 option B), an assumption rather than a "
