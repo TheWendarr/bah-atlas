@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 07 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 10  ·  🟣 In progress: 1  ·  🔴 Not started: 16  ·  ⚪ Scrapped: 4
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 45  ·  🟢 Completed this week: 17  ·  🟣 In progress: 3  ·  🔴 Not started: 7  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -19,11 +19,13 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M4** 2.5 Computed Metrics | Sat 17 Oct | 4 / 4 | `██████████ 100%` | ✅ Complete |
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 14 / 14 | `██████████ 100%` | ✅ Complete |
-| **M7** Layer 3 Front-End | Mon 16 Nov | 9 / 21 | `████░░░░░░ 43%` | 🗓️ Upcoming |
+| **M7** Layer 3 Front-End | Mon 16 Nov | 16 / 21 | `████████░░ 76%` | 🗓️ Upcoming |
 
 ## In progress now
 
-- 🟣 **C14** Render function — due 16 Nov (M7)
+- 🟣 **C10** Legend — due 16 Nov (M7)
+- 🟣 **C11** MHA detail popup/panel — due 16 Nov (M7)
+- 🟣 **C20** Attribution + methodology — due 16 Nov (M7)
 
 ## Nodal map
 
@@ -278,9 +280,9 @@ flowchart LR
     classDef gone fill:#e0e0e0,stroke:#000,color:#616161
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W2 done
-    class B32,W1,C1,C2,C3,C4,C5,C22,C23,C24 week
-    class C14 prog
-    class W3,C6,C7,C8,C9,C10,C11,C12,C13,C15,C16,C17,C19,C20,C21,C25 todo
+    class B32,W1,C1,C2,C3,C4,C5,C6,C7,C8,C9,C13,C14,C22,C23,C24,C25 week
+    class C10,C11,C20 prog
+    class W3,C12,C15,C16,C17,C19,C21 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
@@ -408,23 +410,23 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
 | 🟢 | **C5** | App bootstrap + MapLibre init | required | C1, C2, C3, C4 | D23 (3 Nov): vanilla ES modules, MapLibre GL JS 6 and pmtiles only; D29: opens on CONUS with Alaska and Hawaii jump buttons; completed 07 Nov |
-| 🔴 | **C6** | UI state object | required | C7, C13 |  |
-| 🔴 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown; D29 (3 Nov): adds the metric selector as a fourth dropdown; D32 (2 Nov): bar above the map on laptops, summary chip and sheet on phones |
-| 🔴 | **C8** | Feature-state join | required | C14, C2 |  |
-| 🔴 | **C9** | Choropleth paint expression | required | C14, C3 | Mock-ups: outline class mha only, County Cost Groups fill only; D27 adds a second scale for views that are not the statutory test |
-| 🔴 | **C10** | Legend | required | C14 | D27 (3 Nov): the legend names the active scale; off-standard views use their own class labels |
-| 🔴 | **C11** | MHA detail popup/panel | required | C14 | D32 (2 Nov): side panel on laptops, bottom sheet on phones; D26: display_name when present |
+| 🟢 | **C6** | UI state object | required | C7, C13 | 7 Nov: web/src/state.js, one state object; every change is checked against the B21 lists and an invalid value falls back to the default and is reported (test/ui.test.mjs). The controls offer only valid values, so no fallback message is shown in the interface; completed 07 Nov |
+| 🟢 | **C7** | Control panel (dropdowns) | required | — | D18 (18 Oct): three dropdowns - rank (E1-E9, W1-W5, O1-O9), dependents (with, without) and home type (six DoD types plus the DoD standard for the grade, the default); any combination can be shown; D29 (3 Nov): adds the metric selector as a fourth dropdown; D32 (2 Nov): bar above the map on laptops, summary chip and sheet on phones; 7 Nov: native selects for rank, dependents, home type and metric (D29) built from B21; desktop top bar (layout A), phone summary chip that opens a sheet (layout C, D32); E2E at 1280 x 800 and 360 x 640; completed 07 Nov |
+| 🟢 | **C8** | Feature-state join | required | C14, C2 | 7 Nov: setFeatureState keyed on code, writing only changed classes; E2E: after a rank change, sampled areas hold the computed class; completed 07 Nov |
+| 🟢 | **C9** | Choropleth paint expression | required | C14, C3 | Mock-ups: outline class mha only, County Cost Groups fill only; D27 adds a second scale for views that are not the statutory test; 7 Nov: match on class index with B21 colours and no_data_color; both D27 scales share the colours; class rule unit-tested at every break (test/unit.test.mjs); the X7 source scan is an exit check; completed 07 Nov |
+| 🟣 | **C10** | Legend | required | C14 | D27 (3 Nov): the legend names the active scale; off-standard views use their own class labels; 7 Nov: built (web/src/legend.js): active-scale title, class labels, no-data label, D27 scale note; compact ramp on phones. Remaining: the E2E check of labels for every metric |
+| 🟣 | **C11** | MHA detail popup/panel | required | C14 | D32 (2 Nov): side panel on laptops, bottom sheet on phones; D26: display_name when present; 7 Nov: built (web/src/panel.js): click an area for BAH, cost share, local cost to rent and to buy and the four grid metrics; B21 status and caveat texts; County Cost Groups open with the boundary note; selected outline; on phones a bottom sheet that pans the area into view. Remaining: E2E for no_zori, piti_only_no_zori and no_rate (ok and ccg_no_benchmark tested), and the buy-mode PITI/utilities split |
 | 🔴 | **C12** | A/B comparison panel | required | C14 |  |
-| 🔴 | **C13** | Rent/Buy toggle | required | — |  |
-| 🟣 | **C14** | Render function | required | C6, C2, C3 | D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles |
+| 🟢 | **C13** | Rent/Buy toggle | required | — | 7 Nov: two-option radio group labelled from B21 modes; E2E: the mode changes and the panel highlights it; completed 07 Nov |
+| 🟢 | **C14** | Render function | required | C6, C2, C3 | D20: computes the ratio for any combination from B31; hotspots (B27) only for the two research profiles; 7 Nov: web/src/render.js, the one path from state to classes, scale, notice and panel values; grid parity on all 218,316 views runs in CI (test/grid.test.mjs); the notice is unit-tested on all 322 selections; completed 07 Nov |
 | 🔴 | **C15** | ZIP search to highlight MHA | optional | C3, C6, B32 | D26 (3 Nov): needs B32; included in M7 scope (D30) |
 | 🔴 | **C16** | Hotspot overlay toggle | optional | B27 | D29 (3 Nov): B27 is served with the other JSON files; included in M7 scope (D30) |
 | 🔴 | **C17** | Shareable URL / permalink | optional | C6 | D30 (3 Nov): first optional node, because the E2E tests drive the app through it |
 | ⚪ | **C18** | Utilities toggle | optional | C6, C2 | Scrapped 3 Nov 2026 (D28): B31 rent costs include utilities and no rent-only figure is delivered, so the toggle would break ICD must-not rule 1 |
 | 🔴 | **C19** | Data export (CSV of view) | optional | C6, C2 | D30 (3 Nov): last optional node, first to cut |
-| 🔴 | **C20** | Attribution + methodology | required | C3, B22 |  |
+| 🟣 | **C20** | Attribution + methodology | required | C3, B22 | 7 Nov: OpenStreetMap and Protomaps credit set on the basemap source (the PMTiles protocol passed none) and checked live. Remaining: Zillow credit, the B21 source list, windows, geometry statements, build id and date, footer disclaimer |
 | 🔴 | **C21** | About / data-caveats page | required | B23, B22 | Prose is author-written; must state the O-3 benchmark dependence, the shared-denominator caveat and the model-form result from B23 |
-| 🔴 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default |
+| 🟢 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default; 7 Nov: web/src/notice.js fills grid.notice.standard or off_standard from standards_text on every view; off-standard views turn amber and switch to the D27 scale; unit test across all 322 selections (right wording, no placeholder left); the default home type is DoD standard for this rank; completed 07 Nov |
 
 #### 3.3 Build and Delivery — due 16 November 2026 (M7)
 
