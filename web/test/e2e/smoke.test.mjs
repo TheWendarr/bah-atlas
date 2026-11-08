@@ -105,6 +105,12 @@ test("the jump buttons move the map to Alaska, Hawaii and back", async () => {
   await page.close();
 });
 
+test("the basemap is credited to OpenStreetMap", async () => {
+  const { page } = await open();
+  assert.match(await page.evaluate(() => window.bahAtlas.attribution()), /OpenStreetMap/);
+  await page.close();
+});
+
 test("the map fits a phone with no horizontal scroll", async () => {
   const { page } = await open({ viewport: { width: 360, height: 640 } });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

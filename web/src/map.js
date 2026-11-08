@@ -14,6 +14,11 @@ const REGIONS = {
 const CONUS_BOUNDS = REGIONS.conus;
 const MAX_ZOOM = 12;
 
+// The PMTiles protocol passes no attribution from the archive, so the credit OpenStreetMap's
+// licence requires is set on the source here, where it cannot drop out with a new extract.
+const BASEMAP_ATTRIBUTION =
+  '<a href="https://protomaps.com">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
 // C4: public/basemap/style.json holds relative addresses, and the tile address changes
 // with the extract, so both are set here. MapLibre needs absolute addresses for these.
 async function basemapStyle(basemapPath, basemapUrl) {
@@ -24,6 +29,7 @@ async function basemapStyle(basemapPath, basemapUrl) {
   style.glyphs = `${base}${style.glyphs}`;
   style.sprite = `${base}${style.sprite}`;
   style.sources.basemap.url = `pmtiles://${new URL(basemapUrl, location.href).href}`;
+  style.sources.basemap.attribution = BASEMAP_ATTRIBUTION;
   return style;
 }
 

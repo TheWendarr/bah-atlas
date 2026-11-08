@@ -120,7 +120,9 @@ PAGE_CHANGES = {
 }
 
 
-def site_server(root: Path, fault: str | None = None) -> ThreadingHTTPServer:
+def site_server(root: Path, fault: str | None = None, requested: list[str] | None = None) -> ThreadingHTTPServer:
+    requested = [] if requested is None else requested
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args) -> None:
             pass
@@ -128,6 +130,7 @@ def site_server(root: Path, fault: str | None = None) -> ThreadingHTTPServer:
         def do_GET(self) -> None:
             path = self.path.lstrip("/") or "index.html"
             file = root / path
+            requested.append(path)
             if not file.is_file() or (fault == "missing" and path.endswith(".mjs")):
                 self.send_response(404)
                 self.end_headers()
@@ -168,7 +171,8 @@ class TestCheckSite(unittest.TestCase):
         self.tmp.cleanup()
 
     def problems(self, fault: str | None) -> list[str]:
-        server = site_server(self.dist, fault)
+        self.requested: list[str] = []
+        server = site_server(self.dist, fault, self.requested)
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
         return ch.check_site(f"http://127.0.0.1:{server.server_address[1]}/", self.dist)
@@ -199,6 +203,15 @@ class TestCheckSite(unittest.TestCase):
 
     def test_a_changed_page_shows_where_it_differs(self) -> None:
         self.assertTrue(any("steal()" in p for p in self.problems("other_script")))
+
+    def test_the_page_is_asked_for_first(self) -> None:
+        self.problems(None)
+        self.assertEqual(self.requested[0], "index.html")
+
+    def test_a_changed_page_stops_the_check_before_any_asset(self) -> None:
+        problems = self.problems("other_script")
+        self.assertEqual(self.requested, ["index.html"])
+        self.assertTrue(any("no other file was asked for" in p for p in problems))
 
     def test_bot_script_is_removed_only_from_the_end_of_the_body(self) -> None:
         page = b"<body>" + BOT_SCRIPT + b"<p>map</p></body>"

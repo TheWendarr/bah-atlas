@@ -181,7 +181,13 @@ def check_site(site: str, dist: Path) -> list[str]:
     site = site.rstrip("/")
     rules = read_header_rules(dist / "_headers")
     problems: list[str] = []
-    for file in sorted(p for p in dist.rglob("*") if p.is_file() and p.name != "_headers"):
+    # The page goes first, and nothing else is asked for until it matches. Pages answers a
+    # missing file with the page itself, and the /assets/* rule marks that answer immutable,
+    # so asking for an asset before its deployment is live can leave the page cached at
+    # that address for a year (7 Nov 2026: app-DHW73UY3.css).
+    files = sorted((p for p in dist.rglob("*") if p.is_file() and p.name != "_headers"),
+                   key=lambda p: (p.name != "index.html" or p.parent != dist, p.as_posix()))
+    for file in files:
         path = file.relative_to(dist).as_posix()
         reply = request(f"{site}/{'' if path == 'index.html' else urllib.parse.quote(path)}")
         if reply.status != 200:
@@ -192,6 +198,10 @@ def check_site(site: str, dist: Path) -> list[str]:
         if body != local:
             detail = f" ({first_difference(body, local)})" if path.endswith(".html") else ""
             problems.append(f"{path}: the live bytes differ from dist{detail}")
+            if path == "index.html":
+                problems.append("index.html: not the page in dist, so no other file was asked for "
+                                "(the deployment is not live yet, or dist is not this build)")
+                return problems
         kind = expected_type(path)
         if kind and kind not in reply.headers.get("content-type", ""):
             problems.append(f"{path}: Content-Type is {reply.headers.get('content-type')!r}, expected {kind}")
@@ -233,6 +243,8 @@ def main() -> int:
     if args.site:
         if not args.dist or not (args.dist / "_headers").is_file():
             sys.exit("check_host: --site needs --dist, a built site with a _headers file")
+        if (args.dist / "tiles").is_dir():
+            sys.exit("check_host: dist is a local build (it holds tiles/); run `make web-build` first")
         try:
             return run_site(args.site, args.dist, args.wait)
         except OSError as err:
