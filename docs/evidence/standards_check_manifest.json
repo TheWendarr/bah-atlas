@@ -1,14 +1,14 @@
 {
   "node": "A14",
   "check": "housing standards table reproduces the 2026 BAH rates",
-  "generated_at": "2026-11-08T03:35:54+00:00",
+  "generated_at": "2026-11-08T04:23:44+00:00",
   "inputs": {
     "B4": "bah_rates.csv",
     "A14": "housing_standards.json"
   },
   "input_sha256": {
     "B4": "f1912660e5752189f2d8642c956a24615f5c7f710b0e256fe6626b2e1e6ffbf3",
-    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+    "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
   },
   "method": {
     "anchors": {

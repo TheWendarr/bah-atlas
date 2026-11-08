@@ -1,10 +1,10 @@
 {
   "node": "B22",
-  "schema_version": "1.2.0",
+  "schema_version": "1.2.1",
   "bah_year": 2026,
-  "generated_at": "2026-11-08T03:37:17+00:00",
+  "generated_at": "2026-11-08T04:25:08+00:00",
   "git": {
-    "commit": "59e093204f68fb22cd14c0e9d38642538fccf35e",
+    "commit": "368aee14648408e27f28111d6f06636d11b0a8d7",
     "dirty": true
   },
   "software": {
@@ -151,10 +151,10 @@
   },
   "configs": {
     "classification.json": "db6d31cc8daa7887bf6c1bc96f81f236fc551d6f3737ca501ce36dcb96bf7ab7",
-    "housing_standards.json": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4",
-    "ownership.json": "a7f963b6f59fb47a16b7d13421c9db9f8b3da88f8dbcbe3a895a8e06b00378cb",
+    "housing_standards.json": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805",
+    "ownership.json": "fd15beafeafdeeb5684c0686eaa56e30c5e7bf7f29637ff2d13a5e256dab3e9f",
     "profiles.json": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
-    "ui_text.json": "983499b90ad5c95164a6b41682ec8cc5e8330463fd3289149c390ea8d74a7867"
+    "ui_text.json": "a2234e17eed4815e41e7d2538ce7a879bd3805674462e81525170c5ab7e74933"
   },
   "stages": [
     {
@@ -167,15 +167,15 @@
     {
       "nodes": "B1-B4",
       "file": "manifest.json",
-      "sha256": "53a2a96b7d473bbf9686b87ff152dd435d6cc2c41809a423639f6e8b8357c494",
-      "generated_at": "2026-11-08T03:35:20+00:00",
+      "sha256": "c1affe61feb2fd1ddf13c83fdd0e5e1dfc086ffb0adece4f7b06d31751302108",
+      "generated_at": "2026-11-08T04:23:11+00:00",
       "warnings": []
     },
     {
       "nodes": "B5",
       "file": "rate_components_manifest.json",
-      "sha256": "d7430078a8608fc015d615f91cc0f40fbc68767738b60f5bf9d19c53aaee0668",
-      "generated_at": "2026-11-08T03:35:40+00:00",
+      "sha256": "204dcf0fa1672bd6860ffab6976274a1c4ec26e4c032c7f1ae486d95142461d3",
+      "generated_at": "2026-11-08T04:23:30+00:00",
       "warnings": [
         "MS168 (GULFPORT, MS) is listed more than once with identical values in the source; kept one row"
       ]
@@ -183,29 +183,29 @@
     {
       "nodes": "B6",
       "file": "mha_2026_geometry_manifest.json",
-      "sha256": "ee8ded40eaf09ef086bacc03bdfe360f86315e811a2138243d8181efb3b1d2b2",
-      "generated_at": "2026-11-08T03:35:26+00:00",
+      "sha256": "11b88e91f25540e68b4c47de1bec912cf9f74e79d6ca579de5b6ecf265244b16",
+      "generated_at": "2026-11-08T04:23:17+00:00",
       "warnings": []
     },
     {
       "nodes": "B28",
       "file": "non_mha_2026_geometry_manifest.json",
-      "sha256": "66cb0b480ffb80827be959fd52c92b6e8f2a179e50cd42a044c42c0461cad0bb",
-      "generated_at": "2026-11-08T03:35:39+00:00",
+      "sha256": "a6b6e0bb89bb902be927dc717aca4ccc026ef95349b41579581b3f74be448f3c",
+      "generated_at": "2026-11-08T04:23:29+00:00",
       "warnings": []
     },
     {
       "nodes": "B7",
       "file": "areas_2026_manifest.json",
-      "sha256": "c19d811e7563c1146d0867a263423921851b11187511ec9408c148eeae40d484",
-      "generated_at": "2026-11-08T03:35:47+00:00",
+      "sha256": "8b316f4567e4baf89254cda33aa91707290ac1bd3b2a73af90ca110b8960f6d0",
+      "generated_at": "2026-11-08T04:23:37+00:00",
       "warnings": []
     },
     {
       "nodes": "B8",
       "file": "mha_zori_manifest.json",
-      "sha256": "9b2fc0d10470743de56efef8326d54d058f8f7150ecad4648fdecb1b897ced39",
-      "generated_at": "2026-11-08T03:35:47+00:00",
+      "sha256": "9b901772ca79ee5f37c1cfe485e774f3f2759d0928c83de235c2a5fa466131dc",
+      "generated_at": "2026-11-08T04:23:37+00:00",
       "warnings": [
         "862 ZIP(s) had fewer than 3 months in the window and were left out",
         "6 ZIP(s) above 25,000 in the window, kept (seasonal luxury markets; the MHA median limits their pull): 11930 (NY218, peak 52,565), 11937 (NY218, peak 35,440), 11963 (NY218, peak 55,972), 11968 (NY218, peak 41,575), 11976 (NY218, peak 101,167), 81611 (not in a real MHA, peak 27,159)"
@@ -214,15 +214,15 @@
     {
       "nodes": "B9",
       "file": "mha_zhvi_manifest.json",
-      "sha256": "0e02b10e2e8d2ba5b0679503606d151c5cfb71f4b9d6ecbc8b5295ba27cccdc1",
-      "generated_at": "2026-11-08T03:35:48+00:00",
+      "sha256": "c8c734f15b1cc9d01838becd591cbff41d1232f5f10ac79121cb1f371d67084a",
+      "generated_at": "2026-11-08T04:23:38+00:00",
       "warnings": []
     },
     {
       "nodes": "B10",
       "file": "mha_safmr_manifest.json",
-      "sha256": "c6731055b1e6af9f3ae8378f038259e79d9841e33cdd8aa3441430c80e666c1a",
-      "generated_at": "2026-11-08T03:35:51+00:00",
+      "sha256": "7fba6dcc689c8870f2ffed82fd9e9f8bb6355e3d671641033c9a230ae28b4498",
+      "generated_at": "2026-11-08T04:23:41+00:00",
       "warnings": [
         "10106 ZIP(s) appear under more than one HUD area; their rows were averaged"
       ]
@@ -230,15 +230,15 @@
     {
       "nodes": "A8",
       "file": "mha_tax_insurance_manifest.json",
-      "sha256": "d18f84df88fe62d5e59c14338329fcf35623948d111f7045566cecfe0f7f6504",
-      "generated_at": "2026-11-08T03:35:54+00:00",
+      "sha256": "0bb05dc2f9abbb1f374e685db0df40ace191981ac354177cb5ca8d5fdeb7ecdd",
+      "generated_at": "2026-11-08T04:23:44+00:00",
       "warnings": []
     },
     {
       "nodes": "B11",
       "file": "mha_ownership_manifest.json",
-      "sha256": "d35f8542df7227913d6d7e89f8412390195fcbba6d4e92ecc0b3f8a074036f62",
-      "generated_at": "2026-11-08T03:35:54+00:00",
+      "sha256": "e118e4d084b89771b7a3e4d53b7abef27b7fcab2301009eb03b792ba94a27f4d",
+      "generated_at": "2026-11-08T04:23:44+00:00",
       "warnings": [
         "10 MHA(s) have a home value but no ZORI utilities estimate; own_total_monthly is blank there"
       ]
@@ -246,15 +246,15 @@
     {
       "nodes": "A14",
       "file": "standards_check_manifest.json",
-      "sha256": "78001dc67cb6b074822c4c34845e00a8fc1b236b20ce39e7c7f162fe9998898a",
-      "generated_at": "2026-11-08T03:35:54+00:00",
+      "sha256": "9fb56acb8f55a08fe32761cf781c411bd743d04fb9de7ad6287b218404bb3603",
+      "generated_at": "2026-11-08T04:23:44+00:00",
       "warnings": []
     },
     {
       "nodes": "B29",
       "file": "mha_rent_by_type_manifest.json",
-      "sha256": "a2664bd6ad9427b0f0fae021a6df09a99742fea413d02f3a7531bfc86fa198f4",
-      "generated_at": "2026-11-08T03:35:55+00:00",
+      "sha256": "8d2f95567b733182a01f3f2931270e205ca75154e40aadebe6dbb8ea8241b7e0",
+      "generated_at": "2026-11-08T04:23:45+00:00",
       "warnings": [
         "15 MHA(s) take the national apartment factor (0.9131): none of their ZIPs lies in a metro with the A15 series",
         "12 MHA(s) take the national single_family factor (1.1741): none of their ZIPs lies in a metro with the A15 series",
@@ -264,35 +264,34 @@
     {
       "nodes": "B30",
       "file": "mha_ownership_by_type_manifest.json",
-      "sha256": "4da54cbdd78185d3e4f25a375a5c9bf6a2cdb67304c257ea24c534407fb6656f",
-      "generated_at": "2026-11-08T03:35:59+00:00",
+      "sha256": "3586d7399d71731c3345c2af7a5b02dc5cbd37fad1f6806d4a690f39c26af989",
+      "generated_at": "2026-11-08T04:23:49+00:00",
       "warnings": [
-        "41 MHA(s) take the national building apartment ratio (0.6551)",
         "47 MHA(s) take the national bedrooms 1 ratio (0.6954)",
         "6 MHA(s) take the national bedrooms 3 ratio (1.3635)",
         "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
-        "41 MHA(s) build the townhouse factor from at least one national ratio (caveat type_factor_national)",
-        "10 MHA(s) have a condo/co-op factor above the single-family factor, so their townhouse is not between the two in DoD's order: IN338, KY430, MD458, MI148, MI156, NY215, OH233, PA253, WI318, WV322",
-        "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
-        "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "41 MHA(s) take the national building apartment ratio (0.6551)",
+        "42 MHA(s) build the townhouse factor from at least one national ratio (caveat type_factor_national)",
         "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
-        "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull"
+        "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
+        "2 ZIP building single family ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull"
       ]
     },
     {
       "nodes": "B12-B15",
       "file": "coverage_metrics_manifest.json",
-      "sha256": "0bfed0603d501946c220813d9345ea976a0963137ae6f695c205c98c632d216d",
-      "generated_at": "2026-11-08T03:36:00+00:00",
+      "sha256": "5a3a138d23f26f1bd355c0a531ade6f9693f1b857c114cea760bb3350c2c9ee3",
+      "generated_at": "2026-11-08T04:23:50+00:00",
       "warnings": [
-        "3 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: e5_dep/MA119=0.2629, o3_dep/CA044=0.2654, o3_dep/MA119=0.1729"
+        "1 buy primary coverage ratio(s) outside 0.3-2.5; check joins and units: o3_dep/MA119=0.2321"
       ]
     },
     {
       "nodes": "B16",
       "file": "weights_manifest.json",
-      "sha256": "f247afc0182cd82f4911e82afbce0764d6d87cd70f02779ad63ca2ef6b9c7469",
-      "generated_at": "2026-11-08T03:36:01+00:00",
+      "sha256": "2fb137eb83fe517826fcc9776f42eb12c436ab58ed27728ea81b20e4e0a89858",
+      "generated_at": "2026-11-08T04:23:51+00:00",
       "warnings": [
         "25 KNN link(s) longer than 500 km; longest MT175->WA313 724.0 km",
         "queen contiguity leaves 81 of 289 MHAs with no neighbour and splits the map into 122 pieces; KNN is the primary weights"
@@ -301,15 +300,15 @@
     {
       "nodes": "B17-B18",
       "file": "spatial_stats_manifest.json",
-      "sha256": "5df76f463381746047107a2e7ab8bd17a6a91c00db9e63c7ec46c5377a4ac73c",
-      "generated_at": "2026-11-08T03:37:05+00:00",
+      "sha256": "8624bd2291f77933f2e0c96d18a0eaeb6cddc420408a55e04573c14ac56e4a7e",
+      "generated_at": "2026-11-08T04:24:54+00:00",
       "warnings": []
     },
     {
       "nodes": "B19",
       "file": "regression_manifest.json",
-      "sha256": "b3ce97dae91987047dbdfa7c31f5a50d946fa270f1a2deaea7b4f111dfad5586",
-      "generated_at": "2026-11-08T03:37:16+00:00",
+      "sha256": "47361ce33f90057bbfe505c1709ada2d03e6f06a9c20561b24bfe0c3abfa70f4",
+      "generated_at": "2026-11-08T04:25:07+00:00",
       "warnings": [
         "e5_dep: the 82 MHAs left out for want of 5-year rent growth differ from the 201 modelled MHAs in adequacy_gap, ln_density, ln_rent (Mann-Whitney, alpha 0.05); the H2 result describes the modelled sample"
       ]

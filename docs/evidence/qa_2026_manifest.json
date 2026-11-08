@@ -2,9 +2,9 @@
   "nodes": [
     "B23"
   ],
-  "generated_at": "2026-11-08T03:38:31+00:00",
-  "build_id": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce",
-  "schema_version": "1.2.0",
+  "generated_at": "2026-11-08T04:26:27+00:00",
+  "build_id": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4",
+  "schema_version": "1.2.1",
   "inputs": {
     "B7": "areas_2026.pmtiles",
     "B20": "payload_2026.json",
@@ -23,19 +23,19 @@
   },
   "input_sha256": {
     "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
-    "B20": "42220235ed0461b83466a2707c3ecd7e14f2cbd639fd7842a4e8bef5708f010c",
-    "B21": "fa9d8bba0635135b45e89cec85b22559e5c0cff982daeda699dba3e9bab649d9",
-    "B27": "0356d5eff8d57d9837709ca4a0d7b5738473aea4c91abef6faab614109dff454",
-    "B31": "9cdb6294c90440f0167ba3ba4c7959789d333cccfb73fa50d15849da71301dc8",
-    "B32": "03cde2e51893b430180eccf11f2b7ddc47e2026ae8b43f12f9e9c1409eb26e88",
-    "B22": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce",
-    "B12": "27e01f0e405274421c9ee48337e2290c6d409a4023ad717bf39be93e0458367e",
-    "B14": "69ac7453c1eba7248752ca05e39fb1dd373d09692f0d048fc804870e29775748",
+    "B20": "51884f7e875e2666220f08019e93762184c05e8c2a6db7f4d7403a88743ff735",
+    "B21": "b025d27df573d41c38ed857ef697874f02dc23544ca21832c3140fa3f19e6645",
+    "B27": "4f56360835ffac261aaf5bf1dc59a61a01ce0d2462c85ef7c36e9a40a19b893e",
+    "B31": "70e1ef0d3d7e8d2a2af712fec0df3ff11116245565ae9a82515ae31b66c8e409",
+    "B32": "52b041d84ddf15b28e9465413161f0cd1dc104c615fb4c51735fe79b7f6d9878",
+    "B22": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4",
+    "B12": "c0d9b688417f35fb2196c12007b3c387c93292fd31f13e94b6006d17cc6379c9",
+    "B14": "a92a640e8e3263ed99369fe50d6db32f414c0ef0dbf9b190351a0016bce713cd",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
     "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d",
-    "B29": "1ad85ab59d979be4bf1559acf2096cca42d7ca01d2e67376f5e84078563b9329",
-    "B30": "e438fbdf16c65a832a7ac9b1587e9084f4cd89c1cf1e29b6d4b1aa260bdf9715",
-    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+    "B29": "e8f5f52f70b11f4ffcb7354f5cda792b61fdbaea316e76c0f4bb4d0912b0035e",
+    "B30": "d6258cb171950bfe1ff11653d67ec8e53568c96b366b0ef486f1214fc4233b63",
+    "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
   },
   "verdict": "PASS",
   "checks": [
@@ -52,7 +52,7 @@
     {
       "check": "Provenance: built from committed code",
       "result": "PASS",
-      "detail": "B22 commit 59e093204f68 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+      "detail": "B22 commit 368aee146484 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
     },
     {
       "check": "Check 9: file sizes recorded; SHA256SUMS matches",
@@ -67,7 +67,7 @@
     {
       "check": "Check 9: classes that differ between rounded and unrounded values",
       "result": "NOTE",
-      "detail": "2 value(s) change class; 15 sit within rounding of a break"
+      "detail": "6 value(s) change class; 19 sit within rounding of a break"
     },
     {
       "check": "Check 4: B20 codes without a polygon listed",
@@ -106,9 +106,9 @@
     }
   ],
   "provenance": {
-    "b22_commit": "59e093204f68fb22cd14c0e9d38642538fccf35e",
+    "b22_commit": "368aee14648408e27f28111d6f06636d11b0a8d7",
     "b22_dirty": true,
-    "detail": "B22 commit 59e093204f68 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    "detail": "B22 commit 368aee146484 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
   },
   "files": {
     "areas_2026.pmtiles": {
@@ -117,34 +117,34 @@
       "sha256": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb"
     },
     "payload_2026.json": {
-      "bytes": 463206,
-      "gzip_bytes": 45443,
-      "sha256": "42220235ed0461b83466a2707c3ecd7e14f2cbd639fd7842a4e8bef5708f010c"
+      "bytes": 461877,
+      "gzip_bytes": 44994,
+      "sha256": "51884f7e875e2666220f08019e93762184c05e8c2a6db7f4d7403a88743ff735"
     },
     "ui_metadata_2026.json": {
-      "bytes": 51965,
-      "gzip_bytes": 11800,
-      "sha256": "fa9d8bba0635135b45e89cec85b22559e5c0cff982daeda699dba3e9bab649d9"
+      "bytes": 52458,
+      "gzip_bytes": 11949,
+      "sha256": "b025d27df573d41c38ed857ef697874f02dc23544ca21832c3140fa3f19e6645"
     },
     "hotspots_2026.json": {
-      "bytes": 134305,
-      "gzip_bytes": 7415,
-      "sha256": "0356d5eff8d57d9837709ca4a0d7b5738473aea4c91abef6faab614109dff454"
+      "bytes": 134267,
+      "gzip_bytes": 7389,
+      "sha256": "4f56360835ffac261aaf5bf1dc59a61a01ce0d2462c85ef7c36e9a40a19b893e"
     },
     "grid_2026.json": {
-      "bytes": 358353,
-      "gzip_bytes": 58957,
-      "sha256": "9cdb6294c90440f0167ba3ba4c7959789d333cccfb73fa50d15849da71301dc8"
+      "bytes": 359046,
+      "gzip_bytes": 57833,
+      "sha256": "70e1ef0d3d7e8d2a2af712fec0df3ff11116245565ae9a82515ae31b66c8e409"
     },
     "zips_2026.json": {
       "bytes": 331193,
       "gzip_bytes": 101886,
-      "sha256": "03cde2e51893b430180eccf11f2b7ddc47e2026ae8b43f12f9e9c1409eb26e88"
+      "sha256": "52b041d84ddf15b28e9465413161f0cd1dc104c615fb4c51735fe79b7f6d9878"
     },
     "build_manifest_2026.json": {
-      "bytes": 15842,
-      "gzip_bytes": 5192,
-      "sha256": "3f330f14d4f63b935a57e4280abd96e0f1d99e095dc152b218435395497477ce"
+      "bytes": 15594,
+      "gzip_bytes": 5057,
+      "sha256": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4"
     }
   },
   "areas_by_class": {
@@ -184,6 +184,26 @@
   },
   "rounding_class_differences": [
     {
+      "area": "NH194",
+      "profile": "e5_dep",
+      "mode": "buy",
+      "metric": "design_gap_usd",
+      "unrounded": -250.18,
+      "rounded": -250,
+      "class_unrounded": 1,
+      "class_rounded": 2
+    },
+    {
+      "area": "AR010",
+      "profile": "o3_dep",
+      "mode": "buy",
+      "metric": "surplus_usd",
+      "unrounded": -50.43,
+      "rounded": -50,
+      "class_unrounded": 2,
+      "class_rounded": 3
+    },
+    {
       "area": "FL057",
       "profile": "e5_dep",
       "mode": "rent",
@@ -194,17 +214,37 @@
       "class_rounded": 4
     },
     {
-      "area": "NJ200",
+      "area": "MD130",
+      "profile": "e5_dep",
+      "mode": "buy",
+      "metric": "surplus_usd",
+      "unrounded": -250.33,
+      "rounded": -250,
+      "class_unrounded": 1,
+      "class_rounded": 2
+    },
+    {
+      "area": "OR246",
       "profile": "o3_dep",
       "mode": "rent",
       "metric": "surplus_usd",
-      "unrounded": 49.89,
-      "rounded": 50,
-      "class_unrounded": 3,
-      "class_rounded": 4
+      "unrounded": -50.15,
+      "rounded": -50,
+      "class_unrounded": 2,
+      "class_rounded": 3
+    },
+    {
+      "area": "TX270",
+      "profile": "o3_dep",
+      "mode": "rent",
+      "metric": "surplus_usd",
+      "unrounded": -500.41,
+      "rounded": -500,
+      "class_unrounded": 0,
+      "class_rounded": 1
     }
   ],
-  "values_near_a_break": 15,
+  "values_near_a_break": 19,
   "codes_without_polygon": [],
   "traces": [
     {
@@ -230,10 +270,10 @@
           "status": "ok",
           "bah": 1626.0,
           "cost_share": 126.0,
-          "cost": 1924.75,
-          "adequacy_recomputed": 0.9102480841667749,
-          "adequacy_b12_b14": 0.9102,
-          "adequacy_b20": 0.9102,
+          "cost": 1693.56,
+          "adequacy_recomputed": 1.0345071919506839,
+          "adequacy_b12_b14": 1.0345,
+          "adequacy_b20": 1.0345,
           "agree": true,
           "b27_cluster": "NS"
         },
@@ -243,10 +283,10 @@
           "status": "ok",
           "bah": 2064.0,
           "cost_share": 151.0,
-          "cost": 2160.19,
-          "adequacy_recomputed": 1.0253727681361362,
-          "adequacy_b12_b14": 1.0254,
-          "adequacy_b20": 1.0254,
+          "cost": 1986.11,
+          "adequacy_recomputed": 1.1152453791582542,
+          "adequacy_b12_b14": 1.1152,
+          "adequacy_b20": 1.1152,
           "agree": true,
           "b27_cluster": "NS"
         },
@@ -256,10 +296,10 @@
           "status": "ok",
           "bah": 2064.0,
           "cost_share": 151.0,
-          "cost": 2956.36,
-          "adequacy_recomputed": 0.7492321638772003,
-          "adequacy_b12_b14": 0.7492,
-          "adequacy_b20": 0.7492,
+          "cost": 2299.8,
+          "adequacy_recomputed": 0.9631272284546482,
+          "adequacy_b12_b14": 0.9631,
+          "adequacy_b20": 0.9631,
           "agree": true,
           "b27_cluster": "NS"
         }
@@ -290,10 +330,10 @@
           "status": "ok",
           "bah": 1806.0,
           "cost_share": 126.0,
-          "cost": 1996.39,
-          "adequacy_recomputed": 0.9677467829432125,
-          "adequacy_b12_b14": 0.9677,
-          "adequacy_b20": 0.9677,
+          "cost": 1691.58,
+          "adequacy_recomputed": 1.142127478452098,
+          "adequacy_b12_b14": 1.1421,
+          "adequacy_b20": 1.1421,
           "agree": true,
           "b27_cluster": "NS"
         },
@@ -303,10 +343,10 @@
           "status": "ok",
           "bah": 2175.0,
           "cost_share": 151.0,
-          "cost": 3246.45,
-          "adequacy_recomputed": 0.716474918757412,
-          "adequacy_b12_b14": 0.7165,
-          "adequacy_b20": 0.7165,
+          "cost": 2796.12,
+          "adequacy_recomputed": 0.8318670157217859,
+          "adequacy_b12_b14": 0.8319,
+          "adequacy_b20": 0.8319,
           "agree": true,
           "b27_cluster": "NS"
         },
@@ -316,10 +356,10 @@
           "status": "ok",
           "bah": 2175.0,
           "cost_share": 151.0,
-          "cost": 3426.91,
-          "adequacy_recomputed": 0.6787455754601084,
-          "adequacy_b12_b14": 0.6787,
-          "adequacy_b20": 0.6787,
+          "cost": 2431.5,
+          "adequacy_recomputed": 0.9566111453835081,
+          "adequacy_b12_b14": 0.9566,
+          "adequacy_b20": 0.9566,
           "agree": true,
           "b27_cluster": "NS"
         }
@@ -350,10 +390,10 @@
           "status": "piti_only_no_zori",
           "bah": 4344.0,
           "cost_share": 126.0,
-          "cost": 16520.83,
-          "adequacy_recomputed": 0.2705675199127404,
-          "adequacy_b12_b14": 0.2706,
-          "adequacy_b20": 0.2706,
+          "cost": 13548.72,
+          "adequacy_recomputed": 0.32992046481143605,
+          "adequacy_b12_b14": 0.3299,
+          "adequacy_b20": 0.3299,
           "agree": true,
           "b27_cluster": null
         },
@@ -376,10 +416,10 @@
           "status": "piti_only_no_zori",
           "bah": 5442.0,
           "cost_share": 151.0,
-          "cost": 31473.49,
-          "adequacy_recomputed": 0.17770510991949096,
-          "adequacy_b12_b14": 0.1777,
-          "adequacy_b20": 0.1777,
+          "cost": 23443.6,
+          "adequacy_recomputed": 0.23857257417802727,
+          "adequacy_b12_b14": 0.2386,
+          "adequacy_b20": 0.2386,
           "agree": true,
           "b27_cluster": null
         }
@@ -399,9 +439,9 @@
         "mode": "rent",
         "bah": 1503.0,
         "cost_share": 115,
-        "cost": 2194.22,
-        "adequacy_recomputed": 0.7373918750170905,
-        "adequacy_b31_formula": 0.7374,
+        "cost": 2014.08,
+        "adequacy_recomputed": 0.8033444550365427,
+        "adequacy_b31_formula": 0.8033,
         "agree": true
       },
       {
@@ -412,9 +452,9 @@
         "mode": "buy",
         "bah": 1503.0,
         "cost_share": 115,
-        "cost": 3650.93,
-        "adequacy_recomputed": 0.44317475273423484,
-        "adequacy_b31_formula": 0.4432,
+        "cost": 2806.09,
+        "adequacy_recomputed": 0.5766030312641434,
+        "adequacy_b31_formula": 0.5766,
         "agree": true
       },
       {
@@ -450,6 +490,6 @@
     "qa_2026_manifest.json"
   ],
   "output_sha256": {
-    "qa_2026.md": "c793a1383725f10f79604451010f4d26b95c173796d7985f736cca3fb764a29c"
+    "qa_2026.md": "c617362fb0ee6e49acc3969925bde594896e20e5785229315e9038253d2dec84"
   }
 }

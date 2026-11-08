@@ -1,6 +1,6 @@
 {
   "node": "B29",
-  "generated_at": "2026-11-08T03:35:55+00:00",
+  "generated_at": "2026-11-08T04:23:45+00:00",
   "inputs": {
     "B8": "mha_zori.csv",
     "B10": "mha_safmr.csv",
@@ -19,15 +19,24 @@
     "A15.all": "1397d89685ad547c94771e6527fb58c5ff057e1c6c3c57b4637ff98de1f45c5a",
     "A4": "50dce14cddd4e3cf27da5b84708fa79dd85e982bd8831c4c12e04f6b7c967719",
     "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
-    "A14": "e8261c26f3ebb2af6125a41f932a2cfe6b8f1ee4be01ff169f40574f11ddbae4"
+    "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
   },
   "window_months": "2026-01:2026-07",
+  "decision": "D34 (7 Nov 2026): the Zillow type ratio is size-matched before the bedroom ratio is applied",
   "method": {
-    "rent": "B8 zori_utilities_adjusted x building_factor x bedroom_ratio",
-    "utilities": "B8 utilities_usd x building_factor x bedroom_ratio",
+    "rent": "B8 zori_utilities_adjusted x applied_factor x bedroom_ratio",
+    "utilities": "B8 utilities_usd x applied_factor x bedroom_ratio",
     "building_factor": "townhouse 1 (B8 stands for a 2 BR townhouse); apartment = metro MFR / all-homes ZORI, single-family = metro SFR / all-homes ZORI, median over the MHA's ZIPs; national ratio where no ZIP lies in a metro with the series",
+    "size_matched_factor": "building_factor x SAFMR 2 BR / SAFMR k BR, k = the series' typical bedrooms (A14 rent_type_series: apartment 2, single-family 3)",
+    "applied_factor": "size_matched_factor; single-family not below 1, the townhouse of the same bedrooms",
     "bedroom_ratio": "B10 SAFMR n BR / 2 BR within the MHA"
   },
+  "series_bedrooms": {
+    "townhouse": 2,
+    "apartment": 2,
+    "single_family": 3
+  },
+  "single_family_not_below_townhouse": true,
   "crosswalk": {
     "crosswalk_file": "zip_mha.csv",
     "real_mha_zips": 20280,
@@ -93,14 +102,28 @@
       "min": 0.6754,
       "max": 0.9897,
       "national": 0.9131,
-      "mhas_national_fallback": 15
+      "mhas_national_fallback": 15,
+      "series_bedrooms": 2,
+      "size_matched": {
+        "median": 0.9114,
+        "min": 0.6754,
+        "max": 0.9897
+      },
+      "mhas_floored_to_townhouse": 0
     },
     "single_family": {
       "median": 1.2356,
       "min": 0.9932,
       "max": 1.7923,
       "national": 1.1741,
-      "mhas_national_fallback": 12
+      "mhas_national_fallback": 12,
+      "series_bedrooms": 3,
+      "size_matched": {
+        "median": 0.9441,
+        "min": 0.7537,
+        "max": 1.2886
+      },
+      "mhas_floored_to_townhouse": 192
     }
   },
   "coverage": {
@@ -164,9 +187,9 @@
         "national": 12
       },
       "rent_monthly": {
-        "min": 1627.52,
-        "median": 3243.72,
-        "max": 6958.75
+        "min": 1461.84,
+        "median": 2636.49,
+        "max": 5508.78
       }
     },
     "sfh4": {
@@ -177,9 +200,9 @@
         "national": 12
       },
       "rent_monthly": {
-        "min": 1885.16,
-        "median": 3794.77,
-        "max": 7578.99
+        "min": 1693.25,
+        "median": 3115.84,
+        "max": 5999.78
       }
     }
   },
