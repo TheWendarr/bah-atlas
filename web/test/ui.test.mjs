@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { scaleFor } from "../src/classify.js";
 import { noticeText } from "../src/notice.js";
+import { gridView } from "../src/grid.js";
 import { computeView } from "../src/render.js";
 import { createStore, initialState, validate } from "../src/state.js";
 
@@ -21,6 +22,7 @@ test("the initial state is the B21 default view", () => {
     mode: "rent",
     metric: "adequacy_ratio",
     selected: null,
+    compare: [],
   });
 });
 
@@ -98,4 +100,42 @@ test("a selected area carries one view per mode, equal to the payload for E-5 wi
       assert.equal(selected[mode][field], expected[field], `${mode} ${field}`);
     }
   }
+});
+
+test("buy-mode PITI equals B20's own_housing_monthly for both research profiles in every area (C11)", () => {
+  let compared = 0;
+  for (const profile of ui.profiles) {
+    for (const [code, area] of Object.entries(files.payload.areas)) {
+      const expected = area[profile.id]?.buy;
+      if (!expected) continue;
+      const view = gridView(files.grid, code, profile.pay_grade, "with", "standard", "buy");
+      assert.equal(view.own_housing_monthly, expected.own_housing_monthly, `${profile.id} ${code}`);
+      compared += 1;
+    }
+  }
+  // 339 areas for each of the two profiles; O-3's standard is a blend, so its PITI is too.
+  assert.equal(compared, 2 * 339);
+});
+
+test("rent views carry no PITI", () => {
+  assert.equal(gridView(files.grid, "CO046", "E5", "with", "standard", "rent").own_housing_monthly, null);
+});
+
+test("pinned areas keep known codes, once each, at most two (C12)", () => {
+  const { state, corrected } = validate(ui, { ...initialState(ui), compare: ["CO046", "ZZ000", "CO046", "NC182", "CA038"] });
+  assert.deepEqual(state.compare, ["CO046", "NC182"]);
+  assert.ok(corrected.includes("compare"));
+  assert.deepEqual(validate(ui, { ...initialState(ui), compare: "CO046" }).state.compare, []);
+  assert.deepEqual(validate(ui, { ...initialState(ui), compare: ["NC182", "CO046"] }).corrected, []);
+});
+
+test("each pinned area is computed in the current mode and follows the controls (C12)", () => {
+  const state = { ...initialState(ui), rank: "O3", mode: "buy", compare: ["CO046", "AK400"] };
+  const { compared } = computeView(files, state);
+  assert.deepEqual(compared.map(({ code }) => code), ["CO046", "AK400"]);
+  for (const { code, view } of compared) {
+    assert.deepEqual(view, gridView(files.grid, code, "O3", "with", "standard", "buy"));
+  }
+  // AK400 has a home value but no rent index: PITI alone, with its own status.
+  assert.equal(compared[1].view.status, "piti_only_no_zori");
 });

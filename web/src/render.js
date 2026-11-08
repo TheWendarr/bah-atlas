@@ -26,5 +26,8 @@ export function computeView(files, state) {
       ? null
       : Object.fromEntries(ui.modes.map((mode) => [mode.id, viewOf(grid, state.selected, state, mode.id)]));
 
-  return { standardView, scale, scales, classes, selected, notice: noticeText(ui, state, standardView) };
+  // C12: each pinned area in the current mode, so the comparison follows the controls.
+  const compared = state.compare.map((code) => ({ code, view: viewOf(grid, code, state, state.mode) }));
+
+  return { standardView, scale, scales, classes, selected, compared, notice: noticeText(ui, state, standardView) };
 }

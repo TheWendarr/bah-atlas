@@ -32,9 +32,10 @@ requests PMTiles depends on. `make web-dev` serves ranges correctly.
 | `src/controls.js` | Rank, dependents, home type, rent/buy and metric; a summary chip on phones |
 | `src/notice.js` | The authorized-standard notice shown on every view |
 | `src/legend.js` | The legend for the active scale, with a compact ramp on phones |
-| `src/panel.js` | The detail panel: BAH against rent and buy for the clicked area |
+| `src/panel.js` | The detail panel: BAH against rent and buy for the clicked area, with the buy-mode PITI and utilities split |
+| `src/compare.js` | The A/B comparison of up to two pinned areas, in the current selection and mode |
 | `src/format.js` | Dollar and percent display |
-| `src/map.js` | MapLibre setup, area layers, selection outline and the value join |
+| `src/map.js` | MapLibre setup, area layers, selection and pinned outlines, and the value join |
 
 The two tile archives live on Cloudflare R2, and the site and its JSON on Cloudflare
 Pages. A push to `main` that touches the site runs `.github/workflows/web.yml`: unit

@@ -4,19 +4,22 @@ import "./app.css";
 import { checkContract, loadFiles } from "./contract.js";
 import { createControls } from "./controls.js";
 import { renderLegend } from "./legend.js";
+import { renderCompare } from "./compare.js";
 import {
   addAreaLayers,
+  addPinnedLayer,
   addSelectionLayer,
   applyClasses,
   createMap,
   jumpTo,
   onAreaClick,
   reveal,
+  setPinned,
   setSelected,
 } from "./map.js";
-import { renderPanel } from "./panel.js";
+import { renderDetail } from "./panel.js";
 import { computeView } from "./render.js";
-import { createStore } from "./state.js";
+import { MAX_COMPARE, createStore } from "./state.js";
 
 const SITE = __SITE__;
 
@@ -51,6 +54,7 @@ async function start() {
   // Both colour scales share one set of colours (D27), so the paint never changes.
   addAreaLayers(map, { colors: ui.metrics[ui.default_metric].colors, noDataColor: ui.no_data_color });
   addSelectionLayer(map);
+  addPinnedLayer(map);
 
   const controlsRoot = document.getElementById("controls");
   const noticeEl = document.getElementById("notice");
@@ -68,11 +72,31 @@ async function start() {
     const view = computeView(files, state);
     classes = applyClasses(map, view.classes, classes);
     if (!previous || previous.selected !== state.selected) setSelected(map, state.selected, previous?.selected ?? null);
+    if (!previous || previous.compare !== state.compare) setPinned(map, state.compare, previous?.compare ?? []);
     updateControls(state, view.standardView);
     noticeEl.textContent = view.notice;
     noticeEl.classList.toggle("off-standard", !view.standardView);
     renderLegend(legendEl, ui, view.scale);
-    panelEl.hidden = !renderPanel(panelEl, files, state, view.selected, view.scales);
+    // One panel holds the selected area's detail (C11) above the comparison (C12), so an
+    // area just clicked is always in view.
+    const sections = [
+      renderDetail(files, state, view.selected, view.scales),
+      renderCompare(files, state, view.compared, view.scales),
+    ].filter(Boolean);
+    // Keep the reader's place, and keyboard focus on the same button, when the panel is
+    // rebuilt.
+    const scroll = panelEl.scrollTop;
+    const focused = panelEl.contains(document.activeElement) ? document.activeElement : null;
+    panelEl.replaceChildren(...sections);
+    panelEl.scrollTop = scroll;
+    if (focused?.matches("button")) {
+      const same = [...panelEl.querySelectorAll("button")].find(
+        (button) => button.className === focused.className && button.dataset.code === focused.dataset.code,
+      );
+      (same ?? panelEl.querySelector("button"))?.focus();
+    }
+    panelEl.hidden = sections.length === 0;
+    panelEl.setAttribute("aria-label", sections.map((section) => section.querySelector("h2").textContent).join(", "));
     document.body.classList.toggle("panel-open", !panelEl.hidden);
     shown = view;
   }
@@ -85,7 +109,18 @@ async function start() {
     if (code !== null) reveal(map, point, panelEl);
   });
   panelEl.addEventListener("click", (event) => {
-    if (event.target.closest("[data-action=close]")) store.set({ selected: null });
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    const { action, code } = button.dataset;
+    const { compare } = store.get();
+    if (action === "close") store.set({ selected: null });
+    else if (action === "pin") {
+      // Pinning the second area completes the comparison, which then has the panel to itself.
+      const next = [...compare, code];
+      store.set(next.length === MAX_COMPARE ? { compare: next, selected: null } : { compare: next });
+    }
+    else if (action === "unpin") store.set({ compare: compare.filter((pinned) => pinned !== code) });
+    else if (action === "clear-compare") store.set({ compare: [] });
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && store.get().selected !== null) store.set({ selected: null });

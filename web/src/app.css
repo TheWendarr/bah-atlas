@@ -255,6 +255,71 @@ body {
 
 .panel-caveat { margin-top: 8px; }
 
+/* C11: the buy-mode parts of the local cost. */
+.panel-table tr.part th[scope="row"] { padding-left: 14px; font-size: 13px; }
+
+.panel-table tr.part td { font-size: 13px; color: var(--ink-muted); }
+
+.panel-pin,
+.compare-unpin,
+.compare-clear {
+  min-height: 36px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid #b9c0c3;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.panel-pin { margin-top: 12px; }
+
+.panel-pin[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+
+.panel-pin:disabled { color: var(--ink-muted); cursor: not-allowed; }
+
+.panel-pin:hover:not(:disabled),
+.compare-unpin:hover,
+.compare-clear:hover { background: #f1f3f4; }
+
+.panel-pin[aria-pressed="true"]:hover { background: var(--ink-muted); }
+
+.panel-pin:focus-visible,
+.compare-unpin:focus-visible,
+.compare-clear:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* C12: the comparison sits below the area detail in the same panel. */
+.panel-detail + .panel-compare {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 2px solid var(--rule);
+}
+
+.compare-one { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
+
+.compare-one p { margin: 6px 0; }
+
+.compare-table thead th[data-code] { white-space: normal; vertical-align: bottom; }
+
+.compare-name { display: block; }
+
+.compare-table thead .compare-unpin {
+  display: block;
+  min-height: 28px;
+  margin: 4px 0 0 auto;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.compare-table .compare-difference { font-weight: 400; }
+
+.compare-note { margin: 6px 0 0; font-size: 12px; color: var(--ink-muted); }
+
+.compare-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
 /* D32 layout C on phones: a summary chip opens the controls, the legend becomes a ramp,
    and the panel becomes a bottom sheet. */
 @media (max-width: 640px) {

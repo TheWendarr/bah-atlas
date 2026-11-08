@@ -106,6 +106,33 @@ export function addSelectionLayer(map) {
   );
 }
 
+// C12: pinned areas keep a dashed outline while they are compared, drawn below the
+// selection outline so a pinned area that is also selected reads as selected.
+export function addPinnedLayer(map) {
+  map.addLayer(
+    {
+      id: "area-pinned",
+      type: "line",
+      source: SOURCE,
+      "source-layer": SOURCE,
+      paint: {
+        "line-color": "#1b2327",
+        "line-width": 2,
+        "line-dasharray": [2, 1.5],
+        "line-opacity": ["case", ["boolean", ["feature-state", "pinned"], false], 1, 0],
+      },
+    },
+    "area-selected",
+  );
+}
+
+export function setPinned(map, codes, previous = []) {
+  for (const code of previous) {
+    if (!codes.includes(code)) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { pinned: false });
+  }
+  for (const code of codes) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { pinned: true });
+}
+
 export function setSelected(map, code, previous) {
   if (previous !== null && previous !== code) {
     map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: previous }, { selected: false });

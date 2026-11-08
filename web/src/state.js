@@ -9,8 +9,12 @@ export function initialState(ui) {
     mode: ui.modes[0].id,
     metric: ui.default_metric,
     selected: null,
+    compare: [],
   };
 }
+
+// C12: up to two pinned areas.
+export const MAX_COMPARE = 2;
 
 const ids = (list) => list.map((item) => item.id);
 
@@ -35,6 +39,11 @@ export function validate(ui, state) {
     next.selected = null;
     corrected.push("selected");
   }
+  // Pinned areas: known codes, each once, at most two, in the order they were pinned.
+  const pinned = Array.isArray(next.compare) ? next.compare : [];
+  const compare = [...new Set(pinned.filter((code) => code in ui.areas))].slice(0, MAX_COMPARE);
+  if (!Array.isArray(next.compare) || compare.length !== next.compare.length) corrected.push("compare");
+  next.compare = compare;
   return { state: next, corrected };
 }
 

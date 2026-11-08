@@ -6,10 +6,16 @@ import { readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { scaleFor } from "../../src/classify.js";
+import { formatMetric, signedUsd, usd } from "../../src/format.js";
+import { gridView } from "../../src/grid.js";
 import { serve } from "../serve.mjs";
 
 const DIST = fileURLToPath(new URL("../../dist", import.meta.url));
-const PAYLOAD = JSON.parse(readFileSync(new URL("../../../delivery/2026/payload_2026.json", import.meta.url), "utf8"));
+const delivered = (name) => JSON.parse(readFileSync(new URL(`../../../delivery/2026/${name}`, import.meta.url), "utf8"));
+const PAYLOAD = delivered("payload_2026.json");
+const GRID = delivered("grid_2026.json");
+const UI = delivered("ui_metadata_2026.json");
 // D33: Bot Fight Mode adds an inline script to the live page, and the site's policy blocks
 // it. Only a live run forgives that one error; make site-check has already shown that the
 // script is the only change to the page, and a local run allows no inline script at all.
@@ -209,5 +215,169 @@ test("an unknown major version shows the error screen and no map", async () => {
   const { page } = await open({}, (grid) => ({ ...grid, schema_version: "2.0.0" }));
   assert.equal(await state(page), "error");
   assert.equal(await page.isVisible("#map"), false);
+  await page.close();
+});
+
+// The text of each data cell in one table row, by row heading.
+const rowCells = (page, scope, heading) =>
+  page.evaluate(
+    ([scope, heading]) => {
+      const row = [...document.querySelectorAll(`${scope} tbody tr`)].find((tr) => tr.querySelector("th").textContent === heading);
+      return row ? [...row.querySelectorAll("td")].map((td) => td.textContent) : null;
+    },
+    [scope, heading],
+  );
+
+test("buy mode splits the local cost into PITI and utilities that add up (C11)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "CO046" }));
+  const buy = gridView(GRID, "CO046", "E5", "with", "standard", "buy");
+  assert.deepEqual(await rowCells(page, ".panel-detail", "Local monthly cost"), [
+    usd(gridView(GRID, "CO046", "E5", "with", "standard", "rent").cost_monthly),
+    usd(buy.cost_monthly),
+  ]);
+  assert.deepEqual(await rowCells(page, ".panel-detail", "Mortgage, tax and insurance"), ["", usd(buy.own_housing_monthly)]);
+  assert.deepEqual(await rowCells(page, ".panel-detail", "Utilities"), ["", usd(buy.cost_monthly - buy.own_housing_monthly)]);
+  await page.close();
+});
+
+test("an area with no rent index shows both statuses and a PITI-only cost (C11, must 3)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "AK400" }));
+  // Rent has no benchmark; buy compares BAH with PITI alone.
+  assert.equal(await page.locator(".panel-detail [data-status=no_zori]").count(), 1);
+  assert.equal(await page.locator(".panel-detail [data-status=piti_only_no_zori]").count(), 1);
+  assert.match(await page.textContent(".panel-detail [data-status=no_zori]"), new RegExp(UI.statuses.no_zori.label));
+  const buy = gridView(GRID, "AK400", "E5", "with", "standard", "buy");
+  assert.equal(buy.status, "piti_only_no_zori");
+  assert.deepEqual(await rowCells(page, ".panel-detail", "Local monthly cost"), ["—", usd(buy.cost_monthly)]);
+  assert.deepEqual(await rowCells(page, ".panel-detail", "Utilities"), ["", "—"]);
+  const scale = scaleFor(UI.metrics.adequacy_ratio, true);
+  assert.deepEqual(await rowCells(page, ".panel-detail", scale.shortLabel), ["—", formatMetric(buy.adequacy_ratio, scale.format)]);
+  await page.close();
+});
+
+test("the territory bucket shows no BAH rate and its status text (C11, must 4)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "XX499" }));
+  assert.equal(await page.locator(".panel-detail [data-status=no_rate]").count(), 1);
+  assert.match(await page.textContent(".panel-detail [data-status=no_rate]"), new RegExp(UI.statuses.no_rate.label));
+  assert.equal(await page.textContent(".panel-summary dd"), "—");
+  assert.equal(await page.locator(".panel-detail tr.part").count(), 0);
+  await page.close();
+});
+
+test("the legend matches B21 for every metric, on both scales (C10)", async () => {
+  const { page } = await open();
+  const views = [
+    { rank: "E5", homeType: "standard", standard: true },
+    { rank: "E1", homeType: "sfh4", standard: false },
+  ];
+  for (const metric of UI.grid.metrics) {
+    for (const { rank, homeType, standard } of views) {
+      const mode = UI.metrics[metric].modes[0];
+      const label = `${metric} ${rank} ${homeType}`;
+      await page.evaluate((patch) => window.bahAtlas.set(patch), { rank, homeType, metric, mode });
+      const scale = scaleFor(UI.metrics[metric], standard);
+      const shown = await page.evaluate(() => ({
+        title: document.querySelector(".legend-title").textContent,
+        short: document.querySelector(".legend-title-short").textContent,
+        scaleNote: document.querySelector(".legend-scale")?.textContent ?? null,
+        items: [...document.querySelectorAll(".legend-list li")].map((li) => [li.textContent, li.querySelector(".legend-swatch").style.backgroundColor]),
+        ends: [...document.querySelectorAll(".legend-ends span")].map((span) => span.textContent),
+      }));
+      const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+      assert.equal(shown.title, scale.label, label);
+      assert.equal(shown.short, scale.shortLabel, label);
+      assert.deepEqual(
+        shown.items,
+        [...scale.classLabels.map((text, i) => [text, rgb(scale.colors[i])]), [UI.no_data_label, rgb(UI.no_data_color)]],
+        label,
+      );
+      assert.deepEqual(shown.ends, scale.rampLabels, label);
+      // The legend names the active scale (D27).
+      const off = UI.grid.off_standard_scale;
+      assert.equal(shown.scaleNote, scale.offStandard ? `${off.title}: ${off.subtitle}` : null, label);
+    }
+  }
+  await page.close();
+});
+
+test("two pinned areas compare side by side, equal to gridView, and follow the controls (C12)", async () => {
+  const { page } = await open();
+  const pin = async (code) => {
+    await page.evaluate((code) => window.bahAtlas.set({ selected: code }), code);
+    await page.getByRole("button", { name: "Pin to compare" }).click();
+  };
+  await pin("CO046");
+  assert.match(await page.textContent(".panel-compare"), /COLORADO SPRINGS, CO is pinned/);
+  await pin("AK400");
+  assert.deepEqual((await page.evaluate(() => window.bahAtlas.state())).compare, ["CO046", "AK400"]);
+
+  const fields = ["bah_monthly", "cost_monthly", ...UI.grid.metrics];
+  const check = async (mode) => {
+    const scales = Object.fromEntries(UI.grid.metrics.map((id) => [id, scaleFor(UI.metrics[id], true)]));
+    const shown = await page.evaluate(() =>
+      Object.fromEntries([...document.querySelectorAll(".compare-table td[data-field]")].map((td) => [`${td.dataset.code} ${td.dataset.field}`, td.textContent])),
+    );
+    const views = Object.fromEntries(["CO046", "AK400"].map((code) => [code, gridView(GRID, code, "E5", "with", "standard", mode)]));
+    for (const code of ["CO046", "AK400"]) {
+      for (const field of fields) {
+        const value = views[code][field];
+        const expected = field in scales ? formatMetric(value, scales[field].format) : usd(value);
+        assert.equal(shown[`${code} ${field}`], expected, `${mode} ${code} ${field}`);
+      }
+    }
+    for (const field of ["design_gap_usd", "surplus_usd"]) {
+      const [a, b] = [views.CO046[field], views.AK400[field]];
+      assert.equal(shown[`difference ${field}`], a === null || b === null ? "—" : signedUsd(b - a), `${mode} difference ${field}`);
+    }
+    return views;
+  };
+  // Rent: AK400 has no rent index, so its metrics are null and the difference is "—".
+  const rent = await check("rent");
+  assert.equal(rent.AK400.adequacy_ratio, null);
+  assert.equal(await page.locator("[data-compare-status=no_zori]").count(), 1);
+  // Buy: both have values, and the comparison follows the mode.
+  await page.getByRole("radio", { name: "Buy (VA loan)" }).check({ force: true });
+  const buy = await check("buy");
+  assert.notEqual(buy.AK400.adequacy_ratio, null);
+  assert.equal(await page.locator("[data-compare-status=piti_only_no_zori]").count(), 1);
+
+  const pinned = await page.evaluate(() => ["CO046", "AK400", "NC182"].map((code) => window.bahAtlas.featureState(code).pinned ?? false));
+  assert.deepEqual(pinned, [true, true, false]);
+  // A third area cannot be pinned while two are.
+  await page.evaluate(() => window.bahAtlas.set({ selected: "NC182" }));
+  assert.equal(await page.getByRole("button", { name: "Pin to compare" }).isDisabled(), true);
+
+  await page.getByRole("button", { name: "Clear comparison" }).click();
+  assert.equal(await page.locator(".panel-compare").count(), 0);
+  assert.equal(await page.evaluate(() => window.bahAtlas.featureState("CO046").pinned), false);
+  await page.close();
+});
+
+test("the comparison fits a phone, and closing the area keeps it open (C12, D32)", async () => {
+  const { page } = await open({ viewport: { width: 360, height: 640 } });
+  await page.evaluate(() => window.bahAtlas.set({ compare: ["NC182", "CA038"], selected: "CO046" }));
+  assert.equal(await page.isVisible(".compare-table"), true);
+  const overflow = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    panel: document.getElementById("panel").scrollWidth - document.getElementById("panel").clientWidth,
+  }));
+  assert.deepEqual(overflow, { page: 0, panel: 0 });
+  await page.keyboard.press("Escape");
+  assert.equal(await page.isVisible(".panel-detail"), false);
+  assert.equal(await page.isVisible(".compare-table"), true);
+  await page.close();
+});
+
+test("pinning keeps keyboard focus on the pin button (C12, X10)", async () => {
+  const { page } = await open();
+  await page.evaluate(() => window.bahAtlas.set({ selected: "CO046" }));
+  await page.getByRole("button", { name: "Pin to compare" }).focus();
+  await page.keyboard.press("Enter");
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), "Unpin");
+  await page.keyboard.press("Enter");
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), "Pin to compare");
   await page.close();
 });

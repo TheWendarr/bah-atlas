@@ -8,6 +8,15 @@ export const STANDARD = "standard";
 // Adding 0 turns the -0 that a small negative value rounds to into 0.
 const round = (value, places) => Number(value.toFixed(places)) + 0;
 
+// Step 4: the cost of the selection from the per-type values it uses. A blended standard
+// is rounded to cents; a single home type's value is already in cents.
+function blend(values, homeType, std) {
+  if (homeType !== STANDARD) return values[0];
+  if (values.includes(null)) return null;
+  if (std.upper === null) return round(values[0] * (1 + std.share), 2);
+  return round(values[0] + std.share * (values[1] - values[0]), 2);
+}
+
 export function gridView(grid, code, rank, dependents, homeType, mode) {
   const area = grid.areas[code];
   const i = grid.ranks.indexOf(rank);
@@ -16,16 +25,14 @@ export function gridView(grid, code, rank, dependents, homeType, mode) {
 
   const parts = homeType === STANDARD ? [std.lower, ...(std.upper ? [std.upper] : [])] : [homeType];
   const indexes = parts.map((type) => grid.home_types.indexOf(type));
-  const costs = indexes.map((j) => block.cost[j]);
 
   const status = indexes.map((j) => block.status[j]).find((s) => s !== "ok") ?? "ok";
   const caveats = [...new Set(indexes.flatMap((j) => block.caveats[j]))];
 
-  let cost;
-  if (homeType !== STANDARD) cost = costs[0];
-  else if (costs.includes(null)) cost = null;
-  else if (std.upper === null) cost = round(costs[0] * (1 + std.share), 2);
-  else cost = round(costs[0] + std.share * (costs[1] - costs[0]), 2);
+  const cost = blend(indexes.map((j) => block.cost[j]), homeType, std);
+  // Buy mode only: PITI alone, blended by the same rule, as the pipeline does for B20's
+  // own_housing_monthly. It is a part of the cost, not a metric.
+  const housing = mode === "buy" ? blend(indexes.map((j) => block.own_housing[j]), homeType, std) : null;
 
   const noRate = status === "no_rate";
   const bah = noRate ? null : area.bah[dependents][i];
@@ -38,6 +45,7 @@ export function gridView(grid, code, rank, dependents, homeType, mode) {
     bah_monthly: bah,
     cost_share_monthly: share,
     cost_monthly: cost === null ? null : round(cost, 0),
+    own_housing_monthly: housing === null ? null : round(housing, 0),
     standard_view: homeType === STANDARD || (anchor && homeType === std.lower),
   };
 
