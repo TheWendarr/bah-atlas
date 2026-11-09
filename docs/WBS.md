@@ -438,6 +438,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 The [progress index](progress/README.md) shows each milestone's status beside its latest note.
 
+- [07 November 2026](progress/2026-11-07.md) — M7
 - [03 November 2026](progress/2026-11-03.md) — M6
 - [24 October 2026](progress/2026-10-24.md) — M5
 - [17 October 2026](progress/2026-10-17.md) — M4
