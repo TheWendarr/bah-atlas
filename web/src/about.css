@@ -1,0 +1,133 @@
+/* C21: the About page. A reading page: one column, normal scrolling. */
+:root {
+  --ink: #1b2327;
+  --ink-muted: #4d575c;
+  --rule: #d9dddf;
+  --ground: #ffffff;
+  --tint: #f5f6f7;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.site-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.site-title { font-size: 18px; font-weight: 600; color: var(--ink); text-decoration: none; }
+
+.back { font-size: 14px; color: var(--ink); }
+
+.about { max-width: 760px; margin: 0 auto; padding: 8px 20px 40px; }
+
+.about h1 { margin: 24px 0 8px; font-size: 28px; line-height: 1.2; }
+
+.about h2 { margin: 36px 0 8px; font-size: 21px; line-height: 1.3; }
+
+.about h3 { margin: 24px 0 8px; font-size: 16px; }
+
+.about p { margin: 0 0 12px; }
+
+.about a { color: var(--ink); }
+
+.about code { font-size: 0.92em; padding: 0 3px; background: var(--tint); border-radius: 3px; }
+
+.about-error { padding: 10px 12px; background: #fdecea; border-left: 4px solid #b2182b; }
+
+.about-scope { color: var(--ink-muted); }
+
+.table-wrap { margin: 8px 0 12px; overflow-x: auto; }
+
+.about-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.about-table th,
+.about-table td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+
+.about-table.facts { width: auto; min-width: min(100%, 420px); }
+
+.about-table.facts td { padding-left: 24px; }
+
+.about-table thead th { font-size: 13px; color: var(--ink-muted); font-weight: 600; }
+
+.about-table tbody th { font-weight: 500; }
+
+.about-table td.num { white-space: nowrap; }
+
+.about-alt { font-size: 13px; color: var(--ink-muted); }
+
+.about-alt.differs { color: var(--ink); font-weight: 600; }
+
+.about-notes { margin: 8px 0 12px; padding-left: 20px; font-size: 14px; }
+
+.about-notes li { margin-bottom: 8px; }
+
+.about-caveat { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+
+.about-caveat h3 { margin: 0 0 4px; font-size: 15px; }
+
+.about-caveat p { margin: 0; }
+
+.about-links { padding-left: 20px; }
+
+.about-links li { margin-bottom: 8px; }
+
+.about-build { font-size: 13px; color: var(--ink-muted); }
+
+.site-footer {
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule);
+}
+
+.site-footer p { max-width: 760px; margin: 0 auto; }
+
+a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .about { padding: 4px 14px 32px; }
+
+  .about h1 { font-size: 24px; }
+
+  .about-table { font-size: 13px; }
+
+  .about-table th,
+  .about-table td { padding: 5px 6px; }
+
+  /* The predictor table stacks: name, coefficient and p-value on one line, the reading
+     below at full width. */
+  .about-table.predictors thead { display: none; }
+
+  .about-table.predictors tr {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .about-table.predictors th,
+  .about-table.predictors td { padding: 0; border-bottom: 0; }
+
+  .about-table.predictors td.coef::before { content: "b = "; color: var(--ink-muted); }
+
+  .about-table.predictors td.pval::before { content: "p = "; color: var(--ink-muted); }
+
+  .about-table.predictors td.pval.below::before { content: "p "; }
+
+  .about-table.predictors td.reading { grid-column: 1 / -1; margin-top: 4px; }
+}

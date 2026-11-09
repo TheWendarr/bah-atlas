@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About BAH Atlas</title>
+<meta name="description" content="How BAH Atlas measures the 2026 Basic Allowance for Housing against local housing cost, what the research found, and the limits of the results.">
+<link rel="stylesheet" href="{{CSS}}">
+</head>
+<body>
+<!--
+  C21: the About and data-caveats page.
+
+  Two kinds of content live here.
+
+  1. Prose slots: <div class="prose" data-prose="..."> elements. The author writes these.
+     Each holds only an HTML comment saying what it should cover until then, and an
+     empty slot is hidden, so the page can deploy before the prose is written.
+     Write ordinary HTML paragraphs inside the slot, below the comment.
+
+  2. Data: elements with data-render="..." are filled by src/about.js from B21
+     (ui_metadata), so the results and caveats always match the delivered build.
+
+  Numbers quoted by hand from evidence files carry data-evidence="<file>#<key>".
+  test/e2e/about.test.mjs checks each one against that file, so a new delivery that
+  changes a number fails the tests until this page is updated.
+-->
+<header class="site-header">
+  <a class="site-title" href="./">BAH Atlas</a>
+  <a class="back" href="./">Back to the map</a>
+</header>
+
+<main class="about">
+  <h1>About this map</h1>
+  <p id="about-error" class="about-error" hidden></p>
+
+  <section id="what" aria-labelledby="what-title">
+    <h2 id="what-title">What the map shows</h2>
+    <div class="prose" data-prose="what">
+      <!-- Author: two or three sentences for a first-time reader. What a colour on the
+           map means (BAH plus the member cost share against the local cost of the home
+           DoD prescribes for that rank), that a user can pick any rank, dependents and
+           home type, and that off-standard views are not the statutory test. -->
+    </div>
+  </section>
+
+  <section id="question" aria-labelledby="question-title">
+    <h2 id="question-title">Research question</h2>
+    <div class="prose" data-prose="question">
+      <!-- Author: the research question and the two hypotheses as stated in the
+           proposal (docs/research-proposal.md). H1: adequacy is spatially clustered.
+           H2: rent level, rent growth and density are associated with the adequacy gap. -->
+    </div>
+  </section>
+
+  <section id="method" aria-labelledby="method-title">
+    <h2 id="method-title">Method</h2>
+    <div class="prose" data-prose="method">
+      <!-- Author: the method in plain language, one short paragraph per step. Areas built
+           from Census ZCTAs through DTMO's ZIP assignments; local rent from Zillow ZORI,
+           grossed up for utilities with DoD's rent/utilities split; home types priced
+           with HUD SAFMR bedroom ratios; ownership cost as PITI plus utilities on a VA
+           loan; adequacy = (BAH + cost share) / local cost. Point to the map's Sources and
+           method dialog for every source and data period, and to W1 for detail. -->
+    </div>
+  </section>
+
+  <section id="results" aria-labelledby="results-title">
+    <h2 id="results-title">Results</h2>
+    <p class="about-scope" data-render="scope"></p>
+
+    <h3 id="h1-title">H1: is adequacy clustered in space?</h3>
+    <div class="table-wrap"><table class="about-table" data-render="h1" aria-labelledby="h1-title"></table></div>
+    <div class="table-wrap"><table class="about-table" data-render="h1-clusters" aria-describedby="h1-title"></table></div>
+    <div class="prose" data-prose="h1">
+      <!-- Author: what the H1 result means. Moran's I is positive and the pseudo p-value is
+           at the permutation floor, so adequacy is not spatially random; the local
+           clusters are exploratory, and only the FDR-significant areas survive correction
+           for multiple testing. Name where the clusters fall if you want to. -->
+    </div>
+
+    <h3 id="h2-title">H2: what is associated with the adequacy gap?</h3>
+    <div class="table-wrap"><table class="about-table" data-render="h2-model" aria-labelledby="h2-title"></table></div>
+    <div class="table-wrap"><table class="about-table" data-render="h2" aria-describedby="h2-title"></table></div>
+    <ul class="about-notes">
+      <li data-required="shared-denominator">
+        Part of the negative <code>ln_rent</code> coefficient is mechanical: <code>adequacy_gap</code>
+        divides by utilities-inclusive ZORI, and <code>ln_rent</code> is the log of ZORI, so
+        rent sits on both sides of the model.
+        <a data-evidence-source="qa_2026.md#shared-denominator" href="https://github.com/TheWendarr/bah-atlas/blob/main/delivery/2026/qa_2026.md#11-statistical-caveats">B23 QA report, section 11</a>
+      </li>
+      <li data-required="sample-selection">
+        <span data-evidence="qa_2026.md#modelled">201</span> of
+        <span data-evidence="qa_2026.md#eligible">283</span> eligible MHAs have a rent-growth
+        series and enter the model. The <span data-evidence="qa_2026.md#unmodelled">82</span>
+        without one differ from those modelled: their median adequacy gap is
+        <span data-evidence="qa_2026.md#unmodelled-gap">0.0543</span> against
+        <span data-evidence="qa_2026.md#modelled-gap">0.1563</span>, and they are less dense.
+        <a href="https://github.com/TheWendarr/bah-atlas/blob/main/delivery/2026/qa_2026.md#11-statistical-caveats">B23 QA report, section 11</a>
+      </li>
+    </ul>
+    <div class="prose" data-prose="h2">
+      <!-- Author: what the H2 result means. Higher rent and lower density go with a smaller
+           gap; the rent-growth reading depends on model form (significant under the lag
+           model, not under the error model); the shared denominator above; and the sample
+           limit above. Say plainly that these are associations, not causes. -->
+    </div>
+
+    <h3 id="benchmark-title">Does the verdict depend on the rent benchmark?</h3>
+    <div class="table-wrap">
+      <table class="about-table" aria-labelledby="benchmark-title">
+        <thead>
+          <tr>
+            <td></td>
+            <th scope="col">MHAs</th>
+            <th scope="col">Below design on ZORI</th>
+            <th scope="col">Below design on SAFMR</th>
+            <th scope="col">Same verdict</th>
+            <th scope="col">Median ZORI ÷ SAFMR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-profile="e5_dep">
+            <th scope="row" data-render="profile-label">e5_dep</th>
+            <td data-evidence="qa_2026.md#e5_dep/mhas">289</td>
+            <td data-evidence="qa_2026.md#e5_dep/below_zori">44</td>
+            <td data-evidence="qa_2026.md#e5_dep/below_safmr">1</td>
+            <td data-evidence="qa_2026.md#e5_dep/same_verdict">84.4%</td>
+            <td data-evidence="qa_2026.md#e5_dep/median_ratio">1.318</td>
+          </tr>
+          <tr data-profile="o3_dep">
+            <th scope="row" data-render="profile-label">o3_dep</th>
+            <td data-evidence="qa_2026.md#o3_dep/mhas">289</td>
+            <td data-evidence="qa_2026.md#o3_dep/below_zori">88</td>
+            <td data-evidence="qa_2026.md#o3_dep/below_safmr">2</td>
+            <td data-evidence="qa_2026.md#o3_dep/same_verdict">68.9%</td>
+            <td data-evidence="qa_2026.md#o3_dep/median_ratio">1.339</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="about-notes">
+      <li data-required="benchmark">
+        HUD's Small Area Fair Market Rent is gross rent at the 40th percentile, so it is
+        expected to sit below Zillow's typical rent. The verdict for O-3 depends on which
+        benchmark is used far more than the verdict for E-5 does.
+        <a href="https://github.com/TheWendarr/bah-atlas/blob/main/delivery/2026/qa_2026.md#10-zori-against-safmr-rent-cross-check">B23 QA report, section 10</a>
+      </li>
+    </ul>
+    <div class="prose" data-prose="benchmark">
+      <!-- Author: why this matters for reading the map. The E-5 result holds under either
+           benchmark in most MHAs; the O-3 result does not, so the O-3 map should be read
+           with the SAFMR layers beside it. -->
+    </div>
+  </section>
+
+  <section id="limits" aria-labelledby="limits-title">
+    <h2 id="limits-title">Limits of these results</h2>
+    <div class="prose" data-prose="limits">
+      <!-- Author: the limits from W1 (docs/layer2-writeup.md) in your own words: market
+           rents rather than DoD's survey rents; benchmark timing; boundaries rebuilt from
+           ZIP codes; insurance in 2022 dollars; County Cost Groups with no benchmark;
+           Alaska and Hawaii outside the cluster analysis. -->
+    </div>
+  </section>
+
+  <section id="caveats" aria-labelledby="caveats-title">
+    <h2 id="caveats-title">Caveats shown with the map</h2>
+    <div data-render="global-caveats"></div>
+  </section>
+
+  <section id="validation" aria-labelledby="validation-title">
+    <h2 id="validation-title">Validation, code and data</h2>
+    <ul class="about-links">
+      <li><a href="https://github.com/TheWendarr/bah-atlas/blob/main/delivery/2026/qa_2026.md">B23 QA report</a>: every delivered file checked against the data contract, three MHAs traced from raw inputs, and the browser formula checked against the pipeline.</li>
+      <li><a href="https://github.com/TheWendarr/bah-atlas/blob/main/docs/layer2-writeup.md">Layer 2 write-up (W1)</a>: every processing step and decision.</li>
+      <li><a href="https://github.com/TheWendarr/bah-atlas/blob/main/docs/data-contract.md">Data contract</a>: the files the map reads and the rules it follows.</li>
+      <li><a href="https://github.com/TheWendarr/bah-atlas">Source code</a></li>
+    </ul>
+    <p class="about-build" data-render="build"></p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p class="disclaimer">A personal academic project, not affiliated with or endorsed by the Department of Defense or the U.S. Army, and not an official source of BAH rates.</p>
+</footer>
+<script type="module" src="{{JS}}"></script>
+</body>
+</html>

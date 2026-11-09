@@ -119,7 +119,7 @@ const SITE = {
 
 const result = await build({
   absWorkingDir: WEB,
-  entryPoints: { app: "src/main.js" },
+  entryPoints: { app: "src/main.js", about: "src/about.js" },
   bundle: true,
   format: "esm",
   target: "es2022",
@@ -132,11 +132,16 @@ const result = await build({
 });
 
 const outputs = Object.keys(result.metafile.outputs);
-const pick = (suffix) => basename(outputs.find((file) => file.endsWith(suffix)));
-const html = readFileSync(join(WEB, "index.html"), "utf8")
-  .replace("{{CSS}}", `assets/${pick(".css")}`)
-  .replace("{{JS}}", `assets/${pick(".js")}`);
-writeFileSync(join(DIST, "index.html"), html);
+// Each page gets the script built from its entry point and that script's stylesheet.
+function page(name, entry) {
+  const [js, meta] = Object.entries(result.metafile.outputs).find(([, out]) => out.entryPoint === entry);
+  const html = readFileSync(join(WEB, name), "utf8")
+    .replace("{{CSS}}", `assets/${basename(meta.cssBundle)}`)
+    .replace("{{JS}}", `assets/${basename(js)}`);
+  writeFileSync(join(DIST, name), html);
+}
+page("index.html", "src/main.js");
+page("about.html", "src/about.js");
 writeFileSync(join(DIST, "_headers"), headersFile());
 
 const size = (file) => `${(statSync(join(WEB, file)).size / 1024).toFixed(0)} KB`;

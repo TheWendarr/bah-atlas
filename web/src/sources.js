@@ -9,6 +9,7 @@ import { element } from "./panel.js";
 // Interface wording that describes no data (D29).
 const UI = {
   open: "Sources and method",
+  about: "About this map",
   title: "Sources and method",
   close: "Close",
   geometry: "How the areas are drawn",
@@ -133,8 +134,8 @@ export function renderSources(dialog, ui, manifest) {
   dialog.append(head, geometry, sources, build);
 }
 
-// The footer line: the disclaimer stays in index.html; this adds the dialog button and
-// the short build id and date.
+// The footer line: the disclaimer stays in index.html; this adds the dialog button, the
+// About link and the short build id and date.
 export function renderFooterBuild(root, ui, manifest) {
   root.replaceChildren();
   const button = element("button", "footer-sources", UI.open);
@@ -143,5 +144,8 @@ export function renderFooterBuild(root, ui, manifest) {
   button.setAttribute("aria-haspopup", "dialog");
   const build = element("span", "footer-build", `${UI.buildId} ${ui.build_id.slice(0, 8)} · ${buildDate(manifest)}`);
   build.title = ui.build_id;
-  root.append(button, build);
+  // C21: the About page.
+  const about = element("a", "footer-about", UI.about);
+  about.href = "about.html";
+  root.append(button, about, build);
 }

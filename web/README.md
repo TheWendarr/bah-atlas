@@ -33,6 +33,7 @@ requests PMTiles depends on. `make web-dev` serves ranges correctly.
 | `src/notice.js` | The authorized-standard notice shown on every view |
 | `src/legend.js` | The legend for the active scale, with a compact ramp on phones |
 | `src/panel.js` | The detail panel: BAH against rent and buy for the clicked area, with the buy-mode PITI and utilities split |
+| `about.html`, `src/about.js` | The About page: results and caveats from B21, evidence quoted from the B23 report, and the author's prose |
 | `src/sources.js` | Map attribution, the footer and the Sources and method dialog (B21 sources, B22 build) |
 | `src/compare.js` | The A/B comparison of up to two pinned areas, in the current selection and mode |
 | `src/format.js` | Dollar and percent display |
