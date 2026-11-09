@@ -321,9 +321,9 @@ evidence:
 	$(PYTHON) tools/collect_evidence.py
 
 # C1, C4, C24: check that a host serves a PMTiles archive correctly by range.
-#   make host-check URL=https://bah-atlas-tiles.mcgowanserver.com/areas_2026.c79d3723.pmtiles
+#   make host-check URL=https://tiles.bah-atlas.com/areas_2026.c79d3723.pmtiles
 HOST_LOCAL ?= delivery/$(YEAR)/areas_$(YEAR).pmtiles
-HOST_ORIGIN ?= https://bah-atlas.mcgowanserver.com
+HOST_ORIGIN ?= https://bah-atlas.com
 host-check:
 	$(PYTHON) tools/check_host.py --url $(URL) --local $(HOST_LOCAL) --origin $(HOST_ORIGIN)
 

@@ -9,7 +9,7 @@ back with the local copy.
 
     python tools/check_host.py --url https://HOST/FILE.pmtiles \\
         --local delivery/2026/areas_2026.pmtiles \\
-        --origin https://bah-atlas.mcgowanserver.com
+        --origin https://bah-atlas.com
 
     make host-check URL=https://HOST/FILE.pmtiles
 
@@ -23,7 +23,7 @@ Checks:
 
 Site mode compares the deployed site with web/dist, after a deployment:
 
-    python tools/check_host.py --site https://bah-atlas.mcgowanserver.com --dist web/dist --wait 120
+    python tools/check_host.py --site https://bah-atlas.com --dist web/dist --wait 120
 
   files      every file in dist answers 200 with the same bytes and the right type
   headers    each header in dist/_headers is on the live response, unchanged

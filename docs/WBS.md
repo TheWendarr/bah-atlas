@@ -398,7 +398,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 
 | Status | ID | Node | Type | Inputs | Notes |
 |:---:|---|---|---|---|---|
-| 🟢 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 at bah-atlas-tiles.mcgowanserver.com under a content-hashed name; tools/check_host.py is the gate; 3 Nov: uploaded to R2; make host-check passes on the real host (ranges, no compression, ETag, CORS); completed 07 Nov |
+| 🟢 | **C1** | MHA PMTiles (served) | required | B7 | D24 (3 Nov): served from Cloudflare R2 under a content-hashed name, on its own tiles hostname; D35 (8 Nov): tiles hostname is tiles.bah-atlas.com; tools/check_host.py is the gate; 3 Nov: uploaded to R2; make host-check passes on the real host (ranges, no compression, ETag, CORS); completed 07 Nov |
 | 🟢 | **C2** | Attribute payload JSON (served) | required | B20, B31 | D29 (3 Nov): ICD section 2 routes B31 through C2 as well; B20, B27, B31 and B32 served from Pages under a build-id path; completed 07 Nov |
 | 🟢 | **C3** | UI metadata JSON (served) | required | B21 | completed 07 Nov |
 | 🟢 | **C4** | Basemap PMTiles (served) | required | A11 | D25 (3 Nov): Protomaps extract through --region (CONUS, Alaska, Hawaii, Puerto Rico and USVI, Guam and CNMI, American Samoa), grayscale flavor, labels above the choropleth; maxzoom set from a dry-run size report; served from R2; 3 Nov: maxzoom 9 from the dry run (185 MB, under the 315 MB Wrangler limit; zoom 10 is 448 MB); uploaded to R2 as basemap_2026.7ae93271.pmtiles; check_host passes; style, fonts and sprites in web/public/basemap; completed 07 Nov |
@@ -433,7 +433,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🔴 | **W3** | Layer 3 writeup | optional | C21 | D31 (3 Nov): author-written, matching W1, due after the site is live; optional so it does not gate M7 unless the instructor expects it by 16 Nov |
 | 🟢 | **C22** | Build bundler | required | — | D23 (3 Nov): esbuild, node --test, Playwright; exact pins and a committed lockfile; completed 07 Nov |
 | 🟢 | **C23** | CI/CD (GitHub Actions) | required | C22 | 3 Nov: .github/workflows/web.yml: tests, then deploy from main, then make site-check and the browser tests against the live site; actions pinned by commit; completed 07 Nov |
-| 🟢 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages at bah-atlas.mcgowanserver.com, security headers through _headers; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error; Web Analytics is off for the site, because the policy blocks it too; completed 07 Nov |
+| 🟢 | **C24** | CDN hosting + security headers | required | C23 | D24 (3 Nov): site on Cloudflare Pages, security headers through _headers; D35 (8 Nov): the site moved to its own domain, bah-atlas.com, with www redirecting to it; D33 (3 Nov): Bot Fight Mode stays on for the domain, so the live page carries Cloudflare's inline script, which the policy blocks; make site-check removes that script alone before comparing, and the live browser test forgives that one error; Web Analytics is off for the site, because the policy blocks it too; completed 07 Nov |
 
 ## Weekly progress log
 

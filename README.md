@@ -4,7 +4,7 @@
 >
 > | | |
 > |---|---|
-> | 🗺️ **[The map](https://bah-atlas.mcgowanserver.com)** | The public site: pick a rank, dependents, home type and metric, and the map shows the BAH gap or surplus in every area |
+> | 🗺️ **[The map](https://bah-atlas.com)** | The public site: pick a rank, dependents, home type and metric, and the map shows the BAH gap or surplus in every area |
 > | 📋 **[Work Breakdown Structure](docs/WBS.md)** | Milestones, due dates, every node's status, and the nodal map |
 > | 📝 **[Progress notes](docs/progress/)** | One note per week on a fixed five-part template, tied to a milestone, with linked evidence; the folder index shows each milestone's status and latest note |
 > | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
