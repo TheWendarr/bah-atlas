@@ -4,11 +4,12 @@
 >
 > | | |
 > |---|---|
+> | 🗺️ **[The map](https://bah-atlas.mcgowanserver.com)** | The public site: pick a rank, dependents, home type and metric, and the map shows the BAH gap or surplus in every area |
 > | 📋 **[Work Breakdown Structure](docs/WBS.md)** | Milestones, due dates, every node's status, and the nodal map |
 > | 📝 **[Progress notes](docs/progress/)** | One note per week on a fixed five-part template, tied to a milestone, with linked evidence; the folder index shows each milestone's status and latest note |
 > | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
-> | 🧭 **[M6 plan](docs/plans/m6-plan.md)** | The Layer 2 → Layer 3 handoff: decisions taken, decisions open, and how each M6 node will be built |
 > | 📐 **[Data contract (ICD)](docs/data-contract.md)** | Every file Layer 3 receives from the pipeline: fields, codes, rules for missing values, and the checks the handoff must pass |
+> | 🧭 **[Layer 2 write-up](docs/layer2-writeup.md)** | How the public sources become the delivered files, with every action and decision ([M6 plan](docs/plans/m6-plan.md) for the handoff's history) |
 >
 > Status is kept in [`docs/wbs/nodes.csv`](docs/wbs/nodes.csv); `make wbs` regenerates the WBS page from it.
 
@@ -38,7 +39,9 @@ See `docs/research-proposal.md` for the full framing, method, and scope.
 
 A Python offline pipeline turns public data endpoints into static, web-ready
 files; a MapLibre GL JS frontend renders them from a CDN. No live API calls at
-request time.
+request time. The site and its JSON files are served by Cloudflare Pages, and the
+map tiles and basemap by Cloudflare R2; GitHub Actions tests every change, deploys
+`main`, and then checks the live site.
 
 ```
 data endpoint --> ingest (tidy CSVs) --> geometry (MHA polygons) --> tiles/JSON --> map
@@ -57,6 +60,7 @@ Each layer is attributed to its source:
 - **Mortgage rate** — Freddie Mac Primary Mortgage Market Survey (PMMS)
 - **Property tax and population density** — U.S. Census American Community Survey (ACS) 5-year, ZCTA level
 - **Homeowners insurance** — U.S. Treasury Federal Insurance Office (FIO) ZIP-level premiums, 2022
+- **Basemap** — OpenStreetMap contributors, through a Protomaps extract
 
 The full register, with licences and caveats, is [`docs/SOURCES.md`](docs/SOURCES.md).
 
@@ -80,12 +84,13 @@ bah-atlas/
 │   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27)
 │   └── qa/          QA / validation report (B23)
 ├── delivery/        the validated handoff, added only by `make deliver` (decision D10)
-├── web/             MapLibre GL JS frontend (Layer 3, in progress)
+├── web/             MapLibre GL JS frontend (Layer 3): app, tests and build; see web/README.md
+├── .github/         CI/CD workflow: test, deploy to Cloudflare Pages, check the live site
 ├── docs/            research framing, data dictionary, data contract (ICD), configuration reference, attribution
 │   ├── WBS.md       live work breakdown structure (generated)
 │   ├── wbs/         nodes.csv + milestones.csv — project status source of truth
 │   ├── progress/    progress notes on the five-part template, with index
-│   ├── plans/       milestone plans (M6: the Layer 2 -> Layer 3 handoff)
+│   ├── plans/       milestone plans (M6, a record of the Layer 2 -> Layer 3 handoff)
 │   └── evidence/    pipeline manifests and test results linked from the notes
 ├── tools/           project tooling (WBS renderer, progress notes, evidence, GitHub sync)
 └── tests/           unit tests on synthetic fixtures
@@ -122,6 +127,16 @@ make deliver-check  # the six D10 gates; `make deliver` copies the handoff into 
 
 `make all` runs check-config, geometry, non-mha, components, tiles, benchmarks, metrics,
 and spatial in order. Each script prints its own usage with `--help`.
+
+The site (Layer 3) builds from `delivery/` alone; [`web/README.md`](web/README.md) has the detail.
+
+```bash
+make web-deps       # npm ci in web/ (once per clone)
+make web-test       # unit tests, including the browser formula against every grid view
+make web-dev        # local site at http://localhost:8000
+make web-e2e        # browser tests (needs `cd web && npx playwright install chromium`)
+make site-check     # after a deploy: the live site against web/dist, headers included
+```
 
 ## Status
 

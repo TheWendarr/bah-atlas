@@ -20,7 +20,7 @@ One note per reporting week, each written against a planned milestone using the 
 
 ## How a note connects to the rest of the project
 
-Every task has a **stable node id** (`A1`–`A13`, `B1`–`B27`, `C1`–`C24`, `W1`), and that id is the key everywhere:
+Every task has a **stable node id** (`A1`–`A16`, `B1`–`B32`, `C1`–`C25`, `W1`–`W3`), and that id is the key everywhere:
 
 | Where | How the id appears | Example |
 |---|---|---|

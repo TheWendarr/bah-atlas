@@ -497,6 +497,20 @@ def render_note(nodes: list[dict], milestones: list[dict], as_of: dt.date, miles
 
 # --------------------------------------------------------------------------- render: index
 
+def id_ranges(nodes: list[dict]) -> str:
+    """`A1`–`A16`, `B1`–`B32`, ... from nodes.csv, so the index never lags the tracker."""
+    by_prefix: dict[str, list[int]] = {}
+    for n in nodes:
+        hit = re.fullmatch(r"([A-Z])(\d+)", n["id"])
+        if hit:
+            by_prefix.setdefault(hit.group(1), []).append(int(hit.group(2)))
+    parts = []
+    for p, nums in sorted(by_prefix.items()):
+        lo, hi = min(nums), max(nums)
+        parts.append(f"`{p}{lo}`" if lo == hi else f"`{p}{lo}`–`{p}{hi}`")
+    return ", ".join(parts)
+
+
 def render_index(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> str:
     notes = list_notes()
     issues = load_issue_map()
@@ -531,7 +545,7 @@ def render_index(nodes: list[dict], milestones: list[dict], as_of: dt.date) -> s
 
     w("## How a note connects to the rest of the project")
     w("")
-    w("Every task has a **stable node id** (`A1`–`A13`, `B1`–`B27`, `C1`–`C24`, `W1`), and that id is "
+    w(f"Every task has a **stable node id** ({id_ranges(nodes)}), and that id is "
       "the key everywhere:")
     w("")
     w("| Where | How the id appears | Example |")

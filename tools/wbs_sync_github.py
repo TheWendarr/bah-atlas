@@ -5,8 +5,11 @@ docs/wbs/nodes.csv stays the single source of truth. This script makes GitHub
 match it, so the repository's Milestones page shows live progress bars:
 
   * one label set: wbs-node, layer-1/2/3, optional, status: in-progress
-  * one milestone per row of docs/wbs/milestones.csv (title "M1: ...", due date)
-  * one issue per node, titled "[A1] <name>", in its milestone
+  * one milestone per row of docs/wbs/milestones.csv (title "M1: ...", due date,
+    description); closed once every node in it is complete or scrapped, so no
+    open issue is left in a closed milestone, and reopened if a node reopens
+  * one issue per node, titled "[A1] <name>", in its milestone, labelled
+    optional only while the node is optional
       complete     -> issue closed (completed)
       in_progress  -> issue open + "status: in-progress" label
       not_started  -> issue open
@@ -121,6 +124,17 @@ def issue_body(n: dict, m: dict | None, known: set[str]) -> str:
     return "\n".join(lines)
 
 
+def milestone_description(m: dict) -> str:
+    extra = f" Also tracks {', '.join(m['node_list'])}." if m["node_list"] else ""
+    return f"Sub-layers {', '.join(m['sublayer_list'])}.{extra} Mirrored from docs/wbs/milestones.csv."
+
+
+def milestone_finished(m: dict, nodes: list[dict], milestones: list[dict]) -> bool:
+    """True when every node in the milestone, optional ones included, is complete or scrapped."""
+    members = [n for n in nodes if wbs.in_milestone(n, m, milestones)]
+    return bool(members) and all(n["status"] in CLOSE_REASON for n in members)
+
+
 def node_labels(n: dict) -> list[str]:
     labels = ["wbs-node", f"layer-{n['sublayer'].split('.')[0]}"]
     if n["required"] == "optional":
@@ -151,14 +165,14 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
     for m in milestones:
         want_title = milestone_title(m)
         want_due = f"{m['due']}T23:59:59Z"
-        extra = f" Also tracks {', '.join(m['node_list'])}." if m["node_list"] else ""
-        desc = f"Sub-layers {', '.join(m['sublayer_list'])}.{extra} Mirrored from docs/wbs/milestones.csv."
+        desc = milestone_description(m)
         rm = by_id.get(m["id"])
         if rm is None:
             gh.write("api", "-X", "POST", f"repos/{gh.repo}/milestones",
                      "-f", f"title={want_title}", "-f", f"due_on={want_due}",
                      "-f", f"description={desc}")
-        elif rm["title"] != want_title or (rm.get("due_on") or "")[:10] != m["due"]:
+        elif (rm["title"] != want_title or (rm.get("due_on") or "")[:10] != m["due"]
+              or (rm.get("description") or "").strip() != desc):
             gh.write("api", "-X", "PATCH", f"repos/{gh.repo}/milestones/{rm['number']}",
                      "-f", f"title={want_title}", "-f", f"due_on={want_due}",
                      "-f", f"description={desc}")
@@ -209,6 +223,8 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
         for label in node_labels(n):
             if label not in have_labels:
                 edit += ["--add-label", label]
+        if n["required"] != "optional" and "optional" in have_labels:
+            edit += ["--remove-label", "optional"]
         if n["status"] == "in_progress" and IN_PROGRESS not in have_labels:
             edit += ["--add-label", IN_PROGRESS]
         if n["status"] != "in_progress" and IN_PROGRESS in have_labels:
@@ -221,6 +237,17 @@ def sync(gh: GitHub, nodes: list[dict], milestones: list[dict]) -> dict[str, str
             gh.write("issue", "close", num, "-R", gh.repo, "--reason", CLOSE_REASON[n["status"]])
         elif n["status"] not in CLOSE_REASON and not is_open:
             gh.write("issue", "reopen", num, "-R", gh.repo)
+
+    # ---- milestone state, after the issues so a milestone closes on closed issues
+    print("Milestone state")
+    for m in milestones:
+        rm = by_id.get(m["id"])
+        if rm is None:  # created above in this run; its state is set on the next run
+            continue
+        want = "closed" if milestone_finished(m, nodes, milestones) else "open"
+        if rm.get("state") != want:
+            gh.write("api", "-X", "PATCH", f"repos/{gh.repo}/milestones/{rm['number']}",
+                     "-f", f"state={want}")
     return numbers
 
 
