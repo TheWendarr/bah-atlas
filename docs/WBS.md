@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 08 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 46  ·  🟢 Completed this week: 20  ·  🟣 In progress: 0  ·  🔴 Not started: 6  ·  ⚪ Scrapped: 4
+**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 46  ·  🟢 Completed this week: 20  ·  🟣 In progress: 1  ·  🔴 Not started: 5  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -23,7 +23,7 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 
 ## In progress now
 
-_Nothing marked in progress._
+- 🟣 **C21** About / data-caveats page — due 16 Nov (M7)
 
 ## Nodal map
 
@@ -279,7 +279,8 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,W1,W2 done
     class B32,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C20,C22,C23,C24,C25 week
-    class W3,C15,C16,C17,C19,C21 todo
+    class C21 prog
+    class W3,C15,C16,C17,C19 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
 ```
@@ -422,7 +423,7 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | ⚪ | **C18** | Utilities toggle | optional | C6, C2 | Scrapped 3 Nov 2026 (D28): B31 rent costs include utilities and no rent-only figure is delivered, so the toggle would break ICD must-not rule 1 |
 | 🔴 | **C19** | Data export (CSV of view) | optional | C6, C2 | D30 (3 Nov): last optional node, first to cut |
 | 🟢 | **C20** | Attribution + methodology | required | C3, B22 | 7 Nov: OpenStreetMap and Protomaps credit set on the basemap source (the PMTiles protocol passed none) and checked live. 8 Nov: web/src/sources.js; the area layer credits each B21 provider whose licence asks for attribution (Zillow Group, Freddie Mac), checked visible at 1280 and 360 px; footer disclaimer; a Sources and method dialog lists all 14 B21 sources with their data windows and licences, the geometry statements, and the build id, date and pipeline commit from B22; the page checks that B22's SHA-256 equals the build id and refuses to render otherwise (unit and E2E); completed 08 Nov |
-| 🔴 | **C21** | About / data-caveats page | required | B23, B22 | Prose is author-written; must state the O-3 benchmark dependence, the shared-denominator caveat and the model-form result from B23 |
+| 🟣 | **C21** | About / data-caveats page | required | B23, B22 | 8 Nov: web/about.html and src/about.js; H1 and H2 results, cluster labels, all five global caveats and the build id rendered from B21; the O-3 benchmark cross-check (88/2/68.9%, E-5 44/1/84.4%), sample selection and the shared-denominator caveat quoted from qa_2026.md, every quoted number checked against it (test/about.test.mjs); the model-form result for rent_growth_pct from B21; linked from the map footer; empty prose slots hide. Remaining: author prose in seven slots (what, question, method, h1, h2, benchmark, limits); the TODO test in test/e2e/about.test.mjs lists those still empty |
 | 🟢 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default; 7 Nov: web/src/notice.js fills grid.notice.standard or off_standard from standards_text on every view; off-standard views turn amber and switch to the D27 scale; unit test across all 322 selections (right wording, no placeholder left); the default home type is DoD standard for this rank; completed 07 Nov |
 
 #### 3.3 Build and Delivery — due 16 November 2026 (M7)
