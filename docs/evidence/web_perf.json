@@ -1,0 +1,95 @@
+{
+  "profile": {
+    "downloadKbps": 9000,
+    "uploadKbps": 1500,
+    "latencyMs": 60,
+    "cpuSlowdown": 4,
+    "viewport": {
+      "width": 360,
+      "height": 640
+    }
+  },
+  "budget": {
+    "firstLoadBytes": 1000000,
+    "usableMs": 3000,
+    "repaintMs": 100
+  },
+  "first_load": {
+    "usable_ms": 1754,
+    "ready_ms": 1772,
+    "bytes_before_basemap": 774146,
+    "basemap_bytes": 11063,
+    "requests": 19
+  },
+  "repaint": {
+    "changes": [
+      {
+        "rank": "O3",
+        "update_ms": 9.3,
+        "to_idle_ms": 29
+      },
+      {
+        "rank": "E1",
+        "update_ms": 7.5,
+        "to_idle_ms": 20
+      },
+      {
+        "rank": "W2",
+        "update_ms": 7.8,
+        "to_idle_ms": 22
+      },
+      {
+        "rank": "O9",
+        "update_ms": 10.1,
+        "to_idle_ms": 26
+      },
+      {
+        "rank": "E7",
+        "update_ms": 8.9,
+        "to_idle_ms": 23
+      },
+      {
+        "rank": "E5",
+        "update_ms": 9.8,
+        "to_idle_ms": 234
+      }
+    ],
+    "max_update_ms": 10.1
+  },
+  "zip_repaint": {
+    "changes": [
+      {
+        "rank": "O3",
+        "update_ms": 34.6,
+        "to_idle_ms": 70
+      },
+      {
+        "rank": "E1",
+        "update_ms": 28.1,
+        "to_idle_ms": 58
+      },
+      {
+        "rank": "W2",
+        "update_ms": 28.2,
+        "to_idle_ms": 61
+      },
+      {
+        "rank": "O9",
+        "update_ms": 30,
+        "to_idle_ms": 65
+      },
+      {
+        "rank": "E7",
+        "update_ms": 28,
+        "to_idle_ms": 58
+      },
+      {
+        "rank": "E5",
+        "update_ms": 26,
+        "to_idle_ms": 53
+      }
+    ],
+    "max_update_ms": 34.6
+  },
+  "measured_at": "2026-11-13T20:39:34.232Z"
+}

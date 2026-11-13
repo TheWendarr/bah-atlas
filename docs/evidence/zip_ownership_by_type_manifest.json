@@ -1,0 +1,79 @@
+{
+  "node": "B34",
+  "generated_at": "2026-11-13T20:32:08+00:00",
+  "inputs": {
+    "B9.zip": "zip_zhvi.csv",
+    "B9": "mha_zhvi.csv",
+    "B30": "mha_ownership_by_type.csv",
+    "A8.rollup": "mha_tax_insurance.csv",
+    "A9": "acs5_2024_zcta.json",
+    "A8": "Supporting_Underlying_Metrics_and_Disclaimer_for_Analyses_of_US_Homeowners_Insurance_Markets_2018-2022.xlsx",
+    "A7": "PMMS_history.csv",
+    "B1": "zip_mha.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B9.zip": "7b9baeef461d9e0736bfc7d1176e750b12425c9f4b554d8d9f03990573fb9062",
+    "B9": "cdaba1cbcfd5b33bda73536532a05628e7e5635b5f103756b0fb5166c6b208b0",
+    "B30": "d6258cb171950bfe1ff11653d67ec8e53568c96b366b0ef486f1214fc4233b63",
+    "A8.rollup": "e3e84b027a8f094097573207980a96323f6c3de64771be93b977ac800960aacd",
+    "A9": "51455fa2249e07c0107b8972a844bbf725c52c062344b4af90f8f48129b70f30",
+    "A8": "99ff8f67d930232d375d3813ffbacacd2a4a8d932d89c81fd8b17b5a6343672e",
+    "A7": "d91ae5ab2fea079a6111cf5eb835cea1734052d2a08b342f2d8c79c92bb3dc8f",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
+    "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
+  },
+  "config": "config/ownership.json",
+  "config_sha256": "fd15beafeafdeeb5684c0686eaa56e30c5e7bf7f29637ff2d13a5e256dab3e9f",
+  "window_months": "2026-01:2026-07",
+  "rate": {
+    "series": "pmms30",
+    "weeks": 30,
+    "mean_pct": 6.3137
+  },
+  "decision": "D36 (13 Nov 2026): ZIP view; the ZIP's ZHVI with the MHA's B30 home-type factors; ZIP tax rate and premium where published; MHA utilities; values outside the band left out",
+  "method": {
+    "home_value": "ZHVI(z) x B30 home_value(m, t) / B9 zhvi_median(m)",
+    "tax_rate": "A9 taxes / value for the ZIP's ZCTA, in (0, 5%); else the MHA's (A8 rollup)",
+    "insurance": "A8 premium per policy for the ZIP; else the MHA's (A8 rollup)",
+    "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B30 utilities_usd(m, t)",
+    "band": "ZHVI(z) / B9 zhvi_median(m) within [0.3333, 3.0]"
+  },
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "zips": 20280,
+    "zips_with_value": 12382,
+    "zips_tax_rate_from_zip": 7047,
+    "zips_premium_from_zip": 11813,
+    "rows_by_status": {
+      "zip_no_benchmark": 45924,
+      "ok": 73632,
+      "zip_outlier": 1464,
+      "piti_only_no_zori": 660
+    }
+  },
+  "zhvi_ratio_summary": {
+    "min": 0.3335,
+    "median": 1.0,
+    "max": 2.9962
+  },
+  "model_identity": "the MHA's own value, tax rate and premium reproduce B30 in every MHA and home type (checked)",
+  "limitations": [
+    "utilities are the MHA's estimate in every ZIP",
+    "a ZCTA's ACS tax estimate rests on a small sample in thinly populated ZIPs; rates outside (0, 5%) are not used"
+  ],
+  "warnings": [
+    "244 ZIP(s) have a ZHVI outside the band (status zip_outlier)"
+  ],
+  "outputs": [
+    "zip_ownership_by_type.csv"
+  ]
+}

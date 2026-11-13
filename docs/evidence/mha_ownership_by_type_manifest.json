@@ -1,6 +1,6 @@
 {
   "node": "B30",
-  "generated_at": "2026-11-08T04:23:49+00:00",
+  "generated_at": "2026-11-13T20:32:05+00:00",
   "inputs": {
     "B9": "mha_zhvi.csv",
     "A4": "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",
@@ -59,24 +59,102 @@
       "zips_with_both": 4473,
       "national_median": 0.6954,
       "mhas_national_fallback": 47,
+      "mhas_on_one_zip": [
+        "AK400",
+        "AK402",
+        "AL003",
+        "AR411",
+        "CA021",
+        "CA023",
+        "CA026",
+        "GA076",
+        "IN097",
+        "KS100",
+        "KS102",
+        "KY106",
+        "KY110",
+        "KY339",
+        "MA119",
+        "MD130",
+        "ME390",
+        "MO162",
+        "MS168",
+        "ND188",
+        "NY222",
+        "NY225",
+        "OK235",
+        "OK236",
+        "OR244",
+        "TN266",
+        "TX270",
+        "TX274",
+        "TX286",
+        "UT357",
+        "VA368",
+        "WI359",
+        "WV322"
+      ],
       "zips_outside_range": 0
     },
     "bedrooms_3": {
       "zips_with_both": 15829,
       "national_median": 1.3635,
       "mhas_national_fallback": 6,
+      "mhas_on_one_zip": [
+        "AK400",
+        "LA326",
+        "MA119",
+        "MS169",
+        "OK235",
+        "TX278"
+      ],
       "zips_outside_range": 2
     },
     "bedrooms_4": {
       "zips_with_both": 13833,
       "national_median": 1.7264,
       "mhas_national_fallback": 7,
+      "mhas_on_one_zip": [
+        "AK400",
+        "AK402",
+        "CA021",
+        "LA118",
+        "MA119",
+        "MS169",
+        "ND189",
+        "OK235",
+        "TX278"
+      ],
       "zips_outside_range": 43
     },
     "building_apartment": {
       "zips_with_both": 6479,
       "national_median": 0.6551,
       "mhas_national_fallback": 41,
+      "mhas_on_one_zip": [
+        "AK400",
+        "AZ014",
+        "CA021",
+        "GA072",
+        "GA075",
+        "GA081",
+        "ID086",
+        "KS100",
+        "KY110",
+        "KY339",
+        "KY430",
+        "LA113",
+        "LA117",
+        "MA119",
+        "ME390",
+        "MO164",
+        "MT175",
+        "MT347",
+        "ND190",
+        "OR242",
+        "PA252",
+        "SC263"
+      ],
       "zips_outside_range": 12,
       "size_matched_median": 0.9079
     },
@@ -84,6 +162,11 @@
       "zips_with_both": 26129,
       "national_median": 0.9869,
       "mhas_national_fallback": 0,
+      "mhas_on_one_zip": [
+        "AK403",
+        "MA119",
+        "TX278"
+      ],
       "zips_outside_range": 2,
       "size_matched_median": 0.99
     },
@@ -94,6 +177,20 @@
       "mhas_national_fallback": 42,
       "mhas_condo_above_single_family": 94,
       "mhas_floored_to_condo": 94
+    }
+  },
+  "dod_order": {
+    "rule": "home_value rises (or holds) from apt1 to sfh4 within each MHA",
+    "mhas_out_of_order": {
+      "IL093": [
+        "apt1 > apt2"
+      ],
+      "IN097": [
+        "apt1 > apt2"
+      ],
+      "SC258": [
+        "apt1 > apt2"
+      ]
     }
   },
   "reference_check": {
@@ -282,6 +379,8 @@
     "7 MHA(s) take the national bedrooms 4 ratio (1.7264)",
     "41 MHA(s) take the national building apartment ratio (0.6551)",
     "42 MHA(s) build the townhouse factor from at least one national ratio (caveat type_factor_national)",
+    "3 MHA(s) price a smaller or lower-ranked home above the next one in DoD's order, from the MHA's own bedroom ratios: IL093 (apt1 > apt2); IN097 (apt1 > apt2); SC258 (apt1 > apt2)",
+    "54 MHA(s) take at least one type or bedroom ratio from a single ZIP, where the MHA median limits nothing: AK400, AK402, AK403, AL003, AR411, AZ014, CA021, CA023, CA026, GA072, GA075, GA076, GA081, ID086, IN097 and 39 more (ratios.*.mhas_on_one_zip)",
     "2 ZIP bedrooms 3 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
     "43 ZIP bedrooms 4 ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",
     "12 ZIP building apartment ratio(s) outside (0.2, 5.0); kept, the MHA median limits their pull",

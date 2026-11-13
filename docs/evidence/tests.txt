@@ -1,54 +1,60 @@
-2026-11-07 — Ran 156 tests in 69.524s — OK
+2026-11-13 — Ran 192 tests in 54.244s — OK
 
-........................................./usr/lib64/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 404: 'Not Found'>
+.........................................../usr/lib64/python3.14/tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 404: 'Not Found'>
   _warnings.warn(self.warn_message, ResourceWarning)
 ...................unknown node ids: A17
-................................................................................................
+..unknown node ids: A10
+.......................................................~/.local/lib/python3.14/site-packages/pandas/core/generic.py:6160: ResourceWarning: unclosed <socket.socket [closed] fd=7, family=2, type=1, proto=6>
+  for name in set(self._metadata) & set(other._metadata):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib64/python3.14/tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 503: 'Service Unavailable'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+.........................................................................
 ----------------------------------------------------------------------
-Ran 156 tests in 69.524s
+Ran 192 tests in 54.244s
 
 OK
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 148c6d82a925; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 1b531d6ca779; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: every gate passes; `make deliver` will copy the handoff to /tmp/tmpwjtj8kb3/delivery/2026/
+deliver_handoff: every gate passes; `make deliver` will copy the handoff to /tmp/tmpglzffdnq/delivery/2026/
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 148c6d82a925; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 1b531d6ca779; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: delivered 10 files to /tmp/tmpwjtj8kb3/delivery/2026/ and checked them against SHA256SUMS and B23
+deliver_handoff: delivered 12 files to /tmp/tmpglzffdnq/delivery/2026/ and checked them against SHA256SUMS and B23
 next:
   make done N=W1
-  git add /tmp/tmpwjtj8kb3/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
-  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpwjtj8kb3/delivery/2026/ with the W1 write-up"
+  git add /tmp/tmpglzffdnq/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpglzffdnq/delivery/2026/ with the W1 write-up"
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 148c6d82a925; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 1b531d6ca779; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
   PASS  gate 1 tracker: ok
   PASS  gate 2 contract: ok
   PASS  gate 3 hashes: ok
-  PASS  gate 4 QA: B23 PASS on build 148c6d82a925; report unchanged
+  PASS  gate 4 QA: B23 PASS on build 1b531d6ca779; report unchanged
   PASS  gate 5 provenance: ok
   PASS  gate 6 write-up: ok
-deliver_handoff: delivered 10 files to /tmp/tmpwjtj8kb3/delivery/2026/ and checked them against SHA256SUMS and B23
+deliver_handoff: delivered 12 files to /tmp/tmpglzffdnq/delivery/2026/ and checked them against SHA256SUMS and B23
 next:
   make done N=W1
-  git add /tmp/tmpwjtj8kb3/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
-  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpwjtj8kb3/delivery/2026/ with the W1 write-up"
+  git add /tmp/tmpglzffdnq/delivery/2026 docs/layer2-writeup.md docs/wbs docs/WBS.md docs/progress docs/evidence
+  git commit -m "Close M6: Layer 2 handoff delivered to /tmp/tmpglzffdnq/delivery/2026/ with the W1 write-up"
   local A6  DoD BAH Rate Component Breakdown 2026  4.0 KB  sha 49d2eec977e6…  (browser download, verified)
 
-fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmplqfr3ili/fetch_manifest.json
+fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmp5kraf3qu/fetch_manifest.json
   local A6  DoD BAH Rate Component Breakdown 2026  4.0 KB  sha 49d2eec977e6…  (browser download, verified)
 
-fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmpqe71kgi2/fetch_manifest.json
+fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmpy1g4jaim/fetch_manifest.json
   cache A15.mfr  Zillow ZORI, metro-level, multifamily (smoothed)  1 B  (present)
   cache A16.sfr  Zillow ZHVI, ZIP-level, single-family (mid-tier, smoothed, SA)  1 B  (present)
   cache A16.condo  Zillow ZHVI, ZIP-level, condo/co-op (mid-tier, smoothed, SA)  1 B  (present)
@@ -57,4 +63,4 @@ fetched 0  present 1  failed 0  action-needed 0  ->  /tmp/tmpqe71kgi2/fetch_mani
   cache A16.br3  Zillow ZHVI, ZIP-level, 3 bedrooms (mid-tier, smoothed, SA)  1 B  (present)
   cache A16.br4  Zillow ZHVI, ZIP-level, 4 bedrooms (mid-tier, smoothed, SA)  1 B  (present)
 
-fetched 0  present 7  failed 0  action-needed 0  ->  /tmp/tmpos94jda4/fetch_manifest.json
+fetched 0  present 7  failed 0  action-needed 0  ->  /tmp/tmptsxgx058/fetch_manifest.json

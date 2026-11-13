@@ -1,0 +1,70 @@
+{
+  "node": "B33",
+  "generated_at": "2026-11-13T20:32:05+00:00",
+  "inputs": {
+    "B8.zip": "zip_zori.csv",
+    "B8": "mha_zori.csv",
+    "B10.zip": "zip_safmr.csv",
+    "B10": "mha_safmr.csv",
+    "B29": "mha_rent_by_type.csv",
+    "B1": "zip_mha.csv",
+    "A14": "housing_standards.json"
+  },
+  "input_sha256": {
+    "B8.zip": "486ed89d9fc3f1dde409bbe477ffd335a419577b1966a80ff5d8848a5ade8026",
+    "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
+    "B10.zip": "6e8192b580fc67f66ac71e4e415aec749f933e41ec54ffd25e29fe728aad8c8f",
+    "B10": "66df87450290c8306e19db85bc460ec2fa862d0500ce3a9ea4016a457bee345c",
+    "B29": "e8f5f52f70b11f4ffcb7354f5cda792b61fdbaea316e76c0f4bb4d0912b0035e",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b",
+    "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
+  },
+  "decision": "D36 (13 Nov 2026): ZIP view; base from ZORI, else HUD SAFMR scaled to the MHA's ZORI level; the MHA's B29 home-type factors; values outside the band left out",
+  "method": {
+    "base_zori": "ZORI(z) / B8 rent_share(m)",
+    "base_safmr_scaled": "SAFMR 2 BR(z) x B8 zori_utilities_adjusted(m) / B10 SAFMR 2 BR median(m)",
+    "rent": "base(z) x B29 applied_factor(m, t) x B29 bedroom_ratio(m, t)",
+    "band": "base / B8 zori_utilities_adjusted(m) within [0.3333, 3.0]"
+  },
+  "crosswalk": {
+    "crosswalk_file": "zip_mha.csv",
+    "real_mha_zips": 20280,
+    "real_mhas": 299,
+    "zips_skipped_by_class": {
+      "unknown": 214,
+      "ccg": 20465
+    }
+  },
+  "coverage": {
+    "zips": 20280,
+    "status": {
+      "zip_no_benchmark": 1809,
+      "ok": 18223,
+      "no_zori": 248
+    },
+    "base_source": {
+      "none": 2057,
+      "zori": 6641,
+      "safmr_scaled": 11582
+    }
+  },
+  "base_ratio_summary": {
+    "min": 0.4667,
+    "median": 1.0,
+    "max": 2.9124
+  },
+  "safmr_check": {
+    "zips_with_both": 6641,
+    "median_abs_pct_error": 11.0,
+    "share_within_10_pct": 0.4618,
+    "share_within_20_pct": 0.7734,
+    "reading": "scaled SAFMR against the ZORI-based base in ZIPs that have both: how far the stand-in sits from the figure it replaces"
+  },
+  "model_identity": "the MHA base reproduces B29 in every MHA and home type (checked)",
+  "warnings": [
+    "18 ZIP(s) have a ZORI outside the band and use the scaled SAFMR: 06807, 06840, 06870, 11937, 11963, 11968, 11976, 33149, 34242, 76092"
+  ],
+  "outputs": [
+    "zip_rent_by_type.csv"
+  ]
+}

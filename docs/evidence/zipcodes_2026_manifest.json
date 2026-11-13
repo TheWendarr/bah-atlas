@@ -1,0 +1,43 @@
+{
+  "node": "B35",
+  "source_nodes": [
+    "A2",
+    "B1"
+  ],
+  "inputs": {
+    "A2": "cb_2020_us_zcta520_500k.zip",
+    "B1": "zip_mha.csv"
+  },
+  "input_sha256": {
+    "A2": "c69a4ede8aebebfc7ed3a98a9075c6aaa1b75d514a129bc5c662fd806d2f3d17",
+    "B1": "eb731389fdc6d678d89eb458b24a965baa1d03bb883f2207d1a15d8d8c23cb2b"
+  },
+  "features": 14671,
+  "real_mha_zips": 20280,
+  "zips_without_zcta": 5609,
+  "mhas_with_zip_polygons": 299,
+  "mhas_without_zip_polygons": [],
+  "layer": "zips",
+  "id_property": "zip",
+  "area_property": "area",
+  "maplibre_source_hint": {
+    "type": "vector",
+    "url": "pmtiles://zipcodes_2026.pmtiles",
+    "promoteId": "zip"
+  },
+  "contract": "docs/data-contract.md section 4b (decision D36)",
+  "minzoom": 6,
+  "maxzoom": 10,
+  "tippecanoe": "tippecanoe v2.82.0",
+  "outputs": [
+    "zipcodes_2026.pmtiles",
+    "zipcodes_2026_features.csv"
+  ],
+  "output_sha256": {
+    "zipcodes_2026.pmtiles": "94629eabac237441f687a00873089e62cae09fb4771e7f68596d035619917ef3",
+    "zipcodes_2026_features.csv": "5f39b0088b3d62fcd2ae85fb9d2bbece91c2e78ac486dc05eca6a551a722458f"
+  },
+  "output_file": "zipcodes_2026.pmtiles",
+  "output_bytes": 16295818,
+  "generated_at": "2026-11-13T20:31:54+00:00"
+}

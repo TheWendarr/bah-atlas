@@ -2,9 +2,9 @@
   "nodes": [
     "B23"
   ],
-  "generated_at": "2026-11-08T04:26:27+00:00",
-  "build_id": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4",
-  "schema_version": "1.2.1",
+  "generated_at": "2026-11-13T20:34:02+00:00",
+  "build_id": "fb0fb45d923ac0cb38ea6772e8051a6bbdb80c792121df3b9a86f7c1f57bcf3e",
+  "schema_version": "1.3.0",
   "inputs": {
     "B7": "areas_2026.pmtiles",
     "B20": "payload_2026.json",
@@ -12,6 +12,8 @@
     "B27": "hotspots_2026.json",
     "B31": "grid_2026.json",
     "B32": "zips_2026.json",
+    "B35": "zipcodes_2026.pmtiles",
+    "B36": "zipgrid_2026.json",
     "B22": "build_manifest_2026.json",
     "B12": "mha_rent_metrics.csv",
     "B14": "mha_buy_metrics.csv",
@@ -19,22 +21,28 @@
     "B11": "mha_ownership.csv",
     "B29": "mha_rent_by_type.csv",
     "B30": "mha_ownership_by_type.csv",
+    "B33": "zip_rent_by_type.csv",
+    "B34": "zip_ownership_by_type.csv",
     "A14": "housing_standards.json"
   },
   "input_sha256": {
     "B7": "c79d3723ffd87061e6f2d15151338db32a766d11b1c79c2aab462d9ade8c9deb",
-    "B20": "51884f7e875e2666220f08019e93762184c05e8c2a6db7f4d7403a88743ff735",
-    "B21": "b025d27df573d41c38ed857ef697874f02dc23544ca21832c3140fa3f19e6645",
-    "B27": "4f56360835ffac261aaf5bf1dc59a61a01ce0d2462c85ef7c36e9a40a19b893e",
-    "B31": "70e1ef0d3d7e8d2a2af712fec0df3ff11116245565ae9a82515ae31b66c8e409",
-    "B32": "52b041d84ddf15b28e9465413161f0cd1dc104c615fb4c51735fe79b7f6d9878",
-    "B22": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4",
+    "B20": "d9d6abbf1362b6e6ec85bf36af5b9a0c8607c4319fcd90865cb9831c15b18c39",
+    "B21": "64fa1d9601cdc6a4542d7905623add8ba5bf0e51c176031d77830141dc6b10c4",
+    "B27": "541882f4c5bcc2f1e9ccaa3726cfca61b916ab3343966d307bc92f4b2f7d0a31",
+    "B31": "648e8bdefd01bd3e2cccde6bb0e6916794e26c822e0f12fb88ffe9d90423292a",
+    "B32": "07796c09136f9190e3168ea0cf7f3bd31fd2406fb2d33c1a6561781c2b821340",
+    "B35": "94629eabac237441f687a00873089e62cae09fb4771e7f68596d035619917ef3",
+    "B36": "76d5619f2bd5a0142780d4173d73d7c621d3b02833e36fe744b36f9e96d478db",
+    "B22": "fb0fb45d923ac0cb38ea6772e8051a6bbdb80c792121df3b9a86f7c1f57bcf3e",
     "B12": "c0d9b688417f35fb2196c12007b3c387c93292fd31f13e94b6006d17cc6379c9",
     "B14": "a92a640e8e3263ed99369fe50d6db32f414c0ef0dbf9b190351a0016bce713cd",
     "B8": "e5f4031c76455fc146d8864ee2158839beadad67d9666e460d1aea2d1a31fdff",
     "B11": "42fb22dea40ccfc73917e4cd8d5a408a3f691e95d2719860446f3632c1e7646d",
     "B29": "e8f5f52f70b11f4ffcb7354f5cda792b61fdbaea316e76c0f4bb4d0912b0035e",
     "B30": "d6258cb171950bfe1ff11653d67ec8e53568c96b366b0ef486f1214fc4233b63",
+    "B33": "dc11c8a2eb8d137e4a433500d622d3ce51390f986019cb38ada2f54d0e617172",
+    "B34": "6c5e67fd9da6859018dd041a6ca783f4c7cb97a19515a03c493d21ec8b1f726b",
     "A14": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805"
   },
   "verdict": "PASS",
@@ -52,7 +60,7 @@
     {
       "check": "Provenance: built from committed code",
       "result": "PASS",
-      "detail": "B22 commit 368aee146484 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+      "detail": "B22 commit c3a766af2402 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
     },
     {
       "check": "Check 9: file sizes recorded; SHA256SUMS matches",
@@ -75,7 +83,7 @@
       "detail": "0: none"
     },
     {
-      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, A14 check)",
+      "check": "Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, B33-B35, A14 check)",
       "result": "PASS",
       "detail": "all present"
     },
@@ -95,6 +103,16 @@
       "detail": "KS105: recomputed from B4, A14, B29 and B30"
     },
     {
+      "check": "ZIP view: the browser formula on B36 and B31 gives a value for every ZIP that has one",
+      "result": "PASS",
+      "detail": "58684 of 58684 ZIP x profile x mode views consistent"
+    },
+    {
+      "check": "ZIP view: spread of ZIP adequacy around the MHA's (primary profile, rent)",
+      "result": "NOTE",
+      "detail": "median ZIP ÷ MHA ratio 1.0077 over 289 MHAs"
+    },
+    {
       "check": "B19: spatial model form",
       "result": "NOTE",
       "detail": "ambiguous (lag and error both fitted); predictor readings differ between them for at least one predictor"
@@ -106,9 +124,9 @@
     }
   ],
   "provenance": {
-    "b22_commit": "368aee14648408e27f28111d6f06636d11b0a8d7",
+    "b22_commit": "c3a766af2402dadb0384cf0155c4b9026d7ba676",
     "b22_dirty": true,
-    "detail": "B22 commit 368aee146484 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
+    "detail": "B22 commit c3a766af2402 is an ancestor of HEAD; pipeline, config, tools, Makefile, requirements.txt unchanged since"
   },
   "files": {
     "areas_2026.pmtiles": {
@@ -118,33 +136,43 @@
     },
     "payload_2026.json": {
       "bytes": 461877,
-      "gzip_bytes": 44994,
-      "sha256": "51884f7e875e2666220f08019e93762184c05e8c2a6db7f4d7403a88743ff735"
+      "gzip_bytes": 45001,
+      "sha256": "d9d6abbf1362b6e6ec85bf36af5b9a0c8607c4319fcd90865cb9831c15b18c39"
     },
     "ui_metadata_2026.json": {
-      "bytes": 52458,
-      "gzip_bytes": 11949,
-      "sha256": "b025d27df573d41c38ed857ef697874f02dc23544ca21832c3140fa3f19e6645"
+      "bytes": 54207,
+      "gzip_bytes": 12443,
+      "sha256": "64fa1d9601cdc6a4542d7905623add8ba5bf0e51c176031d77830141dc6b10c4"
     },
     "hotspots_2026.json": {
       "bytes": 134267,
-      "gzip_bytes": 7389,
-      "sha256": "4f56360835ffac261aaf5bf1dc59a61a01ce0d2462c85ef7c36e9a40a19b893e"
+      "gzip_bytes": 7391,
+      "sha256": "541882f4c5bcc2f1e9ccaa3726cfca61b916ab3343966d307bc92f4b2f7d0a31"
     },
     "grid_2026.json": {
       "bytes": 359046,
-      "gzip_bytes": 57833,
-      "sha256": "70e1ef0d3d7e8d2a2af712fec0df3ff11116245565ae9a82515ae31b66c8e409"
+      "gzip_bytes": 57841,
+      "sha256": "648e8bdefd01bd3e2cccde6bb0e6916794e26c822e0f12fb88ffe9d90423292a"
     },
     "zips_2026.json": {
       "bytes": 331193,
-      "gzip_bytes": 101886,
-      "sha256": "52b041d84ddf15b28e9465413161f0cd1dc104c615fb4c51735fe79b7f6d9878"
+      "gzip_bytes": 101898,
+      "sha256": "07796c09136f9190e3168ea0cf7f3bd31fd2406fb2d33c1a6561781c2b821340"
+    },
+    "zipcodes_2026.pmtiles": {
+      "bytes": 16295818,
+      "gzip_bytes": 16108640,
+      "sha256": "94629eabac237441f687a00873089e62cae09fb4771e7f68596d035619917ef3"
+    },
+    "zipgrid_2026.json": {
+      "bytes": 4539908,
+      "gzip_bytes": 645371,
+      "sha256": "76d5619f2bd5a0142780d4173d73d7c621d3b02833e36fe744b36f9e96d478db"
     },
     "build_manifest_2026.json": {
-      "bytes": 15594,
-      "gzip_bytes": 5057,
-      "sha256": "67cda35f7be377376399611ecf0d29708c192da78a598305f4b028d3687a36a4"
+      "bytes": 17174,
+      "gzip_bytes": 5608,
+      "sha256": "fb0fb45d923ac0cb38ea6772e8051a6bbdb80c792121df3b9a86f7c1f57bcf3e"
     }
   },
   "areas_by_class": {
@@ -485,11 +513,67 @@
       }
     ]
   },
+  "zip_view": {
+    "zips": 14671,
+    "views_checked": 58684,
+    "inconsistent": [],
+    "primary_status": {
+      "rent": {
+        "ok": 14472,
+        "no_zori": 199
+      },
+      "buy": {
+        "ok": 12266,
+        "zip_no_benchmark": 2051,
+        "zip_outlier": 244,
+        "piti_only_no_zori": 110
+      }
+    },
+    "b33_coverage": {
+      "zips": 20280,
+      "status": {
+        "zip_no_benchmark": 1809,
+        "ok": 18223,
+        "no_zori": 248
+      },
+      "base_source": {
+        "none": 2057,
+        "zori": 6641,
+        "safmr_scaled": 11582
+      }
+    },
+    "safmr_check": {
+      "zips_with_both": 6641,
+      "median_abs_pct_error": 11.0,
+      "share_within_10_pct": 0.4618,
+      "share_within_20_pct": 0.7734,
+      "reading": "scaled SAFMR against the ZORI-based base in ZIPs that have both: how far the stand-in sits from the figure it replaces"
+    },
+    "b34_coverage": {
+      "zips": 20280,
+      "zips_with_value": 12382,
+      "zips_tax_rate_from_zip": 7047,
+      "zips_premium_from_zip": 11813,
+      "rows_by_status": {
+        "zip_no_benchmark": 45924,
+        "ok": 73632,
+        "zip_outlier": 1464,
+        "piti_only_no_zori": 660
+      }
+    },
+    "b35_features": 14671,
+    "primary_rent_zip_over_mha": {
+      "mhas": 289,
+      "median_of_mha_medians": 1.0077,
+      "median_p10": 0.7949,
+      "median_p90": 1.2023
+    }
+  },
   "outputs": [
     "qa_2026.md",
     "qa_2026_manifest.json"
   ],
   "output_sha256": {
-    "qa_2026.md": "c617362fb0ee6e49acc3969925bde594896e20e5785229315e9038253d2dec84"
+    "qa_2026.md": "05589f29d3ff4af00b042e09ad7c869e4bf49838dd3e38f5eba4695f13055630"
   }
 }
