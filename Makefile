@@ -2,7 +2,9 @@
 YEAR ?= 2026
 PYTHON ?= python3
 BAH_ZIP  ?= data/raw/BAH-ASCII-$(YEAR).zip
-ZCTA_SHP ?= data/raw/cb_2020_us_zcta520_500k.zip   # geopandas reads the zipped shapefile directly
+# geopandas reads the zipped shapefile directly. (The note sits on its own line: a comment
+# after a value leaves the spaces before it in the value.)
+ZCTA_SHP ?= data/raw/cb_2020_us_zcta520_500k.zip
 COMPONENTS_PDF ?= data/raw/dod_bah_rate_components_$(YEAR).pdf
 INTERIM  ?= data/interim/bah_$(YEAR)
 PROCESSED?= data/processed
@@ -29,6 +31,11 @@ WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff standards \
 	benchmarks zori zhvi safmr taxins ownership rent-types own-types metrics weights spatial density regression qa layer2 deliver-check deliver test clean
+
+# The stages run in the order written. Most of that order is in the recipes and their
+# comments ("run `make ingest` first"), not in prerequisites, so `make -j` would start a
+# stage before the files it reads exist. This keeps every run serial whatever MAKEFLAGS says.
+.NOTPARALLEL:
 
 all: check-config geometry non-mha components tiles benchmarks metrics spatial
 
@@ -291,7 +298,8 @@ clean:
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
 .PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-style web-golden web-test web-e2e
 
-# Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md in one step.
+# Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md and the
+# progress index (docs/progress/README.md) in one step.
 #   make start N="A3 A6"     make done N="A3-A6 B5"     make scrap N=B26     make wbs-show N=B7
 start:
 	$(PYTHON) tools/wbs.py start $(N)

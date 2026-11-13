@@ -157,8 +157,9 @@ make wbs-week              # scaffold this week's progress note in docs/progress
 make wbs-sync              # optional: mirror milestones and issues to GitHub (gh CLI)
 ```
 
-`start` and `done` rewrite `docs/wbs/nodes.csv` and regenerate `docs/WBS.md`, so a
-status change is one command and one small diff.
+`start` and `done` rewrite `docs/wbs/nodes.csv` and regenerate `docs/WBS.md` and the
+progress index (`docs/progress/README.md`), so a status change is one command and the
+two pages never disagree.
 
 ## License
 

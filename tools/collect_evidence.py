@@ -70,6 +70,11 @@ def scrub(text: str) -> str:
     return re.sub(r"(/home|/Users)/[^/\"]+/", "~/", text)
 
 
+def has_manifests() -> bool:
+    """True when data/ holds at least one pipeline manifest to copy."""
+    return any(DATA.rglob("*manifest*.json"))
+
+
 def collect() -> list[dict]:
     OUT.mkdir(parents=True, exist_ok=True)
     rows: list[dict] = []
@@ -160,9 +165,16 @@ def main() -> None:
     if not DATA.is_dir():
         sys.exit("collect_evidence: no data/ folder; run the pipeline first")
     print("Pipeline manifests")
-    rows = collect()
-    maps = sum(r["file"].endswith(".png") for r in rows)
-    print(f"copied {len(rows) - maps} manifest(s) and {maps} map(s) to docs/evidence/")
+    if has_manifests():
+        rows = collect()
+        maps = sum(r["file"].endswith(".png") for r in rows)
+        print(f"copied {len(rows) - maps} manifest(s) and {maps} map(s) to docs/evidence/")
+    else:
+        # A clone that has not run the pipeline (data/ holds only the committed raw files).
+        # Rewriting index.csv here would leave it with a header and no rows, and
+        # `make verify` would then fail on evidence that is in fact intact.
+        print("  none under data/: the pipeline has not run in this clone, so docs/evidence/ and its "
+              "index.csv are left as they are")
     if not args.no_tests:
         print("Unit tests")
         print("  " + run_tests())

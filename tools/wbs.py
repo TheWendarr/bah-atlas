@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update node status in one command, then regenerate docs/WBS.md.
+"""Update node status in one command, then regenerate docs/WBS.md and the progress index.
 
     python tools/wbs.py start A3 A6        # mark in progress
     python tools/wbs.py done A3-A6 B5      # mark complete today (ranges allowed)
@@ -12,7 +12,10 @@
 Make shortcuts:  make start N="A3 A6"   make done N="A3-A6 B5"   make scrap N=B26   make wbs-show
 
 Edits docs/wbs/nodes.csv in place (same columns, same row order), so the change
-shows up as a one-line diff per node in your next commit.
+shows up as a one-line diff per node in your next commit. docs/progress/README.md
+carries the same milestone counts as docs/WBS.md, so both are regenerated: left to
+`make wbs` alone, the index went on showing a milestone as open after its last node
+was marked done.
 """
 from __future__ import annotations
 
@@ -91,10 +94,15 @@ def main() -> None:
         w.writerows(rows)
 
     if not args.no_render:
+        import wbs_progress  # noqa: PLC0415  (imports wbs_render; loaded late, as in wbs_render.main)
         nodes = wbs.load_nodes()
         milestones = wbs.load_milestones()
-        wbs.WBS_MD.write_text(wbs.render_wbs(nodes, milestones, dt.date.today()), encoding="utf-8")
+        today = dt.date.today()
+        wbs.WBS_MD.write_text(wbs.render_wbs(nodes, milestones, today), encoding="utf-8")
         print(f"regenerated {wbs.WBS_MD.relative_to(wbs.ROOT)}")
+        wbs_progress.INDEX_MD.parent.mkdir(parents=True, exist_ok=True)
+        wbs_progress.INDEX_MD.write_text(wbs_progress.render_index(nodes, milestones, today), encoding="utf-8")
+        print(f"regenerated {wbs_progress.INDEX_MD.relative_to(wbs.ROOT)}")
 
 
 if __name__ == "__main__":

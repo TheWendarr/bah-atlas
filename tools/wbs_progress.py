@@ -301,7 +301,6 @@ TODO = "<!-- TODO (author): {} -->"
 
 def render_note(nodes: list[dict], milestones: list[dict], as_of: dt.date, milestone_id: str | None) -> str:
     known = {n["id"] for n in nodes}
-    by_id = {n["id"]: n for n in nodes}
     issues = load_issue_map()
     commits = load_commits(known)
     evidence = load_evidence()

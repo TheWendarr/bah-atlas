@@ -192,7 +192,7 @@ handoff, B23 and the evidence and hash checks (data contract check 1).
 `make deliver-check` runs the six D10 gates in `tools/deliver_handoff.py`: every
 Layer 1–2 node complete or scrapped (W1 aside), contract checks 3–8, `make verify`,
 a passing B23 for this exact build, a build from committed code, and a written W1.
-`make deliver` runs them and only then copies the six files, `SHA256SUMS` and the
+`make deliver` runs them and only then copies the seven files, `SHA256SUMS` and the
 B23 report into `delivery/YYYY/`, the one place processed data enters the
 repository (data contract section 12).
 
