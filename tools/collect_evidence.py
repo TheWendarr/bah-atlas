@@ -15,6 +15,8 @@ copies them into docs/evidence/, where they are committed and linkable.
                                          sha256 (of the pipeline file) and copy_sha256 (of the
                                          committed copy, which has machine paths scrubbed)
     docs/evidence/tests.txt              result of the unit-test suite, summary on the first line
+    docs/evidence/web_tests.txt          result of the site's unit tests (`make web-test`), the same
+                                         way, when web/node_modules is installed
 
 File names stay the same from week to week, so `git log -p docs/evidence/` shows
 how the results changed over the project.
@@ -158,6 +160,24 @@ def run_tests() -> str:
     return summary
 
 
+def run_web_tests() -> str | None:
+    """The site's unit tests (Layer 3): formula parity, the class rule, the source scan.
+
+    The browser tests run in CI on every push; their log is the evidence for them.
+    """
+    if not (ROOT / "web" / "node_modules").is_dir():
+        return None
+    proc = subprocess.run(["make", "web-test"], cwd=ROOT, capture_output=True, text=True)
+    log = proc.stdout + proc.stderr
+    counts = {key: re.search(rf"^# {key} (\d+)$", log, re.MULTILINE) for key in ("tests", "pass", "fail")}
+    found = {key: m.group(1) for key, m in counts.items() if m}
+    summary = (f"{dt.date.today().isoformat()} — "
+               + (f"{found.get('tests', '?')} web tests, {found.get('pass', '?')} passed, {found.get('fail', '?')} failed"
+                  if found else f"no web test run found, exit code {proc.returncode}"))
+    (OUT / "web_tests.txt").write_text(summary + "\n\n" + scrub(log), encoding="utf-8")
+    return summary
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--no-tests", action="store_true", help="skip running the unit tests")
@@ -178,6 +198,8 @@ def main() -> None:
     if not args.no_tests:
         print("Unit tests")
         print("  " + run_tests())
+        web = run_web_tests()
+        print("  " + (web or "web tests skipped: run `make web-deps` first"))
 
 
 if __name__ == "__main__":

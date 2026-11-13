@@ -9,8 +9,9 @@ It reads only `delivery/<year>/` and follows the
 | `make web-deps` | Installs the pinned packages from `package-lock.json` |
 | `make web-dev` | Builds with the tiles copied in and serves http://localhost:8000 |
 | `make web-build` | Builds the production site in `web/dist` |
-| `make web-test` | Formula parity on all 218,316 views, the class rule and the contract gate |
+| `make web-test` | Formula parity on all 218,316 views, the class rule, the contract gate, the four optional features, and the X7 scan for B21 colours, breaks and texts in this folder |
 | `make web-e2e` | The built site in a real browser (first run: `cd web && npx playwright install chromium`) |
+| `make web-perf` | X9 on a throttled connection and processor: bytes before the basemap, time to a usable map, repaint time; writes `docs/evidence/web_perf.json`. Not run in CI, because the timings depend on the machine |
 | `make site-check` | The deployed site against `web/dist`: files, types and security headers, allowing Cloudflare's Bot Fight Mode script and nothing else (D33) |
 | `make web-e2e-live` | The same browser tests against the deployed site and the real tile host |
 
@@ -37,7 +38,13 @@ requests PMTiles depends on. `make web-dev` serves ranges correctly.
 | `src/sources.js` | Map attribution, the footer and the Sources and method dialog (B21 sources, B22 build) |
 | `src/compare.js` | The A/B comparison of up to two pinned areas, in the current selection and mode |
 | `src/format.js` | Dollar and percent display |
-| `src/map.js` | MapLibre setup, area layers, selection and pinned outlines, and the value join |
+| `src/map.js` | MapLibre setup, area layers, selection and pinned outlines, the cluster overlay layers, and the value join |
+| `src/research.js` | The one test for a research view (ICD 5b.6, must 9), and each area's B27 cluster class |
+| `src/permalink.js` | C17: the selection in the address hash, read at start and on every hash change |
+| `src/search.js` | C15: ZIP search on B32, loaded on first use and checked against the map's build |
+| `src/locate.js` | C15, C17: moves the map to an area, leaving room for the panel |
+| `src/export.js` | C19: the current view as CSV, one row per area, from `gridView` |
+| `tools/area_bounds.mjs` | Each area's bounding box, read from the delivered area tiles at build time |
 
 The two tile archives live on Cloudflare R2, and the site and its JSON on Cloudflare
 Pages. A push to `main` that touches the site runs `.github/workflows/web.yml`: unit
@@ -59,5 +66,19 @@ only `make web-e2e-live` checks the real basemap.
 The browser tests wait for `data-state`. A delivery whose area tiles were not uploaded
 therefore fails `make web-e2e-live` at once with `areas-unavailable`, where it used to
 wait out a 60-second timeout in every test.
+
+## Optional features (C15–C17, C19)
+
+| Feature | How it works | Rules it keeps |
+|---|---|---|
+| Links (C17) | The address hash holds rank, dependents, home type, mode and metric, plus the open area, pinned areas and the overlay when set: `#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&area=CO046`. It is rewritten in place, so the back button leaves the page. | Every value goes through `set()`; a value this build does not know falls back to the default and the address is corrected |
+| Cluster overlay (C16) | "Show local clusters" replaces the colours and legend with B27's local clusters; FDR-significant areas get the B21 outline; the panel adds the area's cluster, pseudo p-value and the exploratory caveat | Available only on a research view (E-5 or O-3 with dependents at the statutory standard); areas outside `cluster_scope` stay unfilled (musts 5, 9; must not 3) |
+| ZIP search (C15) | Five digits or ZIP+4 in the header; B32 loads on first use, opens the area's panel and fits the map to it. The territory bucket spans the Pacific, so its panel opens and the map stays put | B32 must share the map's `build_id` and major version, or it is not used (must 6) |
+| CSV export (C19) | "Download this view (CSV)" in the footer: one row per area for the current selection and mode | Values from `gridView`, so the file matches the map; text cells that a spreadsheet would run as a formula start with an apostrophe |
+
+The area boxes for ZIP search and links come from the delivered area tiles at build time
+(`tools/area_bounds.mjs`), because B7 carries no bounds and the browser can read only the
+tiles it has loaded. They are geometry, not values about an area, and are written to
+`dist/assets/` under a name taken from their content.
 
 Wording about the data comes from `ui_metadata_<year>.json`, never from this folder.

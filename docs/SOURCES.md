@@ -49,7 +49,7 @@ config" are the files that read or cite it (documentation is not listed).
 | A8 insurance (Treasury FIO) | incorporated | `data/raw/` | B11 | `benchmarks/fio_insurance.py`, `config/ownership.json` |
 | A9 Census ACS 5-year (ZCTA) | incorporated | `data/raw/` | A8, B24 → B19 | `fetch/fetch_sources.py`, `benchmarks/density_to_mha.py` |
 | A10 BEA RPP | not used | — | (B25, scrapped) | — |
-| Software (Python and packages, tippecanoe, pmtiles, gh, MapLibre) | incorporated / planned | not redistributed | all | `requirements.txt`, `Makefile` |
+| Software (Python and packages, tippecanoe, pmtiles, gh, MapLibre and the site's build and test tools) | incorporated | not redistributed | all | `requirements.txt`, `web/package.json`, `Makefile` |
 | 37 U.S.C. § 403 | incorporated | — | B12–B15, D1 | `metrics/coverage_metrics.py` |
 | DoD housing standards | incorporated | — | A12 profiles, A14 | `config/profiles.json`, `config/housing_standards.json` |
 | CNA 2026 BAH adequacy evaluation | reference | — | A14 (confirms the anchor points) | — |
@@ -368,8 +368,13 @@ with B19.
 
 ### Playwright  `[incorporated]`
 - **Provider:** Microsoft — https://github.com/microsoft/playwright
-- **Role:** Runs the built site in a real browser for the end-to-end tests. Test-time only.
+- **Role:** Runs the built site in a real browser for the end-to-end tests and the throttled first-load check (`make web-perf`, X9). Test-time only.
 - **License:** Apache-2.0.
+
+### @mapbox/vector-tile and pbf  `[incorporated]`
+- **Provider:** Mapbox — https://github.com/mapbox/vector-tile-js · https://github.com/mapbox/pbf
+- **Role:** Decode the delivered area tiles at build time, so `web/tools/area_bounds.mjs` can take each area's bounding box for ZIP search and links (C15, C17). Build-time only; both were already installed as MapLibre dependencies and are now pinned directly (3.0.0 and 5.1.2) with no new package in the lockfile.
+- **License:** BSD-3-Clause.
 
 ---
 

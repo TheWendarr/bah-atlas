@@ -1,8 +1,9 @@
 # Reproducing BAH Atlas on another machine
 
-How to rebuild Layers 1 and 2 of BAH Atlas from a fresh clone: the source files, the
-pipeline, the Layer 3 handoff files and the QA report. Follow the steps in order.
-Layer 3 (the web map) is not built yet and is not covered here.
+How to rebuild BAH Atlas from a fresh clone: the source files, the pipeline, the Layer 3
+handoff files and the QA report (sections 1–8), then the web map built from the delivered
+files (section 9). Follow the steps in order. The web map can also be built on its own
+from the committed `delivery/` folder, without running the pipeline.
 
 Tracker: [WBS](WBS.md) · sources and licences: [SOURCES.md](SOURCES.md) · what the
 handoff files contain: [data contract](data-contract.md) · table layouts:
@@ -256,3 +257,28 @@ beside its outputs with the SHA-256 of what it read and wrote, which is how
 
 *AI-assistance disclosure: Claude (Anthropic) drafted this guide from the repository
 for the author's review.*
+
+## 9. Build and check the web map (Layer 3)
+
+The site reads only `delivery/<year>/`, which is committed, so this section works in a
+clone that has not run the pipeline. It needs Node.js 22 or later.
+
+```bash
+make web-deps                                 # npm ci from web/package-lock.json
+cd web && npx playwright install chromium && cd ..   # once, for the browser tests
+make web-test        # formula parity on all 218,316 views, class rule, contract gate, X7 source scan
+make web-e2e         # the built site in a real browser
+make web-perf        # X9: first load and repaint, throttled; writes docs/evidence/web_perf.json
+make web-dev         # http://localhost:8000 with the tiles copied in
+```
+
+`make web-build` writes the production site to `web/dist`. The build stops if any
+delivered file differs from `SHA256SUMS`, and two builds from the same delivery are
+byte-identical. Deployment, the tile upload and the live checks (`make host-check`,
+`make site-check`, `make web-e2e-live`) are in [`web/README.md`](../web/README.md); they
+need the Cloudflare account and are not part of reproducing the results.
+
+`make web-perf` measures with software WebGL in headless Chromium, so its timings are
+higher than a phone with a graphics processor would show. The byte budget does not
+depend on the machine.
+

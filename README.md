@@ -4,7 +4,7 @@
 >
 > | | |
 > |---|---|
-> | 🗺️ **[The map](https://bah-atlas.com)** | The public site: pick a rank, dependents, home type and metric, and the map shows the BAH gap or surplus in every area |
+> | 🗺️ **[The map](https://bah-atlas.com)** | The public site: pick a rank, dependents, home type and metric, and the map shows the BAH gap or surplus in every area; find an area by ZIP code, compare two, show the exploratory cluster overlay on the research views, share the view as a link, or download it as CSV |
 > | 📋 **[Work Breakdown Structure](docs/WBS.md)** | Milestones, due dates, every node's status, and the nodal map |
 > | 📝 **[Progress notes](docs/progress/)** | One note per week on a fixed five-part template, tied to a milestone, with linked evidence; the folder index shows each milestone's status and latest note |
 > | 🎯 **[GitHub milestones](https://github.com/TheWendarr/bah-atlas/milestones)** | The same milestones as progress bars, mirrored from the WBS |
@@ -81,7 +81,7 @@ bah-atlas/
 │   ├── metrics/     coverage and adequacy metrics (B12-B15)
 │   ├── spatial/     spatial weights, Moran's I, LISA, Gi* (B16-B18), spatial regression (B19)
 │   ├── tiles/       PMTiles builders: area tiles (B7) and basemap cutout (A11)
-│   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27)
+│   ├── handoff/     the Layer 2 -> Layer 3 files to the data contract (B20-B22, B27, B31, B32)
 │   └── qa/          QA / validation report (B23)
 ├── delivery/        the validated handoff, added only by `make deliver` (decision D10)
 ├── web/             MapLibre GL JS frontend (Layer 3): app, tests and build; see web/README.md
@@ -135,6 +135,7 @@ make web-deps       # npm ci in web/ (once per clone)
 make web-test       # unit tests, including the browser formula against every grid view
 make web-dev        # local site at http://localhost:8000
 make web-e2e        # browser tests (needs `cd web && npx playwright install chromium`)
+make web-perf       # X9: throttled first load and repaint, written to docs/evidence/web_perf.json
 make site-check     # after a deploy: the live site against web/dist, headers included
 ```
 
