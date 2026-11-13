@@ -26,14 +26,17 @@ export async function sha256Hex(buffer) {
 }
 
 export async function loadFiles(dataPath, year) {
-  const entries = await Promise.all(
-    Object.entries(fileNames(year)).map(async ([key, name]) => {
-      const response = await fetchOk(`${dataPath}/${name}`, name);
-      return [key, await response.json()];
-    }),
-  );
+  // All five requests start together: on a slow connection each round trip counts (X9).
   const name = manifestName(year);
-  const bytes = await (await fetchOk(`${dataPath}/${name}`, name)).arrayBuffer();
+  const [entries, bytes] = await Promise.all([
+    Promise.all(
+      Object.entries(fileNames(year)).map(async ([key, file]) => {
+        const response = await fetchOk(`${dataPath}/${file}`, file);
+        return [key, await response.json()];
+      }),
+    ),
+    fetchOk(`${dataPath}/${name}`, name).then((response) => response.arrayBuffer()),
+  ]);
   const manifest = {
     name,
     sha256: await sha256Hex(bytes),

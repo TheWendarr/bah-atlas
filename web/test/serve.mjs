@@ -1,9 +1,11 @@
 // A small static server for the end-to-end tests. It answers range requests, as the
 // tiles host must, and sends the Content-Security-Policy from dist/_headers, so the
-// tests see the same policy as the live site.
+// tests see the same policy as the live site. With `compress`, it gzips text files as the
+// live host compresses them, so the X9 check measures what a reader downloads.
 
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
+import { createGzip } from "node:zlib";
 import { extname, join, normalize } from "node:path";
 
 const TYPES = {
@@ -14,7 +16,9 @@ const TYPES = {
   ".json": "application/json",
 };
 
-export function serve(root) {
+const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".css", ".json"]);
+
+export function serve(root, { compress = false } = {}) {
   const policy = readFileSync(join(root, "_headers"), "utf8").match(/Content-Security-Policy: (.*)/)[1];
 
   const server = createServer((request, response) => {
@@ -37,6 +41,11 @@ export function serve(root) {
       const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
       response.writeHead(206, { ...headers, "Content-Range": `bytes ${start}-${end}/${size}`, "Content-Length": end - start + 1 });
       createReadStream(file, { start, end }).pipe(response);
+      return;
+    }
+    if (compress && COMPRESSIBLE.has(extname(file)) && /\bgzip\b/.test(request.headers["accept-encoding"] ?? "")) {
+      response.writeHead(200, { ...headers, "Content-Encoding": "gzip", Vary: "Accept-Encoding" });
+      createReadStream(file).pipe(createGzip()).pipe(response);
       return;
     }
     response.writeHead(200, { ...headers, "Content-Length": size });

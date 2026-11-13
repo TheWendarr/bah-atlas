@@ -24,7 +24,7 @@ const BASEMAP_ATTRIBUTION =
 
 // C4: public/basemap/style.json holds relative addresses, and the tile address changes
 // with the extract, so both are set here. MapLibre needs absolute addresses for these.
-async function basemapStyle(basemapPath, basemapUrl) {
+export async function basemapStyle(basemapPath, basemapUrl) {
   const base = new URL(basemapPath, location.href).href;
   const response = await fetch(`${base}style.json`);
   if (!response.ok) throw new Error(`The basemap style could not be loaded (HTTP ${response.status}).`);
@@ -36,12 +36,13 @@ async function basemapStyle(basemapPath, basemapUrl) {
   return style;
 }
 
+// `style` is the promise basemapStyle returned, started before the data files load so the
+// two requests overlap (X9).
 export async function createMap({
   container,
   areasUrl,
   areasAttribution,
-  basemapPath,
-  basemapUrl,
+  style,
   workerPath,
   onAreasUnavailable = () => {},
 }) {
@@ -50,7 +51,7 @@ export async function createMap({
 
   const map = new MapLibreMap({
     container,
-    style: await basemapStyle(basemapPath, basemapUrl),
+    style: await style,
     bounds: CONUS_BOUNDS,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,

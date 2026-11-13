@@ -10,6 +10,7 @@ import {
   addPinnedLayer,
   addSelectionLayer,
   applyClasses,
+  basemapStyle,
   createMap,
   jumpTo,
   onAreaClick,
@@ -39,6 +40,10 @@ function showError(detail, cause = "load") {
 }
 
 async function start() {
+  // The basemap style loads alongside the data files (X9). A failure surfaces when the map
+  // awaits it, after the contract gate.
+  const style = basemapStyle(SITE.basemapPath, SITE.basemapUrl);
+  style.catch(() => {});
   const { files, manifest } = await loadFiles(SITE.dataPath, SITE.year);
   const problems = checkContract(files);
   if (!problems.length) problems.push(...checkManifest(manifest, files.ui.build_id));
@@ -55,8 +60,7 @@ async function start() {
     container: "map",
     areasUrl: SITE.areasUrl,
     areasAttribution: areaAttribution(ui),
-    basemapPath: SITE.basemapPath,
-    basemapUrl: SITE.basemapUrl,
+    style,
     workerPath: SITE.workerPath,
     // The tiles come from their own host. If it cannot be reached the map has no areas to
     // colour, and without this notice the page would show an empty map with no reason.
@@ -180,6 +184,7 @@ async function start() {
     center: () => [...map.getCenter().toArray(), map.getZoom()],
     moving: () => map.isMoving(),
     idle: () => map.loaded() && !map.isMoving(),
+    nextIdle: () => new Promise((resolve) => map.once("idle", resolve)),
     renderedAreas: () => map.queryRenderedFeatures({ layers: ["area-fill"] }).length,
     layerOrder: () => map.getLayersOrder(),
     basemapFeatures: (sourceLayer) => map.querySourceFeatures("basemap", { sourceLayer }).length,

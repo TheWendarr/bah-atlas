@@ -44,7 +44,7 @@ body {
 
 .about code { font-size: 0.92em; padding: 0 3px; background: var(--tint); border-radius: 3px; }
 
-.about-error { padding: 10px 12px; background: #fdecea; border-left: 4px solid #b2182b; }
+.about-error { padding: 10px 12px; background: #fdecea; border-left: 4px solid #a4262c; }
 
 .about-scope { color: var(--ink-muted); }
 

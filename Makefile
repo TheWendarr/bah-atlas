@@ -296,7 +296,7 @@ clean:
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
-.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-style web-golden web-test web-e2e
+.PHONY: wbs wbs-week wbs-show start done scrap wbs-sync wbs-sync-dry evidence verify hooks host-check site-check web-e2e-live web-deps web-build web-dev web-style web-golden web-test web-e2e web-perf
 
 # Mark nodes in progress / complete / scrapped and regenerate docs/WBS.md and the
 # progress index (docs/progress/README.md) in one step.
@@ -377,6 +377,11 @@ web-test: web-golden
 
 web-e2e:
 	cd web && node build.mjs --dev && node --test test/e2e/*.test.mjs
+
+# X9: first load and repaint on a throttled connection and processor, written to
+# docs/evidence/web_perf.json. Timings depend on the machine, so this is not run in CI.
+web-perf:
+	cd web && node build.mjs --dev && PERF_OUT=../docs/evidence/web_perf.json node --test test/perf/*.test.mjs
 
 # Turn on the commit-message check (subject must name a node or milestone id).
 hooks:
