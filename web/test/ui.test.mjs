@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { scaleFor } from "../src/classify.js";
 import { noticeText } from "../src/notice.js";
-import { gridView } from "../src/grid.js";
+import { gridView, zipMetricValues, zipView } from "../src/grid.js";
 import { WINDOW_SOURCE, areaAttribution } from "../src/sources.js";
 import { computeView } from "../src/render.js";
 import { createStore, initialState, validate } from "../src/state.js";
@@ -25,6 +25,7 @@ test("the initial state is the B21 default view", () => {
     selected: null,
     compare: [],
     overlay: false,
+    geography: "mha",
   });
 });
 
@@ -157,4 +158,81 @@ test("the map credits each provider whose licence asks for attribution, once (C2
   // The basemap source credits OpenStreetMap itself.
   assert.doesNotMatch(html, /OpenStreetMap/);
   assert.doesNotMatch(html, /Census|Defense Travel/);
+});
+
+// C26-C28 (D36): the ZIP view on the delivered B36.
+const zipgrid = read("zipgrid_2026.json");
+const zipFiles = { ...files, zipgrid };
+const someZip = Object.keys(zipgrid.zips).find((zip) => zipgrid.zips[zip].rent.status.every((s) => s === "ok"));
+const zipArea = (zip) => zipgrid.zips[zip]?.area;
+
+test("B21 offers the MHA and the ZIP view, MHA first", () => {
+  assert.deepEqual(ui.grid.geographies.map((g) => g.id), ["mha", "zip"]);
+  assert.equal(ui.grid.default_geography, "mha");
+  assert.ok(ui.grid.titles.geography);
+});
+
+test("a ZIP code is kept in the ZIP view and becomes its MHA outside it", () => {
+  const zipState = { ...initialState(ui), geography: "zip", selected: someZip, compare: [someZip, "CO046"] };
+  // Before B36 loads, the ZIP view keeps a well-formed ZIP code.
+  assert.equal(validate(ui, zipState).state.selected, someZip);
+  assert.equal(validate(ui, zipState, zipArea).state.selected, someZip);
+  const back = validate(ui, { ...zipState, geography: "mha" }, zipArea).state;
+  assert.equal(back.selected, zipArea(someZip));
+  assert.deepEqual(back.compare, [...new Set([zipArea(someZip), "CO046"])]);
+  // A ZIP code B36 does not draw is dropped once B36 is known; nonsense is dropped at once.
+  assert.equal(validate(ui, { ...zipState, selected: "00000" }, zipArea).state.selected, null);
+  assert.equal(validate(ui, { ...zipState, selected: "8090" }).state.selected, null);
+  assert.equal(validate(ui, { ...zipState, geography: "county" }).state.geography, "mha");
+});
+
+test("the store checks ZIP codes again when B36 arrives", () => {
+  const store = createStore(ui, { ...initialState(ui), geography: "zip", selected: "00000" });
+  assert.equal(store.get().selected, "00000");
+  store.setZipLookup(zipArea);
+  assert.equal(store.get().selected, null);
+});
+
+test("the ZIP view classes every B36 ZIP by the same rule and scale, and never shows clusters", () => {
+  const state = { ...initialState(ui), geography: "zip", overlay: true, selected: someZip, compare: [someZip] };
+  const view = computeView(zipFiles, state);
+  assert.equal(view.zipClasses.size, Object.keys(zipgrid.zips).length);
+  const zv = zipView(files.grid, zipgrid, someZip, "E5", "with", "standard", "rent");
+  const breaks = view.scale.breaks;
+  assert.equal(view.zipClasses.get(someZip), breaks.filter((b) => b <= zv.adequacy_ratio).length);
+  assert.equal(view.overlay, false);
+  assert.equal(view.research, null);
+  assert.deepEqual(view.selected.rent, zv);
+  assert.equal(view.selectedArea.rent.adequacy_ratio, gridView(files.grid, zipArea(someZip), "E5", "with", "standard", "rent").adequacy_ratio);
+  assert.equal(view.compared[0].view.adequacy_ratio, zv.adequacy_ratio);
+  // The MHA view of the same state draws no ZIP codes.
+  assert.equal(computeView(zipFiles, { ...state, geography: "mha", overlay: false, selected: null, compare: [] }).zipClasses, null);
+  // Before B36 loads, a ZIP selection has no view yet.
+  assert.equal(computeView(files, state).selected, null);
+});
+
+test("every ZIP view carries BAH from its MHA", () => {
+  for (const zip of Object.keys(zipgrid.zips).filter((_, i) => i % 97 === 0)) {
+    const area = zipgrid.zips[zip].area;
+    for (const mode of ["rent", "buy"]) {
+      const zv = zipView(files.grid, zipgrid, zip, "O3", "with", "standard", mode);
+      assert.equal(zv.bah_monthly, gridView(files.grid, area, "O3", "with", "standard", mode).bah_monthly, zip);
+    }
+  }
+});
+
+test("the map's fast ZIP values equal zipView for every ZIP code (C27)", () => {
+  for (const [rank, dependents, homeType, mode, metric] of [
+    ["E5", "with", "standard", "rent", "adequacy_ratio"],
+    ["O3", "with", "standard", "buy", "surplus_usd"],
+    ["O7", "with", "standard", "rent", "design_gap_usd"],
+    ["E1", "without", "sfh4", "buy", "coverage_ratio"],
+    ["W2", "without", "apt1", "rent", "adequacy_ratio"],
+  ]) {
+    const { zips, values } = zipMetricValues(files.grid, zipgrid, rank, dependents, homeType, mode, metric);
+    assert.deepEqual(zips, Object.keys(zipgrid.zips));
+    zips.forEach((zip, n) => {
+      assert.equal(values[n], zipView(files.grid, zipgrid, zip, rank, dependents, homeType, mode)[metric], `${zip} ${rank} ${homeType} ${mode} ${metric}`);
+    });
+  }
 });

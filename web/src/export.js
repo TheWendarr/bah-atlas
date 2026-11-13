@@ -1,7 +1,8 @@
 // C19: the current view as CSV, one row per area. Every value comes from gridView, so the
 // file matches the map; labels come from B21. Pure apart from download().
+// C28: in the ZIP view, one row per ZIP code from zipView, with its MHA in `area`.
 
-import { gridView } from "./grid.js";
+import { gridView, zipView } from "./grid.js";
 import { labelOf } from "./notice.js";
 
 // Interface wording that describes no data (D29).
@@ -11,6 +12,7 @@ export const COLUMNS = [
   "code",
   "name",
   "class",
+  "area",
   "rank",
   "dependents",
   "home_type",
@@ -53,13 +55,19 @@ export function viewRows(files, state) {
     home_type: labelOf(ui.grid.home_types, state.homeType),
     mode: labelOf(ui.modes, state.mode),
   };
-  return Object.keys(grid.areas).map((code) => {
-    const area = ui.areas[code];
-    const view = gridView(grid, code, state.rank, state.dependents, state.homeType, state.mode);
+  const zipRows = state.geography === "zip" && files.zipgrid;
+  const ids = zipRows ? Object.keys(files.zipgrid.zips) : Object.keys(grid.areas);
+  return ids.map((code) => {
+    const areaCode = zipRows ? files.zipgrid.zips[code].area : code;
+    const area = ui.areas[areaCode];
+    const view = zipRows
+      ? zipView(grid, files.zipgrid, code, state.rank, state.dependents, state.homeType, state.mode)
+      : gridView(grid, code, state.rank, state.dependents, state.homeType, state.mode);
     return {
       code,
-      name: area.display_name ?? area.name,
-      class: area.class,
+      name: zipRows ? `ZIP ${code}` : area.display_name ?? area.name,
+      class: zipRows ? "zip" : area.class,
+      area: areaCode,
       ...selection,
       standard_view: view.standard_view,
       status: view.status,
@@ -105,7 +113,8 @@ export function toCsv(files, state) {
 }
 
 export function fileName(ui, state) {
-  return `bah-atlas_${ui.bah_year}_${state.rank}_${state.dependents}_${state.homeType}_${state.mode}.csv`;
+  const zip = state.geography === "zip" ? "_zip" : "";
+  return `bah-atlas_${ui.bah_year}_${state.rank}_${state.dependents}_${state.homeType}_${state.mode}${zip}.csv`;
 }
 
 export function download(text, name) {

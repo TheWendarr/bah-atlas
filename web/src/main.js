@@ -8,30 +8,42 @@ import { EXPORT_LABEL, download, fileName, toCsv } from "./export.js";
 import { showArea } from "./locate.js";
 import { stateFromHash, writeHash } from "./permalink.js";
 import { NO_VALUE } from "./research.js";
-import { createSearch } from "./search.js";
+import { checkZipFile, createSearch } from "./search.js";
 import { renderCompare } from "./compare.js";
 import {
+  ZIP_MIN_ZOOM,
   addAreaLayers,
   addClusterLayers,
   addPinnedLayer,
   addSelectionLayer,
+  addZipLayers,
   applyClasses,
   applyClusters,
+  applyZipClasses,
   basemapStyle,
   createMap,
   jumpTo,
   onAreaClick,
   reveal,
-  setOverlay,
+  setLayers,
   setPinned,
   setSelected,
+  zipLayerShown,
 } from "./map.js";
 import { renderDetail } from "./panel.js";
 import { computeView } from "./render.js";
 import { areaAttribution, renderFooterBuild, renderSources } from "./sources.js";
-import { MAX_COMPARE, createStore, initialState } from "./state.js";
+import { MAX_COMPARE, createStore, initialState, isZip } from "./state.js";
 
 const SITE = __SITE__;
+
+// C27: interface wording for the ZIP view that describes no data (D29).
+const ZIP_TEXT = {
+  zoom: "Zoom in to see ZIP codes. Farther out, the map shows Military Housing Areas.",
+  loading: "Loading ZIP codes…",
+  failed: "The ZIP code values did not load. Check the connection, then choose ZIP code again.",
+  mismatch: "The ZIP code values come from a different build than the map, so they were not used. Reload the page.",
+};
 
 // Two causes share the error screen, each with its own explanation: files from different
 // builds (ICD 9, must 6), and anything else that stops the map, such as a file that did
@@ -99,19 +111,79 @@ async function start() {
   legendEl.hidden = false;
 
   let classes = new Map();
+  let zipClasses = new Map();
   let clusterStates = new Map();
   let shown = null;
   const locate = (code) =>
-    showArea(map, SITE.boundsPath, code, panelEl).catch((error) => console.warn(`Area bounds: ${error.message}`));
+    (isZip(code)
+      ? showArea(map, SITE.zipBoundsPath, code, panelEl, 11)
+      : showArea(map, SITE.boundsPath, code, panelEl)
+    ).catch((error) => console.warn(`Bounds: ${error.message}`));
+
+  // C27: the ZIP view's values (B36) and tiles (B35) load the first time it is chosen.
+  const zipHint = document.getElementById("zip-hint");
+  let zipLoading = null;
+  let zipProblem = null;
+  function updateZipHint() {
+    const state = store.get();
+    let text = null;
+    if (state.geography === "zip") {
+      if (zipProblem) text = zipProblem;
+      else if (!files.zipgrid) text = ZIP_TEXT.loading;
+      else if (map.getZoom() < ZIP_MIN_ZOOM) text = ZIP_TEXT.zoom;
+    }
+    zipHint.hidden = text === null;
+    zipHint.textContent = text ?? "";
+    document.documentElement.dataset.zip = files.zipgrid ? "ready" : zipProblem ? "failed" : zipLoading ? "loading" : "off";
+  }
+  function ensureZipGrid() {
+    if (files.zipgrid || zipLoading) return zipLoading;
+    zipProblem = null;
+    addZipLayers(map, {
+      zipsUrl: SITE.zipsUrl,
+      attribution: areaAttribution(ui),
+      colors: ui.metrics[ui.default_metric].colors,
+      noDataColor: ui.no_data_color,
+    });
+    zipLoading = fetch(`${SITE.dataPath}/zipgrid_${SITE.year}.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`zipgrid_${SITE.year}.json: HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((doc) => {
+        // ICD 9, must 6: a ZIP grid from another build is refused.
+        if (checkZipFile(doc, ui.build_id, "zipgrid").length) {
+          zipProblem = ZIP_TEXT.mismatch;
+          return;
+        }
+        files.zipgrid = doc;
+        const { selected, compare } = store.get();
+        setSelected(map, selected, null);
+        setPinned(map, compare, []);
+        store.setZipLookup((zip) => doc.zips[zip]?.area);
+      })
+      .catch((error) => {
+        console.warn(`ZIP grid: ${error.message}`);
+        zipProblem = ZIP_TEXT.failed;
+        zipLoading = null;
+      })
+      .finally(updateZipHint);
+    updateZipHint();
+    return zipLoading;
+  }
+  map.on("zoomend", updateZipHint);
 
   function render(state, previous = null) {
+    if (state.geography === "zip") ensureZipGrid();
     const view = computeView(files, state);
     classes = applyClasses(map, view.classes, classes);
+    if (view.zipClasses) zipClasses = applyZipClasses(map, view.zipClasses, zipClasses);
     if (!previous || previous.selected !== state.selected) setSelected(map, state.selected, previous?.selected ?? null);
     if (!previous || previous.compare !== state.compare) setPinned(map, state.compare, previous?.compare ?? []);
     // C16: the overlay replaces the choropleth's colours and legend while it shows.
     if (view.overlay) clusterStates = applyClusters(map, view.clusters, clusterStates);
-    setOverlay(map, view.overlay);
+    setLayers(map, { overlay: view.overlay, geography: view.zipClasses ? "zip" : "mha" });
+    updateZipHint();
     updateControls(state, view.standardView, view.research);
     noticeEl.textContent = view.notice;
     noticeEl.classList.toggle("off-standard", !view.standardView);
@@ -124,7 +196,7 @@ async function start() {
     // One panel holds the selected area's detail (C11) above the comparison (C12), so an
     // area just clicked is always in view.
     const sections = [
-      renderDetail(files, state, view.selected, view.scales, view.selectedCluster),
+      renderDetail(files, state, view.selected, view.scales, view.selectedCluster, view.selectedArea),
       renderCompare(files, state, view.compared, view.scales),
     ].filter(Boolean);
     // Keep the reader's place, and keyboard focus on the same button, when the panel is
@@ -163,9 +235,12 @@ async function start() {
   createSearch(searchEl, {
     ui,
     url: `${SITE.dataPath}/zips_${SITE.year}.json`,
-    onFound: (code) => {
-      store.set({ selected: code });
-      locate(code);
+    // C28: in the ZIP view, a ZIP code it draws opens on its own; any other opens its area.
+    onFound: async (code, zip) => {
+      if (store.get().geography === "zip") await ensureZipGrid();
+      const target = store.get().geography === "zip" && files.zipgrid?.zips[zip] ? zip : code;
+      store.set({ selected: target });
+      locate(target);
     },
   });
   searchEl.hidden = false;
@@ -235,6 +310,11 @@ async function start() {
     classOf: (code) => classes.get(code),
     standardView: () => shown.standardView,
     featureState: (code) => map.getFeatureState({ source: "areas", sourceLayer: "areas", id: code }),
+    zipClassOf: (zip) => zipClasses.get(zip),
+    zipFeatureState: (zip) => map.getFeatureState({ source: "zips", sourceLayer: "zips", id: zip }),
+    zipLayerShown: () => zipLayerShown(map),
+    renderedZips: () => (map.getLayer("zip-fill") ? map.queryRenderedFeatures({ layers: ["zip-fill"] }).length : 0),
+    zoomTo: (center, zoom) => map.jumpTo({ center, zoom }),
     overlayShown: () => map.getLayoutProperty("cluster-fill", "visibility") === "visible",
     bounds: () => map.getBounds().toArray(),
     pointOf: (lngLat) => {

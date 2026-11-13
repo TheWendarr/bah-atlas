@@ -10,13 +10,16 @@ const KEYS = [
   ["homeType", "home"],
   ["mode", "mode"],
   ["metric", "show"],
+  // C26: written only for the ZIP view, so every link made before it keeps its meaning.
+  ["geography", "geo"],
   ["selected", "area"],
   ["compare", "compare"],
   ["overlay", "clusters"],
 ];
 
 // The selection is always written in full, so a link keeps its meaning if a later build
-// changes the defaults. An area, pinned areas and the overlay are written only when set.
+// changes the defaults. An area (or ZIP code), pinned places, the overlay and the ZIP view
+// are written only when set.
 export function toHash(state) {
   const parts = [];
   for (const [field, key] of KEYS) {
@@ -24,6 +27,7 @@ export function toHash(state) {
     if (field === "selected" && value === null) continue;
     if (field === "compare" && !value.length) continue;
     if (field === "overlay" && !value) continue;
+    if (field === "geography" && value !== "zip") continue;
     const text = field === "compare" ? value.map(encodeURIComponent).join(",") : encodeURIComponent(field === "overlay" ? "on" : value);
     parts.push(`${key}=${text}`);
   }

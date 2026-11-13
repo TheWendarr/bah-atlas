@@ -1,10 +1,12 @@
 // C11: the detail panel for one area. It shows the selected rank's BAH against the local
 // cost of the selected home, to rent and to buy, side by side. Every value comes from
 // gridView; status and caveat texts come from B21 (ICD 9, musts 3 and 4).
+// C28 (D36): the same panel for a ZIP code, with its MHA's figure for the chosen measure
+// beside it and the zip-level caveat (one BAH rate per MHA).
 
 import { formatMetric, usd } from "./format.js";
 import { labelOf } from "./notice.js";
-import { MAX_COMPARE } from "./state.js";
+import { MAX_COMPARE, isZip } from "./state.js";
 
 // Interface wording that describes no data (D29).
 const UI = {
@@ -20,7 +22,22 @@ const UI = {
   full: "Two areas are pinned. Unpin one to compare this area.",
   cluster: "Local cluster",
   pValue: "Pseudo p-value",
+  zip: (zip) => `ZIP ${zip}`,
+  inArea: (name) => `In ${name}`,
+  areaLine: (name) => `${name}, the MHA as a whole`,
 };
+
+// The name a place is shown by: an area's display name, or "ZIP 80903".
+export function placeName(files, id) {
+  if (isZip(id)) return UI.zip(id);
+  const area = files.ui.areas[id];
+  return area.display_name ?? area.name;
+}
+
+// The MHA a ZIP code belongs to, from B36.
+export function zipArea(files, zip) {
+  return files.zipgrid?.zips[zip]?.area ?? null;
+}
 
 // The cluster-analysis caveat belongs with the research overlay (ICD 9, must 9).
 const PANEL_AREA_CAVEATS = (id) => id !== "outside_cluster_scope";
@@ -77,10 +94,15 @@ export function caveatList(ui, ids, open, heading = UI.notes) {
   return details;
 }
 
-// Area-level caveats from B20 plus the row-level caveats of the views shown.
+// Area-level caveats from B20 plus the row-level caveats of the views shown. A ZIP code's
+// list opens with the B21 caveats of level `zip` (ICD 5c): one BAH rate per MHA.
 export function caveatIds(files, code, views) {
+  const zipLevel = isZip(code)
+    ? Object.entries(files.ui.caveats).filter(([, caveat]) => caveat.level === "zip").map(([id]) => id)
+    : [];
   return [
     ...new Set([
+      ...zipLevel,
       ...(files.payload.areas[code]?.caveats ?? []).filter(PANEL_AREA_CAVEATS),
       ...views.flatMap((view) => view.caveats),
     ]),
@@ -123,12 +145,13 @@ function clusterBox(ui, entry) {
 
 // Returns the panel section, or null when no area is selected. `cluster` is set only while
 // the overlay shows (render.js), with the area's B27 entry or null outside the analysis.
-export function renderDetail(files, state, views, scales, cluster = null) {
+export function renderDetail(files, state, views, scales, cluster = null, areaViews = null) {
   const code = state.selected;
-  if (code === null) return null;
+  if (code === null || views === null) return null;
 
   const { ui } = files;
-  const area = ui.areas[code];
+  const zip = isZip(code);
+  const area = zip ? { name: UI.zip(code), class: "zip" } : ui.areas[code];
   const modes = ui.modes;
   const current = modes.findIndex((mode) => mode.id === state.mode);
   const byMode = modes.map((mode) => views[mode.id]);
@@ -195,7 +218,28 @@ export function renderDetail(files, state, views, scales, cluster = null) {
   }
   table.append(thead, tbody);
 
-  section.append(head, element("p", "panel-context", contextLine(ui, state)), summary, table);
+  section.append(head);
+  if (zip) section.append(element("p", "panel-area", UI.inArea(placeName(files, zipArea(files, code)))));
+  section.append(element("p", "panel-context", contextLine(ui, state)), summary, table);
+
+  // C28: the MHA's figure for the chosen measure, in both modes, so a ZIP reads against it.
+  if (zip && areaViews) {
+    const scale = scales[state.metric];
+    const line = element("table", "panel-table panel-area-table");
+    const tr = element("tr");
+    const th = element("th", "", `${UI.areaLine(placeName(files, zipArea(files, code)))}: ${scale.shortLabel}`);
+    th.scope = "row";
+    tr.append(th);
+    modes.forEach((mode, index) => {
+      const td = element("td", index === current ? "current" : "", formatMetric(areaViews[mode.id][state.metric], scale.format));
+      td.dataset.field = "area-metric";
+      tr.append(td);
+    });
+    const body = element("tbody");
+    body.append(tr);
+    line.append(body);
+    section.append(line);
+  }
 
   // A status other than ok explains why a value is missing or limited. One that both
   // modes share is shown once.
@@ -216,7 +260,7 @@ export function renderDetail(files, state, views, scales, cluster = null) {
     ids = [...new Set([...ids, ...extra])].filter((id) => id in ui.caveats);
   }
   // County Cost Groups and the territory bucket open with their approximate-boundary note
-  // in view (ICD 9, must 4).
+  // in view (ICD 9, must 4); a ZIP code opens with the note that BAH is set for its MHA.
   if (ids.length) section.append(caveatList(ui, ids, area.class !== "mha" || cluster !== null));
 
   section.append(pinButton(code, state.compare));

@@ -1,4 +1,4 @@
-// C15, C17: the bounding box of every area, read from the delivered area tiles at build
+// C15, C17, C27: the bounding box of every area (or ZIP code), read from the delivered tiles at build
 // time, so the map can move to an area found by ZIP code or named in a link. B7 carries
 // no bounds and no point for an area, and the browser can only read the tiles it has
 // loaded, so the box is taken once here from every tile at one zoom level.
@@ -45,25 +45,41 @@ function extend(box, coordinates) {
 }
 
 // Returns { code: [west, south, east, north] }, rounded outward to 0.001 degree.
-export async function areaBounds(path, layerName = "areas") {
+// `deepest` (C27, the ZIP tiles): read the archive's deepest zoom instead, reached through
+// the tiles that exist at the first zoom read. A ZIP code of a single building collapses to
+// nothing in a zoom 6 tile, so only the deepest zoom holds every ZIP code.
+export async function areaBounds(path, layerName = "areas", idField = "code", { deepest = false } = {}) {
   const { source, close } = fileSource(path);
   try {
     const archive = new PMTiles(source);
     const header = await archive.getHeader();
     const zoom = Math.min(Math.max(ZOOM, header.minZoom), header.maxZoom);
     const boxes = {};
+    const read = async (z, x, y) => {
+      const tile = await archive.getZxy(z, x, y);
+      if (!tile) return false;
+      const layer = new VectorTile(new PbfReader(new Uint8Array(tile.data))).layers[layerName];
+      if (!layer) return true;
+      for (let i = 0; i < layer.length; i++) {
+        const feature = layer.feature(i);
+        const code = String(feature.properties[idField]);
+        boxes[code] ??= [Infinity, Infinity, -Infinity, -Infinity];
+        extend(boxes[code], feature.toGeoJSON(x, y, z).geometry.coordinates);
+      }
+      return true;
+    };
     const n = 2 ** zoom;
+    const present = [];
     for (let x = 0; x < n; x++) {
       for (let y = 0; y < n; y++) {
-        const tile = await archive.getZxy(zoom, x, y);
-        if (!tile) continue;
-        const layer = new VectorTile(new PbfReader(new Uint8Array(tile.data))).layers[layerName];
-        if (!layer) continue;
-        for (let i = 0; i < layer.length; i++) {
-          const feature = layer.feature(i);
-          const code = String(feature.properties.code);
-          boxes[code] ??= [Infinity, Infinity, -Infinity, -Infinity];
-          extend(boxes[code], feature.toGeoJSON(x, y, zoom).geometry.coordinates);
+        if (deepest ? await archive.getZxy(zoom, x, y) : await read(zoom, x, y)) present.push([x, y]);
+      }
+    }
+    if (deepest) {
+      const step = 2 ** (header.maxZoom - zoom);
+      for (const [x, y] of present) {
+        for (let dx = 0; dx < step; dx++) {
+          for (let dy = 0; dy < step; dy++) await read(header.maxZoom, x * step + dx, y * step + dy);
         }
       }
     }

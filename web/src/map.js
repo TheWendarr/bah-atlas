@@ -1,4 +1,4 @@
-// C5, C8, C9: MapLibre setup, the area layers and the value join.
+// C5, C8, C9: MapLibre setup, the area layers and the value join. C27: the ZIP code layers.
 
 import { MapLibreMap, addProtocol, setWorkerUrl } from "maplibre-gl";
 import { Protocol } from "pmtiles";
@@ -6,6 +6,10 @@ import { NO_CLASS } from "./classify.js";
 import { NO_VALUE, OUT_OF_SCOPE } from "./research.js";
 
 const SOURCE = "areas";
+// C27 (D36, ICD 4b): the ZIP code tiles, one layer `zips` keyed on `zip`, from zoom 6.
+const ZIP_SOURCE = "zips";
+export const ZIP_MIN_ZOOM = 6;
+const ZIP = /^\d{5}$/;
 // D29: the map opens on the 48 states; the jump buttons reach the rest.
 const REGIONS = {
   conus: [-124.9, 24.4, -66.9, 49.5],
@@ -187,14 +191,93 @@ export function addClusterLayers(map, { colors, noDataColor, fdr }) {
   );
 }
 
+// C27: the ZIP code layers, added the first time the reader chooses the ZIP view, so the
+// first load never fetches the ZIP archive. They sit above the area fills and below the
+// MHA outlines, so each MHA's edge stays visible over its ZIP codes.
+export function addZipLayers(map, { zipsUrl, attribution, colors, noDataColor }) {
+  if (map.getSource(ZIP_SOURCE)) return;
+  map.addSource(ZIP_SOURCE, {
+    type: "vector",
+    url: `pmtiles://${new URL(zipsUrl, location.href).href}`,
+    promoteId: "zip",
+    attribution,
+  });
+  const fill = ["match", ["coalesce", ["feature-state", "class"], NO_CLASS]];
+  colors.forEach((color, index) => fill.push(index, color));
+  fill.push(noDataColor);
+  const common = { source: ZIP_SOURCE, "source-layer": ZIP_SOURCE, minzoom: ZIP_MIN_ZOOM, layout: { visibility: "none" } };
+  map.addLayer({ id: "zip-fill", type: "fill", ...common, paint: { "fill-color": fill } }, "mha-outline");
+  map.addLayer(
+    { id: "zip-outline", type: "line", ...common, paint: { "line-color": "#ffffff", "line-width": 0.4 } },
+    "mha-outline",
+  );
+  map.addLayer(
+    {
+      id: "zip-pinned",
+      type: "line",
+      ...common,
+      paint: {
+        "line-color": "#1b2327",
+        "line-width": 2,
+        "line-dasharray": [2, 1.5],
+        "line-opacity": ["case", ["boolean", ["feature-state", "pinned"], false], 1, 0],
+      },
+    },
+    "area-selected",
+  );
+  map.addLayer(
+    {
+      id: "zip-selected",
+      type: "line",
+      ...common,
+      paint: {
+        "line-color": "#1b2327",
+        "line-width": 2.5,
+        "line-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0],
+      },
+    },
+    "area-selected",
+  );
+  pointerOver(map, "zip-fill");
+}
+
+const ZIP_LAYERS = ["zip-fill", "zip-outline", "zip-pinned", "zip-selected"];
+
 // The choropleth stays in place, transparent, while the overlay shows: it is the layer a
-// click is read from, and it returns at once when the overlay is turned off.
-export function setOverlay(map, visible) {
-  const visibility = visible ? "visible" : "none";
-  if (map.getLayoutProperty("cluster-fill", "visibility") === visibility) return;
-  map.setLayoutProperty("cluster-fill", "visibility", visibility);
-  map.setLayoutProperty("cluster-fdr", "visibility", visibility);
-  map.setPaintProperty("area-fill", "fill-opacity", visible ? 0 : 1);
+// click is read from, and it returns at once when the overlay is turned off. In the ZIP
+// view (C27) the MHA fills give way to the ZIP fills from zoom 6, where the ZIP tiles
+// begin; County Cost Groups and the territory bucket keep their area fill, and below
+// zoom 6 the map shows MHAs. The MHA outlines widen so each MHA reads over its ZIPs.
+export function setLayers(map, { overlay, geography }) {
+  const zip = geography === "zip" && Boolean(map.getLayer("zip-fill"));
+  const visibility = overlay ? "visible" : "none";
+  if (map.getLayoutProperty("cluster-fill", "visibility") !== visibility) {
+    map.setLayoutProperty("cluster-fill", "visibility", visibility);
+    map.setLayoutProperty("cluster-fdr", "visibility", visibility);
+  }
+  const opacity = overlay ? 0 : zip ? ["step", ["zoom"], 1, ZIP_MIN_ZOOM, ["case", ["==", ["get", "class"], "mha"], 0, 1]] : 1;
+  map.setPaintProperty("area-fill", "fill-opacity", opacity);
+  map.setPaintProperty("mha-outline", "line-width", zip ? ["step", ["zoom"], 0.5, ZIP_MIN_ZOOM, 1.8] : 0.5);
+  if (map.getLayer("zip-fill")) {
+    for (const id of ZIP_LAYERS) map.setLayoutProperty(id, "visibility", zip ? "visible" : "none");
+  }
+}
+
+// Whether the ZIP layer is what the reader sees: the ZIP view, zoomed in far enough.
+export function zipLayerShown(map) {
+  return Boolean(map.getLayer("zip-fill")) && map.getLayoutProperty("zip-fill", "visibility") === "visible"
+    && map.getZoom() >= ZIP_MIN_ZOOM;
+}
+
+// The feature a selection or pin names: a five-digit ZIP code is in the ZIP layer.
+function target(id) {
+  return ZIP.test(id) ? { source: ZIP_SOURCE, sourceLayer: ZIP_SOURCE, id } : { source: SOURCE, sourceLayer: SOURCE, id };
+}
+
+function setState(map, id, state) {
+  const where = target(id);
+  if (where.source === ZIP_SOURCE && !map.getSource(ZIP_SOURCE)) return;
+  map.setFeatureState(where, state);
 }
 
 // Writes only the areas whose cluster or FDR mark changed.
@@ -210,29 +293,38 @@ export function applyClusters(map, clusters, previous = new Map()) {
 
 export function setPinned(map, codes, previous = []) {
   for (const code of previous) {
-    if (!codes.includes(code)) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { pinned: false });
+    if (!codes.includes(code)) setState(map, code, { pinned: false });
   }
-  for (const code of codes) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { pinned: true });
+  for (const code of codes) setState(map, code, { pinned: true });
 }
 
 export function setSelected(map, code, previous) {
-  if (previous !== null && previous !== code) {
-    map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: previous }, { selected: false });
-  }
-  if (code !== null) map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { selected: true });
+  if (previous !== null && previous !== code) setState(map, previous, { selected: false });
+  if (code !== null) setState(map, code, { selected: true });
 }
 
-// Calls back with the clicked area's code, or null for a click outside every area, and
-// the clicked point in map pixels.
+// Calls back with the clicked area's code (or, where the ZIP layer shows, the clicked ZIP
+// code), or null for a click outside every area, and the clicked point in map pixels.
 export function onAreaClick(map, callback) {
   map.on("click", (event) => {
+    if (zipLayerShown(map)) {
+      const [zip] = map.queryRenderedFeatures(event.point, { layers: ["zip-fill"] });
+      if (zip) {
+        callback(String(zip.id), event.point);
+        return;
+      }
+    }
     const [feature] = map.queryRenderedFeatures(event.point, { layers: ["area-fill"] });
     callback(feature ? String(feature.id) : null, event.point);
   });
-  map.on("mouseenter", "area-fill", () => {
+  pointerOver(map, "area-fill");
+}
+
+function pointerOver(map, layer) {
+  map.on("mouseenter", layer, () => {
     map.getCanvas().style.cursor = "pointer";
   });
-  map.on("mouseleave", "area-fill", () => {
+  map.on("mouseleave", layer, () => {
     map.getCanvas().style.cursor = "";
   });
 }
@@ -252,6 +344,17 @@ export function reveal(map, point, panel) {
     : { x: (sheet.left - box.left) / 2, y: box.height / 2 };
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   map.panBy([point.x - target.x, point.y - target.y], { duration: still ? 0 : 400 });
+}
+
+// C27: writes only the ZIP codes whose class changed.
+export function applyZipClasses(map, classes, previous = new Map()) {
+  if (!map.getSource(ZIP_SOURCE)) return previous;
+  for (const [zip, value] of classes) {
+    if (previous.get(zip) !== value) {
+      map.setFeatureState({ source: ZIP_SOURCE, sourceLayer: ZIP_SOURCE, id: zip }, { class: value });
+    }
+  }
+  return classes;
 }
 
 // Writes only the areas whose class changed.

@@ -78,6 +78,12 @@ const year = site.year;
 const buildId = sums.get(`build_manifest_${year}.json`);
 const areasName = `areas_${year}.pmtiles`;
 const hashedAreas = `areas_${year}.${sums.get(areasName).slice(0, 8)}.pmtiles`;
+// C27 (D36): the ZIP code tiles (B35), on the same host under a content-hashed name.
+const zipsName = `zipcodes_${year}.pmtiles`;
+if (!sums.has(zipsName) || !sums.has(`zipgrid_${year}.json`)) {
+  die(`the delivery has no ${zipsName} or zipgrid_${year}.json; run \`make layer2\` and \`make deliver REPLACE=1\` (data contract 1.3.0)`);
+}
+const hashedZips = `zipcodes_${year}.${sums.get(zipsName).slice(0, 8)}.pmtiles`;
 const dataPath = `data/${buildId.slice(0, 8)}`;
 
 rmSync(DIST, { recursive: true, force: true });
@@ -97,6 +103,7 @@ let localBasemap = `tiles/${hashedAreas}`;
 if (dev) {
   mkdirSync(join(DIST, "tiles"));
   copyFileSync(join(DELIVERY, areasName), join(DIST, "tiles", hashedAreas));
+  copyFileSync(join(DELIVERY, zipsName), join(DIST, "tiles", hashedZips));
   if (existsSync(LOCAL_BASEMAP)) {
     localBasemap = `tiles/${site.basemap}`;
     copyFileSync(LOCAL_BASEMAP, join(DIST, localBasemap));
@@ -114,15 +121,21 @@ copyFileSync(workerSource, join(DIST, "assets", workerName));
 const bounds = JSON.stringify(await areaBounds(join(DELIVERY, areasName)));
 const boundsName = `area-bounds-${sha256(bounds).slice(0, 8)}.json`;
 writeFileSync(join(DIST, "assets", boundsName), bounds);
+// C27: the same for each ZIP code, for ZIP search and links in the ZIP view.
+const zipBounds = JSON.stringify(await areaBounds(join(DELIVERY, zipsName), "zips", "zip", { deepest: true }));
+const zipBoundsName = `zip-bounds-${sha256(zipBounds).slice(0, 8)}.json`;
+writeFileSync(join(DIST, "assets", zipBoundsName), zipBounds);
 
 const SITE = {
   year,
   dataPath,
   areasUrl: dev ? `tiles/${hashedAreas}` : `${site.tilesOrigin}/${hashedAreas}`,
+  zipsUrl: dev ? `tiles/${hashedZips}` : `${site.tilesOrigin}/${hashedZips}`,
   basemapPath: "basemap/",
   basemapUrl: dev ? localBasemap : `${site.tilesOrigin}/${site.basemap}`,
   workerPath: `assets/${workerName}`,
   boundsPath: `assets/${boundsName}`,
+  zipBoundsPath: `assets/${zipBoundsName}`,
 };
 
 const result = await build({
@@ -154,4 +167,4 @@ writeFileSync(join(DIST, "_headers"), headersFile());
 
 const size = (file) => `${(statSync(join(WEB, file)).size / 1024).toFixed(0)} KB`;
 for (const file of outputs) console.log(`${file}  ${size(file)}`);
-console.log(`build: ${dev ? "local" : "production"} site in web/dist, data path ${dataPath}, tiles ${SITE.areasUrl}`);
+console.log(`build: ${dev ? "local" : "production"} site in web/dist, data path ${dataPath}, tiles ${SITE.areasUrl} and ${SITE.zipsUrl}`);

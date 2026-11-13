@@ -22,12 +22,13 @@ export function normalizeZip(text) {
   return match ? match[1] : null;
 }
 
-// The same checks the contract gate applies to the other files.
-export function checkZipFile(file, buildId) {
+// The same checks the contract gate applies to the other files. Also used for the ZIP grid
+// (B36, C27), which loads on first use in the same way.
+export function checkZipFile(file, buildId, name = "zips") {
   const problems = [];
   const major = Number(String(file.schema_version).split(".")[0]);
-  if (major !== SUPPORTED_MAJOR) problems.push(`zips: schema_version ${file.schema_version}`);
-  if (file.build_id !== buildId) problems.push(`zips: build id begins ${String(file.build_id).slice(0, 8)}`);
+  if (major !== SUPPORTED_MAJOR) problems.push(`${name}: schema_version ${file.schema_version}`);
+  if (file.build_id !== buildId) problems.push(`${name}: build id begins ${String(file.build_id).slice(0, 8)}`);
   return problems;
 }
 
@@ -116,7 +117,7 @@ export function createSearch(root, { ui, url, onFound }) {
     if (outcome === "mismatch") return say(UI.mismatch);
     const found = findZip(index, ui, input.value);
     say(found.message);
-    if (found.code) onFound(found.code);
+    if (found.code) onFound(found.code, found.zip);
   });
 
   return { clear: () => say("") };

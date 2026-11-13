@@ -4,7 +4,8 @@
 
 import { formatMetric, signedUsd, usd } from "./format.js";
 import { labelOf } from "./notice.js";
-import { caveatIds, caveatList, contextLine, element, statusBox } from "./panel.js";
+import { caveatIds, caveatList, contextLine, element, placeName, statusBox } from "./panel.js";
+import { isZip } from "./state.js";
 
 // Interface wording that describes no data (D29).
 const UI = {
@@ -24,7 +25,8 @@ const UI = {
 // share, against the local cost.
 const DIFFERENCE = new Set(["design_gap_usd", "surplus_usd"]);
 
-const nameOf = (ui, code) => ui.areas[code].display_name ?? ui.areas[code].name;
+// C28: a pinned place may be a ZIP code in the ZIP view.
+const nameOf = (ui, code) => (isZip(code) ? placeName({ ui }, code) : ui.areas[code].display_name ?? ui.areas[code].name);
 
 function cell(tag, text, field = null, code = null) {
   const el = element(tag, "", text);
@@ -111,7 +113,7 @@ export function renderCompare(files, state, compared, scales) {
   for (const { code, view } of compared) {
     const ids = caveatIds(files, code, [view]);
     if (ids.length) {
-      const details = caveatList(ui, ids, ui.areas[code].class !== "mha", UI.notes(nameOf(ui, code)));
+      const details = caveatList(ui, ids, isZip(code) || ui.areas[code].class !== "mha", UI.notes(nameOf(ui, code)));
       details.dataset.code = code;
       section.append(details);
     }

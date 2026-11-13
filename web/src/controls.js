@@ -1,4 +1,4 @@
-// C7, C13: the selection controls. Native <select> and radio inputs, so keyboard,
+// C7, C13, C26: the selection controls. Native <select> and radio inputs, so keyboard,
 // screen-reader and phone behaviour come from the browser. Option labels come from B21;
 // only the wording that describes no data lives here (ICD 9, D29).
 
@@ -10,6 +10,8 @@ const UI = {
   overlay: "Show local clusters",
   // Names the views the overlay exists for, from B21's profile and home-type labels.
   overlayOnly: (profiles, standard) => `Only for ${profiles.join(" and ")} at the ${standard}`,
+  // C26: clusters were tested between MHAs, so the ZIP view has none (D36).
+  overlayMhaOnly: "Clusters are measured between MHAs, so they show only by MHA",
 };
 
 function select(id, title, options) {
@@ -74,12 +76,16 @@ function overlaySwitch(ui) {
 
 export function createControls(root, ui, store) {
   const titles = ui.grid.titles;
+  // C26 (D36): MHA or ZIP code. A build without the ZIP view has no geographies in B21.
+  const geographies = ui.grid.geographies ?? [];
+  const geography = geographies.length > 1 ? select("geography", titles.geography, geographies) : null;
   const rank = select("rank", titles.rank, ui.grid.ranks);
   const dependents = select("dependents", titles.dependents, ui.grid.dependents);
   const homeType = select("home-type", titles.home_type, ui.grid.home_types);
   const metric = select("metric", titles.metric, ui.grid.metrics.map((id) => ({ id, label: ui.metrics[id].short_label })));
   const mode = modeGroup(titles.mode, ui.modes);
   const overlay = overlaySwitch(ui);
+  const overlayOnlyText = overlay.hint.textContent;
 
   // Layout C on phones: a summary chip opens the controls as a sheet.
   const chip = document.createElement("button");
@@ -95,7 +101,8 @@ export function createControls(root, ui, store) {
   const fields = document.createElement("div");
   fields.id = "controls-fields";
   fields.className = "controls-fields";
-  fields.append(rank.wrap, dependents.wrap, homeType.wrap, mode.wrap, metric.wrap, overlay.wrap);
+  fields.append(...(geography ? [geography.wrap] : []), rank.wrap, dependents.wrap, homeType.wrap, mode.wrap, metric.wrap,
+    overlay.wrap);
   root.append(chip, fields);
 
   const setOpen = (open) => {
@@ -106,6 +113,7 @@ export function createControls(root, ui, store) {
   chip.addEventListener("click", () => setOpen(!root.classList.contains("open")));
   setOpen(false);
 
+  geography?.input.addEventListener("change", () => store.set({ geography: geography.input.value }));
   rank.input.addEventListener("change", () => store.set({ rank: rank.input.value }));
   dependents.input.addEventListener("change", () => store.set({ dependents: dependents.input.value }));
   homeType.input.addEventListener("change", () => store.set({ homeType: homeType.input.value }));
@@ -116,6 +124,7 @@ export function createControls(root, ui, store) {
   // Called by render with the current state, whether it is the statutory view, and the
   // research profile it is the statutory view of (null for any other view).
   return function update(state, standardView, research = null) {
+    if (geography) geography.input.value = state.geography;
     rank.input.value = state.rank;
     dependents.input.value = state.dependents;
     homeType.input.value = state.homeType;
@@ -131,7 +140,9 @@ export function createControls(root, ui, store) {
     overlay.input.disabled = research === null;
     overlay.input.checked = state.overlay && research !== null;
     overlay.hint.hidden = research !== null;
+    overlay.hint.textContent = state.geography === "zip" ? UI.overlayMhaOnly : overlayOnlyText;
     chipText.textContent = [
+      ...(state.geography === "zip" ? [labelOf(geographies, state.geography)] : []),
       labelOf(ui.grid.ranks, state.rank),
       labelOf(ui.grid.dependents, state.dependents),
       labelOf(ui.grid.home_types, state.homeType),

@@ -57,6 +57,28 @@ body {
 
 .map-problem[hidden] { display: none; }
 
+/* C27: a note over the map in the ZIP view: zoom in, loading, or did not load. */
+.zip-hint {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: min(460px, calc(100% - 20px));
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.zip-hint[hidden] { display: none; }
+
 .error { max-width: 520px; margin: 0 auto; padding: 48px 24px; font-size: 16px; line-height: 1.5; }
 
 .error h2 { margin: 0 0 12px; font-size: 26px; font-weight: 600; line-height: 1.2; }
@@ -228,6 +250,11 @@ body {
 }
 
 .panel-close:hover { background: #f1f3f4; }
+
+/* C28: the MHA a ZIP code belongs to, and that MHA's figure under the table. */
+.panel-area { margin: 2px 0 0; font-size: 14px; }
+
+.panel-area-table { margin-top: -4px; }
 
 .panel-context { margin: 2px 0 10px; font-size: 13px; color: var(--ink-muted); }
 

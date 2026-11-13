@@ -112,3 +112,32 @@ test("a selection change repaints in under 100 ms (X9)", async () => {
   assert.ok(update <= BUDGET.repaintMs, `${update} ms`);
   await context.close();
 });
+
+// C27 (D36): the ZIP view rewrites up to ~15,000 ZIP codes' feature-state on each change, the
+// risk the ZIP-view plan named. Measured zoomed in on Colorado Springs, on the same profile.
+test("a selection change in the ZIP view repaints in under 100 ms (X9, C27)", async () => {
+  const { context, page } = await throttled();
+  await page.goto(`${site.origin}/#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=zip`);
+  await page.waitForFunction(() => document.documentElement.dataset.zip === "ready", null, { timeout: 120_000 });
+  await page.evaluate(() => window.bahAtlas.zoomTo([-104.8, 38.85], 9));
+  await page.waitForFunction(() => window.bahAtlas.idle(), null, { timeout: 60_000 });
+  const ranks = ["O3", "E1", "W2", "O9", "E7", "E5"];
+  const times = await page.evaluate(async (ranks) => {
+    const out = [];
+    const idleOrTimeout = () => Promise.race([window.bahAtlas.nextIdle(), new Promise((resolve) => setTimeout(resolve, 5000))]);
+    for (const rank of ranks) {
+      const idle = idleOrTimeout();
+      const t0 = performance.now();
+      window.bahAtlas.set({ rank });
+      const update = performance.now() - t0;
+      await idle;
+      out.push({ rank, update_ms: Math.round(update * 10) / 10, to_idle_ms: Math.round(performance.now() - t0) });
+    }
+    return out;
+  }, ranks);
+  const update = Math.max(...times.map((t) => t.update_ms));
+  results.zip_repaint = { changes: times, max_update_ms: update };
+  console.log(`ZIP repaint: state to feature-state at most ${update} ms; to idle ${times.map((t) => t.to_idle_ms).join(", ")} ms`);
+  assert.ok(update <= BUDGET.repaintMs, `${update} ms`);
+  await context.close();
+});

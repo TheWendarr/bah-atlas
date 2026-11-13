@@ -1,14 +1,20 @@
 // C15, C17: move the map to one area. The boxes come from the area tiles at build time
-// (tools/area_bounds.mjs) and load on first use.
+// (tools/area_bounds.mjs) and load on first use. C27: the same for a ZIP code, from the
+// ZIP tiles, in a file of its own.
 
-let pending = null;
+const pending = new Map();
 
 export function loadBounds(path) {
-  pending ??= fetch(path).then((response) => {
-    if (!response.ok) throw new Error(`Area bounds: HTTP ${response.status}`);
-    return response.json();
-  });
-  return pending;
+  if (!pending.has(path)) {
+    pending.set(
+      path,
+      fetch(path).then((response) => {
+        if (!response.ok) throw new Error(`Bounds: HTTP ${response.status}`);
+        return response.json();
+      }),
+    );
+  }
+  return pending.get(path);
 }
 
 // A box wider than half the globe is the territory bucket, whose parts lie in the
@@ -33,12 +39,12 @@ export function paddingFor(container, panel) {
   return padding;
 }
 
-// Returns true when the map moved.
-export async function showArea(map, boundsPath, code, panel) {
+// Returns true when the map moved. A ZIP code is small, so the map may come closer to it.
+export async function showArea(map, boundsPath, code, panel, maxZoom = 9) {
   const boxes = await loadBounds(boundsPath);
   const box = boxes[code];
   if (!fitsOnMap(box)) return false;
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  map.fitBounds(box, { padding: paddingFor(map.getContainer(), panel), maxZoom: 9, duration: still ? 0 : 700 });
+  map.fitBounds(box, { padding: paddingFor(map.getContainer(), panel), maxZoom, duration: still ? 0 : 700 });
   return true;
 }

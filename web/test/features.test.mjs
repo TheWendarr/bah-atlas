@@ -5,8 +5,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { areaBounds } from "../tools/area_bounds.mjs";
-import { COLUMNS, textCell, toCsv, viewRows } from "../src/export.js";
-import { gridView } from "../src/grid.js";
+import { COLUMNS, fileName, textCell, toCsv, viewRows } from "../src/export.js";
+import { gridView, zipView } from "../src/grid.js";
 import { fitsOnMap } from "../src/locate.js";
 import { fromHash, stateFromHash, toHash } from "../src/permalink.js";
 import { computeView } from "../src/render.js";
@@ -224,4 +224,45 @@ test("a text cell that a spreadsheet would run as a formula is written as text (
   // Negative numbers stay numbers: the gap column is not a text cell.
   const row = toCsv(files, defaults).split("\r\n").find((line) => line.startsWith("NC182,"));
   assert.match(row, /,-\d+,/);
+});
+
+// C26-C28 (D36) ------------------------------------------------------------------------
+
+const zipgrid = read("zipgrid_2026.json");
+const zipCodes = Object.keys(zipgrid.zips);
+
+test("a ZIP-view link round-trips, and the MHA view writes no geo key (C26)", () => {
+  const state = { ...defaults, geography: "zip", selected: zipCodes[0], compare: [zipCodes[1], "CO046"] };
+  const lookup = (zip) => zipgrid.zips[zip]?.area;
+  const hash = toHash(state);
+  assert.match(hash, /&geo=zip&area=\d{5}&compare=\d{5},CO046$/);
+  assert.deepEqual(validate(ui, stateFromHash(defaults, hash), lookup).state, state);
+  assert.doesNotMatch(toHash(defaults), /geo=/);
+});
+
+test("the ZIP-view CSV has one row per B36 ZIP, its MHA in `area`, and zipView's values (C28)", () => {
+  const state = { ...defaults, geography: "zip", mode: "buy" };
+  const rows = viewRows({ ...files, zipgrid }, state);
+  assert.equal(rows.length, zipCodes.length);
+  for (const row of rows.filter((_, i) => i % 53 === 0)) {
+    const view = zipView(files.grid, zipgrid, row.code, state.rank, state.dependents, state.homeType, state.mode);
+    assert.equal(row.area, zipgrid.zips[row.code].area);
+    assert.equal(row.class, "zip");
+    for (const field of ["status", "bah_monthly", "cost_monthly", ...ui.grid.metrics]) assert.equal(row[field], view[field]);
+  }
+  // In the MHA view `area` is the area itself.
+  assert.ok(viewRows(files, defaults).every((row) => row.area === row.code));
+  assert.ok(fileName(ui, state).endsWith("_buy_zip.csv"));
+});
+
+test("the ZIP tiles hold exactly the B36 ZIPs, each inside its MHA's box (C27)", async () => {
+  const boxes = await areaBounds(new URL("zipcodes_2026.pmtiles", DELIVERY).pathname, "zips", "zip", { deepest: true });
+  assert.deepEqual(Object.keys(boxes).sort(), [...zipCodes].sort());
+  const areas = await areaBounds(new URL("areas_2026.pmtiles", DELIVERY).pathname);
+  for (const zip of zipCodes.filter((_, i) => i % 41 === 0)) {
+    const [w, s, e, n] = boxes[zip];
+    const [aw, as, ae, an] = areas[zipgrid.zips[zip].area];
+    // Both boxes are read from simplified tiles at different zooms, so allow a hundredth of a degree.
+    assert.ok(w >= aw - 0.01 && s >= as - 0.01 && e <= ae + 0.01 && n <= an + 0.01, zip);
+  }
 });
