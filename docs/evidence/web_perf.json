@@ -15,9 +15,9 @@
     "repaintMs": 100
   },
   "first_load": {
-    "usable_ms": 1754,
-    "ready_ms": 1772,
-    "bytes_before_basemap": 774146,
+    "usable_ms": 1775,
+    "ready_ms": 1796,
+    "bytes_before_basemap": 774211,
     "basemap_bytes": 11063,
     "requests": 19
   },
@@ -25,71 +25,71 @@
     "changes": [
       {
         "rank": "O3",
-        "update_ms": 9.3,
-        "to_idle_ms": 29
+        "update_ms": 9.8,
+        "to_idle_ms": 25
       },
       {
         "rank": "E1",
-        "update_ms": 7.5,
-        "to_idle_ms": 20
+        "update_ms": 7.8,
+        "to_idle_ms": 21
       },
       {
         "rank": "W2",
-        "update_ms": 7.8,
-        "to_idle_ms": 22
+        "update_ms": 8.3,
+        "to_idle_ms": 25
       },
       {
         "rank": "O9",
-        "update_ms": 10.1,
-        "to_idle_ms": 26
+        "update_ms": 9,
+        "to_idle_ms": 22
       },
       {
         "rank": "E7",
-        "update_ms": 8.9,
-        "to_idle_ms": 23
+        "update_ms": 13.4,
+        "to_idle_ms": 37
       },
       {
         "rank": "E5",
-        "update_ms": 9.8,
-        "to_idle_ms": 234
+        "update_ms": 6.7,
+        "to_idle_ms": 214
       }
     ],
-    "max_update_ms": 10.1
+    "max_update_ms": 13.4
   },
   "zip_repaint": {
     "changes": [
       {
         "rank": "O3",
-        "update_ms": 34.6,
-        "to_idle_ms": 70
+        "update_ms": 33.3,
+        "to_idle_ms": 68
       },
       {
         "rank": "E1",
-        "update_ms": 28.1,
-        "to_idle_ms": 58
+        "update_ms": 37.9,
+        "to_idle_ms": 72
       },
       {
         "rank": "W2",
-        "update_ms": 28.2,
-        "to_idle_ms": 61
+        "update_ms": 29.8,
+        "to_idle_ms": 66
       },
       {
         "rank": "O9",
-        "update_ms": 30,
-        "to_idle_ms": 65
+        "update_ms": 31,
+        "to_idle_ms": 66
       },
       {
         "rank": "E7",
-        "update_ms": 28,
-        "to_idle_ms": 58
+        "update_ms": 28.7,
+        "to_idle_ms": 60
       },
       {
         "rank": "E5",
-        "update_ms": 26,
-        "to_idle_ms": 53
+        "update_ms": 26.9,
+        "to_idle_ms": 56
       }
     ],
-    "max_update_ms": 34.6
+    "max_update_ms": 37.9
   },
-  "measured_at": "2026-11-13T20:39:34.232Z"
+  "measured_at": "2026-11-13T22:14:50.228Z"
 }

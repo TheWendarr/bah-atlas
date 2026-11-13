@@ -1,10 +1,10 @@
 {
   "node": "B22",
-  "schema_version": "1.3.0",
+  "schema_version": "1.3.1",
   "bah_year": 2026,
-  "generated_at": "2026-11-13T20:32:57+00:00",
+  "generated_at": "2026-11-13T22:11:38+00:00",
   "git": {
-    "commit": "c3a766af2402dadb0384cf0155c4b9026d7ba676",
+    "commit": "42006a379c4f40dc361aef6d89fc06ec885938bf",
     "dirty": true
   },
   "software": {
@@ -154,7 +154,7 @@
     "housing_standards.json": "c3630ed699f8360f280a23e71a5274a2d9a327e7297206f171a61a647ba00805",
     "ownership.json": "fd15beafeafdeeb5684c0686eaa56e30c5e7bf7f29637ff2d13a5e256dab3e9f",
     "profiles.json": "07b250f169d8c73c617b576f35bb9e3abb216415b793882732f53e4fd7bab5c6",
-    "ui_text.json": "401d4e07adfbfb4e1c51be927abeca10d2b89d5ca010f59b5f02a795e8ee80f2"
+    "ui_text.json": "df274ad7536b30fba181899b9f9724b6fc8dd0253f4361d221292da31e84e16c"
   },
   "stages": [
     {

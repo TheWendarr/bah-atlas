@@ -1,4 +1,4 @@
-2026-11-13 — 75 web tests, 75 passed, 0 failed
+2026-11-13 — 76 web tests, 74 passed, 2 failed
 
 make[1]: Entering directory '~/Coding/Cloned-Repos/bah-atlas'
 python3 tools/grid_golden.py --year 2026
@@ -9,460 +9,533 @@ TAP version 13
 # Subtest: about.html quotes numbers from the QA report
 ok 1 - about.html quotes numbers from the QA report
   ---
-  duration_ms: 0.965287
+  duration_ms: 1.083901
   type: 'test'
   ...
 # Subtest: every number about.html quotes equals the QA report (C21)
 ok 2 - every number about.html quotes equals the QA report (C21)
   ---
-  duration_ms: 0.188396
+  duration_ms: 0.185762
   type: 'test'
   ...
 # Subtest: both profiles' cross-check rows are quoted in full
 ok 3 - both profiles' cross-check rows are quoted in full
   ---
-  duration_ms: 0.169871
+  duration_ms: 0.171004
   type: 'test'
   ...
 # Subtest: the statements the page makes still stand in the QA report
 ok 4 - the statements the page makes still stand in the QA report
   ---
-  duration_ms: 0.26971
+  duration_ms: 0.254512
   type: 'test'
   ...
 # Subtest: a link round-trips every field of the state (C17)
 ok 5 - a link round-trips every field of the state (C17)
   ---
-  duration_ms: 2.068916
+  duration_ms: 2.080456
   type: 'test'
   ...
-# Subtest: the default view writes the selection only (C17)
-ok 6 - the default view writes the selection only (C17)
+# Subtest: the default view writes the selection and the geography only (C17, C26)
+ok 6 - the default view writes the selection and the geography only (C17, C26)
   ---
-  duration_ms: 0.178598
+  duration_ms: 0.183477
+  type: 'test'
+  ...
+# Subtest: a bare visit takes the B21 default geography; a link without geo opens on MHAs (C26, D37)
+ok 7 - a bare visit takes the B21 default geography; a link without geo opens on MHAs (C26, D37)
+  ---
+  duration_ms: 0.171304
   type: 'test'
   ...
 # Subtest: a link with bad or missing values falls back field by field (C17)
-ok 7 - a link with bad or missing values falls back field by field (C17)
+ok 8 - a link with bad or missing values falls back field by field (C17)
   ---
-  duration_ms: 0.267556
+  duration_ms: 0.199838
   type: 'test'
   ...
 # Subtest: a hash that is not valid percent-encoding is ignored, not thrown (C17)
-ok 8 - a hash that is not valid percent-encoding is ignored, not thrown (C17)
+ok 9 - a hash that is not valid percent-encoding is ignored, not thrown (C17)
   ---
-  duration_ms: 0.171384
+  duration_ms: 0.179971
   type: 'test'
   ...
 # Subtest: the research view is exactly E-5 or O-3 with dependents at the statutory standard (C16, must 9)
-ok 9 - the research view is exactly E-5 or O-3 with dependents at the statutory standard (C16, must 9)
+ok 10 - the research view is exactly E-5 or O-3 with dependents at the statutory standard (C16, must 9)
   ---
-  duration_ms: 155.646498
+  duration_ms: 164.927705
   type: 'test'
   ...
 # Subtest: the overlay shows only when asked for and only on a research view (C16)
-ok 10 - the overlay shows only when asked for and only on a research view (C16)
+ok 11 - the overlay shows only when asked for and only on a research view (C16)
   ---
-  duration_ms: 2.561277
+  duration_ms: 2.664591
   type: 'test'
   ...
 # Subtest: every area's overlay class equals B27, and no area outside cluster_scope has one (C16, must not 3)
-ok 11 - every area's overlay class equals B27, and no area outside cluster_scope has one (C16, must not 3)
+ok 12 - every area's overlay class equals B27, and no area outside cluster_scope has one (C16, must not 3)
   ---
-  duration_ms: 4.010499
+  duration_ms: 4.3764
   type: 'test'
   ...
 # Subtest: the E-5 rent overlay counts equal the H1 finding in B21 (C16)
-ok 12 - the E-5 rent overlay counts equal the H1 finding in B21 (C16)
+ok 13 - the E-5 rent overlay counts equal the H1 finding in B21 (C16)
   ---
-  duration_ms: 1.053934
+  duration_ms: 1.258321
   type: 'test'
   ...
 # Subtest: Alaska, Hawaii, County Cost Groups and the territory bucket are outside the overlay (C16)
-ok 13 - Alaska, Hawaii, County Cost Groups and the territory bucket are outside the overlay (C16)
+ok 14 - Alaska, Hawaii, County Cost Groups and the territory bucket are outside the overlay (C16)
   ---
-  duration_ms: 1.139787
+  duration_ms: 1.235388
   type: 'test'
   ...
 # Subtest: an untested area in the analysis has no cluster class (C16)
-ok 14 - an untested area in the analysis has no cluster class (C16)
+ok 15 - an untested area in the analysis has no cluster class (C16)
   ---
-  duration_ms: 0.3538
+  duration_ms: 0.148171
   type: 'test'
   ...
 # Subtest: ZIP input accepts five digits or ZIP+4, nothing else (C15)
-ok 15 - ZIP input accepts five digits or ZIP+4, nothing else (C15)
+ok 16 - ZIP input accepts five digits or ZIP+4, nothing else (C15)
   ---
-  duration_ms: 0.229054
+  duration_ms: 0.179339
   type: 'test'
   ...
 # Subtest: every delivered ZIP finds its area: an MHA, a County Cost Group, the territory bucket (C15)
-ok 16 - every delivered ZIP finds its area: an MHA, a County Cost Group, the territory bucket (C15)
+ok 17 - every delivered ZIP finds its area: an MHA, a County Cost Group, the territory bucket (C15)
   ---
-  duration_ms: 6.898255
+  duration_ms: 7.204401
   type: 'test'
   ...
 # Subtest: an unknown ZIP and a malformed one say so and select nothing (C15)
-ok 17 - an unknown ZIP and a malformed one say so and select nothing (C15)
+ok 18 - an unknown ZIP and a malformed one say so and select nothing (C15)
   ---
-  duration_ms: 2.877365
+  duration_ms: 3.186028
   type: 'test'
   ...
 # Subtest: the ZIP list must come from the map's build and a known major version (C15, must 6)
-ok 18 - the ZIP list must come from the map's build and a known major version (C15, must 6)
+ok 19 - the ZIP list must come from the map's build and a known major version (C15, must 6)
   ---
-  duration_ms: 0.135978
+  duration_ms: 0.148541
   type: 'test'
   ...
 # Subtest: every area has a bounding box from the tiles, and only the territory bucket is too wide to fit (C15, C17)
-ok 19 - every area has a bounding box from the tiles, and only the territory bucket is too wide to fit (C15, C17)
+ok 20 - every area has a bounding box from the tiles, and only the territory bucket is too wide to fit (C15, C17)
   ---
-  duration_ms: 145.852875
+  duration_ms: 154.318122
   type: 'test'
   ...
 # Subtest: the CSV has one row per area and every value equals gridView (C19)
-ok 20 - the CSV has one row per area and every value equals gridView (C19)
+ok 21 - the CSV has one row per area and every value equals gridView (C19)
   ---
-  duration_ms: 5.058432
+  duration_ms: 5.931573
   type: 'test'
   ...
 # Subtest: the CSV parses back to the same rows (C19)
-ok 21 - the CSV parses back to the same rows (C19)
+ok 22 - the CSV parses back to the same rows (C19)
   ---
-  duration_ms: 4.766109
+  duration_ms: 7.429837
   type: 'test'
   ...
 # Subtest: a text cell that a spreadsheet would run as a formula is written as text (C19)
-ok 22 - a text cell that a spreadsheet would run as a formula is written as text (C19)
+ok 23 - a text cell that a spreadsheet would run as a formula is written as text (C19)
   ---
-  duration_ms: 1.695558
+  duration_ms: 2.126163
   type: 'test'
   ...
-# Subtest: a ZIP-view link round-trips, and the MHA view writes no geo key (C26)
-ok 23 - a ZIP-view link round-trips, and the MHA view writes no geo key (C26)
+# Subtest: a link in either view round-trips with its geography (C26)
+ok 24 - a link in either view round-trips with its geography (C26)
   ---
-  duration_ms: 0.229224
+  duration_ms: 0.267285
   type: 'test'
   ...
 # Subtest: the ZIP-view CSV has one row per B36 ZIP, its MHA in `area`, and zipView's values (C28)
-ok 24 - the ZIP-view CSV has one row per B36 ZIP, its MHA in `area`, and zipView's values (C28)
+ok 25 - the ZIP-view CSV has one row per B36 ZIP, its MHA in `area`, and zipView's values (C28)
   ---
-  duration_ms: 43.296916
+  duration_ms: 45.788462
   type: 'test'
   ...
 # Subtest: the ZIP tiles hold exactly the B36 ZIPs, each inside its MHA's box (C27)
-ok 25 - the ZIP tiles hold exactly the B36 ZIPs, each inside its MHA's box (C27)
+ok 26 - the ZIP tiles hold exactly the B36 ZIPs, each inside its MHA's box (C27)
   ---
-  duration_ms: 1622.668197
+  duration_ms: 1655.574742
   type: 'test'
   ...
 # Subtest: every view matches contract.grid_view
-ok 26 - every view matches contract.grid_view
+ok 27 - every view matches contract.grid_view
   ---
-  duration_ms: 929.940026
+  duration_ms: 974.78893
   type: 'test'
   ...
 # Subtest: every reference ZIP view matches contract.zip_view
-ok 27 - every reference ZIP view matches contract.zip_view
+ok 28 - every reference ZIP view matches contract.zip_view
   ---
-  duration_ms: 1155.304109
+  duration_ms: 1157.779639
   type: 'test'
   ...
 # Subtest: a blended cost on an exact tie rounds half away from zero
-ok 28 - a blended cost on an exact tie rounds half away from zero
+ok 29 - a blended cost on an exact tie rounds half away from zero
   ---
-  duration_ms: 0.295309
+  duration_ms: 0.340885
   type: 'test'
   ...
 # Subtest: a small negative gap rounds to 0, not -0
-ok 29 - a small negative gap rounds to 0, not -0
+ok 30 - a small negative gap rounds to 0, not -0
   ---
-  duration_ms: 0.125487
+  duration_ms: 0.134194
   type: 'test'
   ...
 # Subtest: a view with no cost has null metrics and keeps its status
-ok 30 - a view with no cost has null metrics and keeps its status
+ok 31 - a view with no cost has null metrics and keeps its status
   ---
-  duration_ms: 0.187125
+  duration_ms: 0.189639
   type: 'test'
   ...
 # Subtest: the caveats of a blended view are the union of its home types
-ok 31 - the caveats of a blended view are the union of its home types
+ok 32 - the caveats of a blended view are the union of its home types
   ---
-  duration_ms: 0.090762
+  duration_ms: 0.092255
   type: 'test'
   ...
 # Subtest: a ZIP takes its MHA's BAH and its own costs
-ok 32 - a ZIP takes its MHA's BAH and its own costs
+ok 33 - a ZIP takes its MHA's BAH and its own costs
   ---
-  duration_ms: 0.118264
+  duration_ms: 0.119326
   type: 'test'
   ...
 # Subtest: no B21 text is written into web/src or the pages (X7)
-ok 33 - no B21 text is written into web/src or the pages (X7)
+ok 34 - no B21 text is written into web/src or the pages (X7)
   ---
-  duration_ms: 3.588461
+  duration_ms: 4.015708
   type: 'test'
   ...
 # Subtest: no B21 colour is written into web/src or the pages (X7)
-ok 34 - no B21 colour is written into web/src or the pages (X7)
+ok 35 - no B21 colour is written into web/src or the pages (X7)
   ---
-  duration_ms: 1.026673
+  duration_ms: 1.012245
   type: 'test'
   ...
 # Subtest: no B21 class breaks are written into web/src or the pages (X7)
-ok 35 - no B21 class breaks are written into web/src or the pages (X7)
+ok 36 - no B21 class breaks are written into web/src or the pages (X7)
   ---
-  duration_ms: 5.30009
+  duration_ms: 5.928136
   type: 'test'
   ...
 # Subtest: the style passes the MapLibre style specification
-ok 36 - the style passes the MapLibre style specification
+ok 37 - the style passes the MapLibre style specification
   ---
-  duration_ms: 23.116276
+  duration_ms: 25.803591
   type: 'test'
   ...
 # Subtest: the first label range ships for every font the layers use
-ok 37 - the first label range ships for every font the layers use
+ok 38 - the first label range ships for every font the layers use
   ---
-  duration_ms: 0.338681
+  duration_ms: 0.33291
   type: 'test'
   ...
 # Subtest: the sprite sheet ships at both pixel densities
-ok 38 - the sprite sheet ships at both pixel densities
+ok 39 - the sprite sheet ships at both pixel densities
   ---
-  duration_ms: 0.146607
+  duration_ms: 0.139624
   type: 'test'
   ...
 # Subtest: water, boundaries and labels draw above the place where the areas go
-ok 39 - water, boundaries and labels draw above the place where the areas go
+ok 40 - water, boundaries and labels draw above the place where the areas go
   ---
-  duration_ms: 0.160263
+  duration_ms: 0.180702
   type: 'test'
   ...
 # Subtest: the initial state is the B21 default view
-ok 40 - the initial state is the B21 default view
+not ok 41 - the initial state is the B21 default view
   ---
-  duration_ms: 1.950842
+  duration_ms: 3.600503
   type: 'test'
+  location: 'web/test/ui.test.mjs:18:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        compare: [],
+        dependents: 'with',
+    +   geography: 'mha',
+    -   geography: 'zip',
+        homeType: 'standard',
+        metric: 'adequacy_ratio',
+        mode: 'rent',
+        overlay: false,
+        rank: 'E5',
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    rank: 'E5'
+    dependents: 'with'
+    homeType: 'standard'
+    mode: 'rent'
+    metric: 'adequacy_ratio'
+    selected: ~
+    compare:
+    overlay: false
+    geography: 'zip'
+  actual:
+    rank: 'E5'
+    dependents: 'with'
+    homeType: 'standard'
+    mode: 'rent'
+    metric: 'adequacy_ratio'
+    selected: ~
+    compare:
+    overlay: false
+    geography: 'mha'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://web/test/ui.test.mjs:19:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
   ...
 # Subtest: values outside the B21 lists fall back to the defaults and are reported
-ok 41 - values outside the B21 lists fall back to the defaults and are reported
+ok 42 - values outside the B21 lists fall back to the defaults and are reported
   ---
-  duration_ms: 0.365211
+  duration_ms: 0.339292
   type: 'test'
   ...
 # Subtest: a metric the grid cannot show falls back to the default metric
-ok 42 - a metric the grid cannot show falls back to the default metric
+ok 43 - a metric the grid cannot show falls back to the default metric
   ---
-  duration_ms: 0.112483
+  duration_ms: 0.111662
   type: 'test'
   ...
 # Subtest: the store tells subscribers the new and previous state
-ok 43 - the store tells subscribers the new and previous state
+ok 44 - the store tells subscribers the new and previous state
   ---
-  duration_ms: 0.288256
+  duration_ms: 0.222441
   type: 'test'
   ...
 # Subtest: an off-standard view uses the metric's wider scale and its own labels (D27)
-ok 44 - an off-standard view uses the metric's wider scale and its own labels (D27)
+ok 45 - an off-standard view uses the metric's wider scale and its own labels (D27)
   ---
-  duration_ms: 0.169271
+  duration_ms: 0.138783
   type: 'test'
   ...
 # Subtest: every one of the 322 selections gets a filled notice in the right wording (C25)
-ok 45 - every one of the 322 selections gets a filled notice in the right wording (C25)
+ok 46 - every one of the 322 selections gets a filled notice in the right wording (C25)
   ---
-  duration_ms: 160.787428
+  duration_ms: 164.915672
   type: 'test'
   ...
 # Subtest: the anchor home type of a rank is a statutory view (E-5 with dependents, 2 BR townhouse)
-ok 46 - the anchor home type of a rank is a statutory view (E-5 with dependents, 2 BR townhouse)
+ok 47 - the anchor home type of a rank is a statutory view (E-5 with dependents, 2 BR townhouse)
   ---
-  duration_ms: 0.61333
+  duration_ms: 0.638067
   type: 'test'
   ...
 # Subtest: the default view classes match the delivered values
-ok 47 - the default view classes match the delivered values
+ok 48 - the default view classes match the delivered values
   ---
-  duration_ms: 0.705775
+  duration_ms: 0.697249
   type: 'test'
   ...
 # Subtest: a selected area carries one view per mode, equal to the payload for E-5 with dependents
-ok 48 - a selected area carries one view per mode, equal to the payload for E-5 with dependents
+ok 49 - a selected area carries one view per mode, equal to the payload for E-5 with dependents
   ---
-  duration_ms: 0.966368
+  duration_ms: 0.980235
   type: 'test'
   ...
 # Subtest: buy-mode PITI equals B20's own_housing_monthly for both research profiles in every area (C11)
-ok 49 - buy-mode PITI equals B20's own_housing_monthly for both research profiles in every area (C11)
+ok 50 - buy-mode PITI equals B20's own_housing_monthly for both research profiles in every area (C11)
   ---
-  duration_ms: 2.361028
+  duration_ms: 2.696923
   type: 'test'
   ...
 # Subtest: rent views carry no PITI
-ok 50 - rent views carry no PITI
+ok 51 - rent views carry no PITI
   ---
-  duration_ms: 0.150275
+  duration_ms: 0.164481
   type: 'test'
   ...
 # Subtest: pinned areas keep known codes, once each, at most two (C12)
-ok 51 - pinned areas keep known codes, once each, at most two (C12)
+ok 52 - pinned areas keep known codes, once each, at most two (C12)
   ---
-  duration_ms: 0.150154
+  duration_ms: 0.220527
   type: 'test'
   ...
 # Subtest: each pinned area is computed in the current mode and follows the controls (C12)
-ok 52 - each pinned area is computed in the current mode and follows the controls (C12)
+ok 53 - each pinned area is computed in the current mode and follows the controls (C12)
   ---
-  duration_ms: 1.033015
+  duration_ms: 1.348181
   type: 'test'
   ...
 # Subtest: every B21 data window belongs to a B21 source (C20)
-ok 53 - every B21 data window belongs to a B21 source (C20)
+ok 54 - every B21 data window belongs to a B21 source (C20)
   ---
-  duration_ms: 0.114778
+  duration_ms: 0.11061
   type: 'test'
   ...
 # Subtest: the map credits each provider whose licence asks for attribution, once (C20)
-ok 54 - the map credits each provider whose licence asks for attribution, once (C20)
+ok 55 - the map credits each provider whose licence asks for attribution, once (C20)
   ---
-  duration_ms: 0.27485
+  duration_ms: 0.275181
   type: 'test'
   ...
-# Subtest: B21 offers the MHA and the ZIP view, MHA first
-ok 55 - B21 offers the MHA and the ZIP view, MHA first
+# Subtest: B21 offers the MHA and the ZIP view, and opens on ZIP codes (D37)
+not ok 56 - B21 offers the MHA and the ZIP view, and opens on ZIP codes (D37)
   ---
-  duration_ms: 0.096373
+  duration_ms: 0.257647
   type: 'test'
+  location: 'web/test/ui.test.mjs:169:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'mha' !== 'zip'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'zip'
+  actual: 'mha'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://web/test/ui.test.mjs:171:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: a ZIP code is kept in the ZIP view and becomes its MHA outside it
-ok 56 - a ZIP code is kept in the ZIP view and becomes its MHA outside it
+ok 57 - a ZIP code is kept in the ZIP view and becomes its MHA outside it
   ---
-  duration_ms: 0.23777
+  duration_ms: 0.243972
   type: 'test'
   ...
 # Subtest: the store checks ZIP codes again when B36 arrives
-ok 57 - the store checks ZIP codes again when B36 arrives
+ok 58 - the store checks ZIP codes again when B36 arrives
   ---
-  duration_ms: 0.106261
+  duration_ms: 0.106501
   type: 'test'
   ...
 # Subtest: the ZIP view classes every B36 ZIP by the same rule and scale, and never shows clusters
-ok 58 - the ZIP view classes every B36 ZIP by the same rule and scale, and never shows clusters
+ok 59 - the ZIP view classes every B36 ZIP by the same rule and scale, and never shows clusters
   ---
-  duration_ms: 13.068661
+  duration_ms: 13.22885
   type: 'test'
   ...
 # Subtest: every ZIP view carries BAH from its MHA
-ok 59 - every ZIP view carries BAH from its MHA
+ok 60 - every ZIP view carries BAH from its MHA
   ---
-  duration_ms: 2.845455
+  duration_ms: 3.0076
   type: 'test'
   ...
 # Subtest: the map's fast ZIP values equal zipView for every ZIP code (C27)
-ok 60 - the map's fast ZIP values equal zipView for every ZIP code (C27)
+ok 61 - the map's fast ZIP values equal zipView for every ZIP code (C27)
   ---
-  duration_ms: 157.016571
+  duration_ms: 179.103706
   type: 'test'
   ...
 # Subtest: a value equal to a break falls in the class above
-ok 61 - a value equal to a break falls in the class above
+ok 62 - a value equal to a break falls in the class above
   ---
-  duration_ms: 1.397254
+  duration_ms: 1.154905
   type: 'test'
   ...
 # Subtest: values below the first break and above the last take the end classes
-ok 62 - values below the first break and above the last take the end classes
+ok 63 - values below the first break and above the last take the end classes
   ---
-  duration_ms: 0.16345
+  duration_ms: 0.163991
   type: 'test'
   ...
 # Subtest: null has no class
-ok 63 - null has no class
+ok 64 - null has no class
   ---
-  duration_ms: 0.097455
+  duration_ms: 0.080031
   type: 'test'
   ...
 # Subtest: B23's two rounding cases classify on the rounded value
-ok 64 - B23's two rounding cases classify on the rounded value
+ok 65 - B23's two rounding cases classify on the rounded value
   ---
-  duration_ms: 0.125247
+  duration_ms: 0.078819
   type: 'test'
   ...
 # Subtest: a percent rounds a tie half away from zero, as the contract rounds
-ok 65 - a percent rounds a tie half away from zero, as the contract rounds
+ok 66 - a percent rounds a tie half away from zero, as the contract rounds
   ---
-  duration_ms: 0.261836
+  duration_ms: 0.192093
   type: 'test'
   ...
 # Subtest: a percent away from a tie, a whole ratio and a missing value read as before
-ok 66 - a percent away from a tie, a whole ratio and a missing value read as before
+ok 67 - a percent away from a tie, a whole ratio and a missing value read as before
   ---
-  duration_ms: 0.152318
+  duration_ms: 0.112352
   type: 'test'
   ...
 # Subtest: a negative percent takes the same minus sign as a dollar value, and never reads -0.0%
-ok 67 - a negative percent takes the same minus sign as a dollar value, and never reads -0.0%
+ok 68 - a negative percent takes the same minus sign as a dollar value, and never reads -0.0%
   ---
-  duration_ms: 0.64497
+  duration_ms: 0.652064
   type: 'test'
   ...
 # Subtest: matching files pass
-ok 68 - matching files pass
+ok 69 - matching files pass
   ---
-  duration_ms: 1.17829
+  duration_ms: 0.937915
   type: 'test'
   ...
 # Subtest: a minor version step passes
-ok 69 - a minor version step passes
+ok 70 - a minor version step passes
   ---
-  duration_ms: 0.373827
+  duration_ms: 0.289968
   type: 'test'
   ...
 # Subtest: a different build id is refused
-ok 70 - a different build id is refused
+ok 71 - a different build id is refused
   ---
-  duration_ms: 0.498904
+  duration_ms: 0.391791
   type: 'test'
   ...
 # Subtest: another major version is refused
-ok 71 - another major version is refused
+ok 72 - another major version is refused
   ---
-  duration_ms: 0.213033
+  duration_ms: 0.165453
   type: 'test'
   ...
 # Subtest: the build manifest whose hash is the build id passes
-ok 72 - the build manifest whose hash is the build id passes
+ok 73 - the build manifest whose hash is the build id passes
   ---
-  duration_ms: 0.168779
+  duration_ms: 0.130647
   type: 'test'
   ...
 # Subtest: a build manifest from another build is refused
-ok 73 - a build manifest from another build is refused
+ok 74 - a build manifest from another build is refused
   ---
-  duration_ms: 0.107162
+  duration_ms: 0.081273
   type: 'test'
   ...
 # Subtest: a build manifest of another major version is refused
-ok 74 - a build manifest of another major version is refused
+ok 75 - a build manifest of another major version is refused
   ---
-  duration_ms: 0.115358
+  duration_ms: 0.094669
   type: 'test'
   ...
 # Subtest: the delivered build manifest hashes to the delivered build id
-ok 75 - the delivered build manifest hashes to the delivered build id
+ok 76 - the delivered build manifest hashes to the delivered build id
   ---
-  duration_ms: 10.31481
+  duration_ms: 10.514544
   type: 'test'
   ...
-1..75
-# tests 75
+1..76
+# tests 76
 # suites 0
-# pass 75
-# fail 0
+# pass 74
+# fail 2
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2190.588551
+# duration_ms 2248.875193
 make[1]: Leaving directory '~/Coding/Cloned-Repos/bah-atlas'
+make[1]: *** [Makefile:404: web-test] Error 1
