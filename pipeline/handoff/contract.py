@@ -1,7 +1,7 @@
 """
 contract.py — the Layer 2 -> Layer 3 data contract (docs/data-contract.md) in code.
 
-Every handoff builder (B20, B21, B22, B27, B31, B32) and the validator import their names,
+Every handoff builder (B20, B21, B22, B27, B31, B32, B36) and the validator import their names,
 codes and rounding rules from here, so the files and the checks cannot drift
 apart. When the ICD changes, this module changes in the same commit, and
 SCHEMA_VERSION follows the ICD's versioning rules (section 10).
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 
-SCHEMA_VERSION = "1.2.1"
+SCHEMA_VERSION = "1.3.0"
 CODE = re.compile(r"^[A-Z]{2}[0-9]{3}$")
 ZIP = re.compile(r"^[0-9]{5}$")
 CLASSES = ("mha", "ccg", "unknown")
@@ -42,7 +42,14 @@ STATUSES = {
     "rent": ("ok", "no_zori", "ccg_no_benchmark", "no_rate"),
     "buy": ("ok", "piti_only_no_zori", "no_home_value", "ccg_no_benchmark", "no_rate"),
 }
-ALL_STATUSES = ("ok", "no_zori", "piti_only_no_zori", "no_home_value", "ccg_no_benchmark", "no_rate")
+# ICD 5c (D36): the ZIP grid (B36) uses the MHA statuses that still apply to one ZIP, plus two of its own.
+ZIP_STATUSES = {
+    "rent": ("ok", "no_zori", "zip_no_benchmark", "zip_outlier"),
+    "buy": ("ok", "piti_only_no_zori", "zip_no_benchmark", "zip_outlier"),
+}
+ZIP_VALUED = ("ok", "piti_only_no_zori")
+ALL_STATUSES = ("ok", "no_zori", "piti_only_no_zori", "no_home_value", "ccg_no_benchmark", "no_rate",
+                "zip_no_benchmark", "zip_outlier")
 NON_NULL = {
     "ok": "all",
     "piti_only_no_zori": "all",
@@ -51,6 +58,8 @@ NON_NULL = {
     "no_home_value": {"bah_monthly", "cost_share_monthly"},
     "ccg_no_benchmark": {"bah_monthly", "cost_share_monthly"},
     "no_rate": set(),
+    "zip_no_benchmark": {"bah_monthly", "cost_share_monthly"},
+    "zip_outlier": {"bah_monthly", "cost_share_monthly"},
 }
 
 # ICD 5.5: caveat ids and the level each is attached at.
@@ -66,6 +75,9 @@ CAVEATS = {
     "insurance_2022_dollars": "row",
     "type_factor_national": "row",
     "lisa_exploratory": "overlay",
+    "zip_bah_constant": "zip",
+    "zip_safmr_scaled": "row",
+    "zip_tax_insurance": "row",
 }
 
 # ICD 7: the hotspot overlay.
@@ -83,12 +95,18 @@ STANDARD = "standard"                      # the home-type dropdown's default: t
 GRID_METRICS = ("adequacy_ratio", "design_gap_usd", "coverage_ratio", "surplus_usd")
 GRID_CENTS = 2                             # B31 benchmark costs carry cents (ICD 5b.3)
 OFF_STANDARD_KEYS = ("label", "short_label", "neutral", "breaks", "class_labels", "ramp_labels")  # ICD 6.2 (D27)
-GRID_TITLES = ("rank", "dependents", "home_type", "metric", "mode")
+GRID_TITLES = ("rank", "dependents", "home_type", "metric", "mode", "geography")
+GEOGRAPHIES = ("mha", "zip")               # ICD 6.1 (D36): the map's two area layers
+
+# ICD 5c (D36): the ZIP view. A ZIP's value outside this band around its MHA's value is left
+# out as unusual (status zip_outlier); ZIP costs are whole dollars.
+ZIP_BAND = (1 / 3, 3.0)
 
 # ICD 2: the delivered files, by node.
 def file_names(year: int) -> dict[str, str]:
     return {"B7": f"areas_{year}.pmtiles", "B20": f"payload_{year}.json", "B21": f"ui_metadata_{year}.json",
             "B27": f"hotspots_{year}.json", "B31": f"grid_{year}.json", "B32": f"zips_{year}.json",
+            "B35": f"zipcodes_{year}.pmtiles", "B36": f"zipgrid_{year}.json",
             "B22": f"build_manifest_{year}.json"}
 
 
@@ -144,7 +162,26 @@ def grid_view(grid: dict, code: str, rank: str, dependents: str, home_type: str,
     rounded from its exact binary value (Decimal(x), not repr), as JavaScript's
     Number.prototype.toFixed and Python's round() do.
     """
-    area, i = grid["areas"][code], grid["ranks"].index(rank)
+    return area_view(grid, grid["areas"][code], rank, dependents, home_type, mode)
+
+
+def zip_view(grid: dict, zipgrid: dict, zip_code: str, rank: str, dependents: str, home_type: str, mode: str) -> dict:
+    """One ZIP's view (ICD 5c.3, D36): the section 5b.4 formula with the ZIP's costs from B36 and
+    its area's BAH from B31. BAH is set by area, so every ZIP of an MHA has the same BAH."""
+    z = zipgrid["zips"][zip_code]
+    area = {"bah": grid["areas"][z["area"]]["bah"], **{m: expand_zip_block(zipgrid, z[m]) for m in MODES}}
+    return area_view(grid, area, rank, dependents, home_type, mode)
+
+
+def expand_zip_block(zipgrid: dict, block: dict) -> dict:
+    """A B36 block with its caveat-set indexes replaced by the lists they name (ICD 5c.2)."""
+    sets = zipgrid["caveat_sets"]
+    return {**block, "caveats": [sets[i] for i in block["caveats"]]}
+
+
+def area_view(grid: dict, area: dict, rank: str, dependents: str, home_type: str, mode: str) -> dict:
+    """The section 5b.4 formula on one entry shaped like a B31 area (bah, rent, buy)."""
+    i = grid["ranks"].index(rank)
     bah = area["bah"][dependents][i]
     share = grid["cost_share_monthly"][dependents][i]
     block = area[mode]

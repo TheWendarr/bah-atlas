@@ -49,6 +49,12 @@ RENT_TYPES = {"CO001": [1500.0, 1800.0, 2139.0, 2500.0, 3000.0, 3500.0],
 OWN_TYPES = {"AK400": [2300.0, 2600.0, 3100.0, 3500.0, 4000.0, 4600.0],
              "CO001": [2100.0, 2400.0, 2905.0, 3300.0, 3800.0, 4400.0],
              "CO002": [1300.0, 1500.0, 1850.5, 2000.0, 2500.0, 3000.0]}
+# B33/B34 for the ZIP view (D36): the ZIPs B35 draws and each one's case.
+#   80901 CO001  rent from its ZORI at 1.1 x the MHA; buy ok at 1.05 x the MHA's PITI, ZIP tax and premium
+#   80902 CO001  rent from scaled SAFMR at 0.9 x the MHA; no ZHVI (zip_no_benchmark)
+#   81001 CO002  no ZORI in the MHA (no_zori); buy PITI only at 0.95 x the MHA
+#   99701 AK400  rent outside the band (zip_outlier); buy ok at the MHA's PITI, insurance from the state
+ZIP_FEATURES = {"80901": "CO001", "80902": "CO001", "81001": "CO002", "99701": "AK400"}
 COSTS = {"e5_dep": {"AK400": (2400.0, 3100.0), "CO001": (2139.0, 2905.0), "CO002": (None, 1850.5)},
          "o3_dep": {"AK400": (3290.0, 3990.0), "CO001": (2990.0, 3790.0), "CO002": (None, 2490.0)}}
 
@@ -188,6 +194,7 @@ class Fixture(unittest.TestCase):
             "tippecanoe": "tippecanoe v2.82.0", "output_file": tiles.name,
             "output_sha256": hashlib.sha256(tiles.read_bytes()).hexdigest()})
         write_json(proc / f"non_mha_{y}_geometry_manifest.json", {"node": "B28", "codes_without_polygon": []})
+        self.write_zip_view()
         write_json(proc / f"mha_{y}_geometry_manifest.json", {"node": "B6"})
         write_json(interim / "manifest.json", {"nodes": ["B1", "B2", "B3", "B4"]})
         write_json(interim / "rate_components_manifest.json", {"node": "B5"})
@@ -201,6 +208,56 @@ class Fixture(unittest.TestCase):
             "B10": "HUD FY2026 SAFMR (fixed vintage, no monthly window)"}})
         write_json(d / "raw" / "fetch_manifest.json", {"A9": {"filename": "acs5_2024_zcta.json", "sha256": "0" * 64}})
 
+    def write_zip_view(self) -> None:
+        """B33, B34 and B35 as the ZIP view's builder reads them (D36)."""
+        d, y = self.data, YEAR
+        bench, proc = d / "interim" / f"benchmarks_{y}", d / "processed"
+        rent_rows, own_rows = [], []
+        for z, code in ZIP_FEATURES.items():
+            for j, t in enumerate(TYPES):
+                src = "national" if (code, t) in (("AK400", "apt1"), ("AK400", "apt2"), ("CO001", "sfh4")) else "metro"
+                rent = {"zip": z, "mha": code, "home_type": t, "base_source": "none", "rent_monthly": "",
+                        "factor_source": src, "status": {"81001": "no_zori", "99701": "zip_outlier"}.get(z, "ok")}
+                if z in ("80901", "80902"):
+                    k, source = (1.1, "zori") if z == "80901" else (0.9, "safmr_scaled")
+                    rent.update({"base_source": source, "rent_monthly": f"{RENT_TYPES[code][j] * k:.2f}"})
+                rent_rows.append(rent)
+                own = {"zip": z, "mha": code, "home_type": t, "own_housing_monthly": "", "own_total_monthly": "",
+                       "tax_source": "", "insurance_source": "", "building_source": "zip",
+                       "bedroom_source": "national" if (code, t) == ("CO001", "apt1") else "zip"}
+                if z == "80901":
+                    housing = (OWN_TYPES[code][j] - 400) * 1.05
+                    own.update({"own_housing_monthly": f"{housing:.2f}", "own_total_monthly": f"{housing + 400:.2f}",
+                                "tax_source": "zip", "insurance_source": "zip", "status": "ok"})
+                elif z == "81001":
+                    own.update({"own_housing_monthly": f"{OWN_TYPES[code][j] * 0.95:.2f}", "tax_source": "mha",
+                                "insurance_source": "mha", "status": "piti_only_no_zori"})
+                elif z == "99701":
+                    own.update({"own_housing_monthly": f"{OWN_TYPES[code][j] - 400:.2f}",
+                                "own_total_monthly": f"{OWN_TYPES[code][j]:.2f}", "tax_source": "mha",
+                                "insurance_source": "state_fallback", "status": "ok"})
+                else:
+                    own["status"] = "zip_no_benchmark"
+                own_rows.append(own)
+        write_csv(bench / "zip_rent_by_type.csv", ["zip", "mha", "home_type", "base_source", "rent_monthly",
+                                                   "factor_source", "status"], rent_rows)
+        write_csv(bench / "zip_ownership_by_type.csv", ["zip", "mha", "home_type", "own_housing_monthly",
+                                                        "own_total_monthly", "tax_source", "insurance_source",
+                                                        "building_source", "bedroom_source", "status"], own_rows)
+        write_csv(proc / f"zipcodes_{y}_features.csv", ["zip", "area"],
+                  [{"zip": z, "area": a} for z, a in sorted(ZIP_FEATURES.items())])
+        tiles = proc / f"zipcodes_{y}.pmtiles"
+        tiles.write_bytes(b"PMTiles" + b"\1" * 2048)
+        write_json(proc / f"zipcodes_{y}_manifest.json", {
+            "node": "B35", "features": len(ZIP_FEATURES), "output_file": tiles.name,
+            "output_sha256": {tiles.name: hashlib.sha256(tiles.read_bytes()).hexdigest()}})
+        write_json(bench / "zip_rent_by_type_manifest.json", {"node": "B33", "coverage": {
+            "base_source": {"zori": 1, "safmr_scaled": 1, "none": 2}},
+            "safmr_check": {"zips_with_both": 1, "median_abs_pct_error": 10.0, "share_within_10_pct": 1.0,
+                            "share_within_20_pct": 1.0}})
+        write_json(bench / "zip_ownership_by_type_manifest.json", {"node": "B34", "coverage": {
+            "zips_with_value": 3, "zips_tax_rate_from_zip": 1, "zips_premium_from_zip": 1}})
+
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
@@ -213,6 +270,7 @@ class Fixture(unittest.TestCase):
         bench, spatial = d / "interim" / f"benchmarks_{y}", d / "interim" / f"spatial_{y}"
         o.mkdir(parents=True, exist_ok=True)
         (o / f"areas_{y}.pmtiles").write_bytes((d / "processed" / f"areas_{y}.pmtiles").read_bytes())
+        (o / f"zipcodes_{y}.pmtiles").write_bytes((d / "processed" / f"zipcodes_{y}.pmtiles").read_bytes())
         b22 = o / f"build_manifest_{y}.json"
         steps = [
             ("build_manifest.py", "--year", y, "--data", str(d), "--out", str(b22)),
@@ -238,6 +296,10 @@ class Fixture(unittest.TestCase):
              "--build-manifest", str(b22), "--out", str(o / f"grid_{y}.json")),
             ("build_zip_lookup.py", "--year", y, "--zip-mha", str(interim / "zip_mha.csv"),
              "--build-manifest", str(b22), "--out", str(o / f"zips_{y}.json")),
+            ("build_zip_grid.py", "--year", y, "--zip-rent", str(bench / "zip_rent_by_type.csv"),
+             "--zip-own", str(bench / "zip_ownership_by_type.csv"),
+             "--features", str(d / "processed" / f"zipcodes_{y}_features.csv"),
+             "--build-manifest", str(b22), "--out", str(o / f"zipgrid_{y}.json")),
         ]
         for script, *args in steps:
             p = self.run_py(script, *args)
@@ -248,7 +310,8 @@ class Fixture(unittest.TestCase):
         y = YEAR
         lines = [f"{hashlib.sha256((self.out / n).read_bytes()).hexdigest()}  {n}"
                  for n in (f"areas_{y}.pmtiles", f"payload_{y}.json", f"ui_metadata_{y}.json",
-                           f"hotspots_{y}.json", f"grid_{y}.json", f"zips_{y}.json", f"build_manifest_{y}.json")]
+                           f"hotspots_{y}.json", f"grid_{y}.json", f"zips_{y}.json", f"zipcodes_{y}.pmtiles",
+                           f"zipgrid_{y}.json", f"build_manifest_{y}.json")]
         (self.out / "SHA256SUMS").write_text("\n".join(lines) + "\n")
 
     def validate(self) -> subprocess.CompletedProcess:
@@ -270,7 +333,7 @@ class TestHandoff(Fixture):
         self.build()
         pay = self.payload()
         b22 = hashlib.sha256((self.out / f"build_manifest_{YEAR}.json").read_bytes()).hexdigest()
-        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.2.1", 2026, b22))
+        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.3.0", 2026, b22))
         self.assertEqual(list(pay["areas"]), ["AK400", "CO001", "CO002", "XX001", "ZZ001"])
         co = pay["areas"]["CO001"]
         self.assertEqual((co["class"], co["cluster_scope"], co["caveats"]), ("mha", True, []))
@@ -334,12 +397,99 @@ class TestHandoff(Fixture):
         self.assertEqual(p.returncode, 1)
         self.assertIn("B32 differs from B1", p.stdout)
 
+    def zipgrid(self) -> dict:
+        return json.loads((self.out / f"zipgrid_{YEAR}.json").read_text())
+
+    def test_zip_grid_contents(self) -> None:
+        self.build()
+        zg = self.zipgrid()
+        self.assertEqual(list(zg["zips"]), ["80901", "80902", "81001", "99701"])
+        self.assertEqual(zg["build_id"], self.payload()["build_id"])
+        a = zg["zips"]["80901"]
+        self.assertEqual(a["area"], "CO001")
+        self.assertEqual(a["rent"]["cost"][2], 2353)                         # 2139 x 1.1 = 2352.90, whole dollars
+        sets = zg["caveat_sets"]                                             # one copy of each list
+        self.assertEqual(sets[0], [])
+        self.assertEqual(len(sets), len({tuple(x) for x in sets}))
+        self.assertEqual(sets[a["rent"]["caveats"][2]], ["utilities_grossed_up"])
+        self.assertEqual(sets[a["rent"]["caveats"][5]], ["utilities_grossed_up", "type_factor_national"])
+        self.assertEqual(sets[a["buy"]["caveats"][2]], ["insurance_2022_dollars", "zip_tax_insurance"])
+        self.assertEqual(sets[a["buy"]["caveats"][0]],
+                         ["insurance_2022_dollars", "type_factor_national", "zip_tax_insurance"])
+        self.assertEqual((a["buy"]["cost"][2], a["buy"]["own_housing"][2]), (3030, 2630))  # 2505 x 1.05 = 2630.25, + 400
+        b = zg["zips"]["80902"]
+        self.assertEqual(sets[b["rent"]["caveats"][0]], ["utilities_grossed_up", "zip_safmr_scaled"])
+        self.assertEqual((b["buy"]["status"][0], b["buy"]["cost"][0], b["buy"]["caveats"][0]),
+                         ("zip_no_benchmark", None, 0))
+        c = zg["zips"]["81001"]
+        self.assertEqual((c["rent"]["status"][0], c["rent"]["cost"][0]), ("no_zori", None))
+        self.assertEqual((c["buy"]["status"][2], c["buy"]["cost"][2], sets[c["buy"]["caveats"][2]][0]),
+                         ("piti_only_no_zori", 1758, "piti_only_no_zori"))    # 1850.50 x 0.95 = 1757.98
+        k = zg["zips"]["99701"]
+        self.assertEqual(k["rent"]["status"], ["zip_outlier"] * 6)
+        self.assertIn("insurance_state_fallback", sets[k["buy"]["caveats"][2]])
+
+    def test_zip_view_runs_the_grid_formula(self) -> None:
+        sys.path.insert(0, str(HANDOFF))
+        import contract as c
+        self.build()
+        grid = json.loads((self.out / f"grid_{YEAR}.json").read_text())
+        zg = self.zipgrid()
+        v = c.zip_view(grid, zg, "80901", "E5", "with", c.STANDARD, "rent")
+        # E-5 standard is the 2 BR townhouse; BAH and cost share come from CO001 in B31.
+        self.assertEqual((v["bah_monthly"], v["cost_share_monthly"], v["cost_monthly"]), (2112, 126, 2353))
+        self.assertEqual((v["adequacy_ratio"], v["design_gap_usd"], v["standard_view"]), (0.9511, -115, True))
+        mha = c.grid_view(grid, "CO001", "E5", "with", c.STANDARD, "rent")
+        self.assertEqual((mha["bah_monthly"], mha["adequacy_ratio"]), (2112, 1.0463))
+        out = c.zip_view(grid, zg, "99701", "E5", "with", c.STANDARD, "rent")
+        self.assertEqual((out["status"], out["adequacy_ratio"], out["bah_monthly"]), ("zip_outlier", None, 2112))
+        self.assertEqual(c.zip_view(grid, zg, "80902", "E5", "with", "th2", "rent")["caveats"],
+                         ["utilities_grossed_up", "zip_safmr_scaled"])
+
+    def test_bad_caveat_index_fails_check_3(self) -> None:
+        self.build()
+        path = self.out / f"zipgrid_{YEAR}.json"
+        doc = self.zipgrid()
+        doc["zips"]["80901"]["rent"]["caveats"][0] = 99
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("is not an index into caveat_sets", p.stdout)
+
+    def test_changed_zip_cost_fails_check_5(self) -> None:
+        self.build()
+        path = self.out / f"zipgrid_{YEAR}.json"
+        doc = self.zipgrid()
+        doc["zips"]["80901"]["rent"]["cost"][2] = 2354
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("[5] B36 80901 rent th2: cost 2354", p.stdout)
+
+    def test_zip_missing_from_b35_fails_check_4(self) -> None:
+        self.build()
+        path = self.out / f"zipgrid_{YEAR}.json"
+        doc = self.zipgrid()
+        del doc["zips"]["99701"]
+        write_json(path, doc)
+        self.write_sums()
+        p = self.validate()
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("B36 and B35 hold different ZIPs", p.stdout)
+
     def test_ui_metadata_additions(self) -> None:
         self.build()
         ui = json.loads((self.out / f"ui_metadata_{YEAR}.json").read_text())
         self.assertEqual(ui["no_data_label"], "No adequacy measure")
         self.assertEqual(ui["areas"]["CO001"]["display_name"], "COLORADO SPRINGS, CO")
         self.assertEqual(ui["grid"]["titles"]["metric"], "Show")
+        self.assertEqual(ui["grid"]["titles"]["geography"], "Show by")
+        self.assertEqual([g["id"] for g in ui["grid"]["geographies"]], ["mha", "zip"])
+        self.assertEqual(ui["grid"]["default_geography"], "mha")
+        self.assertEqual(ui["caveats"]["zip_bah_constant"]["level"], "zip")
+        self.assertIn("zip_outlier", ui["statuses"])
         self.assertEqual(ui["metrics"]["adequacy_ratio"]["off_standard"]["breaks"], [0.5, 0.7, 0.9, 1.1, 1.4, 1.8])
         self.assertNotIn("off_standard", ui["metrics"]["flat95_gap"])
         self.assertEqual(len(ui["metrics"]["flat95_gap"]["ramp_labels"]), 3)
@@ -415,7 +565,7 @@ class TestHandoff(Fixture):
         self.build()
         g = self.grid()
         self.assertEqual((g["schema_version"], g["ranks"][:5], g["home_types"], g["dependents"]),
-                         ("1.2.1", GRADES[:5], TYPES, ["with", "without"]))
+                         ("1.3.0", GRADES[:5], TYPES, ["with", "without"]))
         self.assertEqual((g["cost_share_monthly"]["with"][4], g["cost_share_monthly"]["without"][22]), (126, 187))
         self.assertEqual(g["standards"]["with"][GRADES.index("O3")], {"lower": "th3", "upper": "sfh3", "share": 0.98})
         co = g["areas"]["CO001"]

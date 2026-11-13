@@ -8,7 +8,7 @@ the seven map layers with their classes and colours and the cluster legend (A13)
 area names (B3), status and caveat texts and source attributions
 (config/ui_text.json), the benchmark windows from the stage manifests, the H1 and H2
 findings from the B17-B19 manifests, and the
-grid block for the rank, dependents and home-type dropdowns with the plain-language
+grid block for the rank, dependents, home-type and geography dropdowns with the plain-language
 DoD standard for each of the 46 cells (A14, decision D18, ICD 6.1).
 
     python pipeline/handoff/build_ui_metadata.py --year 2026 \
@@ -78,6 +78,8 @@ def main() -> None:
     gt = text.get("grid", {})
     if set(gt.get("home_types", {})) != {c.STANDARD, *c.HOME_TYPES}:
         problems.append(f"ui_text.json grid.home_types must label exactly {[c.STANDARD, *c.HOME_TYPES]}")
+    if set(gt.get("geographies", {})) != set(c.GEOGRAPHIES):
+        problems.append(f"ui_text.json grid.geographies must label exactly {c.GEOGRAPHIES}")
     if set(gt.get("dependents", {})) != set(c.GRID_DEPENDENTS):
         problems.append(f"ui_text.json grid.dependents must label exactly {c.GRID_DEPENDENTS}")
     notice = gt.get("notice", {})
@@ -137,6 +139,9 @@ def main() -> None:
         "default_rank": primary["pay_grade"].upper(),
         "default_dependents": "with" if primary["has_dependents"] else "without",
         "default_home_type": c.STANDARD,
+        # ICD 6.1 (D36): the "Show by" control; the map opens on MHAs.
+        "geographies": [{"id": g, "label": gt["geographies"][g]} for g in c.GEOGRAPHIES],
+        "default_geography": c.GEOGRAPHIES[0],
         "metrics": list(c.GRID_METRICS),
         "standards_text": {g: {d: ht.describe(std["standards"][g][d], labels) for d in c.GRID_DEPENDENTS}
                            for g in std["grades"]},

@@ -1,6 +1,6 @@
 # Data contract — Layer 2 → Layer 3 Interface Control Document
 
-**ICD version:** 1.2.1 · **contract `schema_version`:** 1.2.1 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **revised:** 24 Oct 2026 (1.1.0, the grid), 1 Nov 2026 (D22 wording), 3 Nov 2026 (1.2.0, ZIP lookup and map wording), 7 Nov 2026 (1.2.1, home types at equal bedrooms, D34) · **approved:** 3 Nov 2026 (1.2.0, D26, D27, D29), 7 Nov 2026 (1.2.1, D34) · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
+**ICD version:** 1.3.0 · **contract `schema_version`:** 1.3.0 · **BAH year:** 2026 · **written:** 18 Oct 2026 · **revised:** 24 Oct 2026 (1.1.0, the grid), 1 Nov 2026 (D22 wording), 3 Nov 2026 (1.2.0, ZIP lookup and map wording), 7 Nov 2026 (1.2.1, home types at equal bedrooms, D34), 13 Nov 2026 (1.3.0, the ZIP view, D36) · **approved:** 3 Nov 2026 (1.2.0, D26, D27, D29), 7 Nov 2026 (1.2.1, D34), 13 Nov 2026 (1.3.0, D36) · **tracked as:** W2 (M6) · plan: [M6 plan](plans/m6-plan.md) · tracker: [WBS](WBS.md)
 
 This document fixes everything that crosses the boundary between the offline pipeline (Layer 2, B nodes) and the static map (Layer 3, C nodes): which files are handed over, the exact shape of each, the rules for missing values, and what the map may and may not do with them. Layer 3 is built against this document, not against the pipeline code.
 
@@ -14,8 +14,8 @@ It is the "data contract" named in the nodal architecture (September 2026), wide
 
 | Side | Owner | Nodes | Responsibility |
 |---|---|---|---|
-| Producer | Layer 2 pipeline (`make`, Python) | B7, B20, B21, B22, B27, B31, B32 (B28 feeds B7) | Emit files that pass every check in section 11 |
-| Consumer | Layer 3 static map (MapLibre GL JS) | C1–C3 serve the files; C5–C25 read them | Use the files as specified in section 9; compute nothing but the grid formula of section 5b.4 |
+| Producer | Layer 2 pipeline (`make`, Python) | B7, B20, B21, B22, B27, B31, B32, B35, B36 (B28 feeds B7; B33 and B34 feed B36) | Emit files that pass every check in section 11 |
+| Consumer | Layer 3 static map (MapLibre GL JS) | C1–C3 serve the files; C5–C28 read them | Use the files as specified in section 9; compute nothing but the grid formula of section 5b.4 |
 | Authority | Author (Wendell McGowan III) | W2 | Approves every change to this document (section 10) |
 
 ## 2. Delivered files
@@ -28,8 +28,10 @@ It is the "data contract" named in the nodal architecture (September 2026), wide
 | **B27** | `hotspots_2026.json` | JSON | C16 (optional) | Local cluster results, exploratory |
 | **B31** | `grid_2026.json` | JSON | C2 → C6, C8, C14, C25 | The rank × dependents × home type grid: BAH for every rank, benchmarks for every home type, cost shares and DoD standards (section 5b) |
 | **B32** | `zips_2026.json` | JSON | C2 → C15 (optional) | Every ZIP in the DTMO crosswalk under its area code (section 7b) |
+| **B35** | `zipcodes_2026.pmtiles` | PMTiles v3, one vector layer | C27 | ZIP code polygons for the ZIP view, with the join key and the MHA code. No values (section 4b). |
+| **B36** | `zipgrid_2026.json` | JSON | C27, C28 | The ZIP view's costs: per ZIP its MHA code and the six home-type costs to rent and to buy (section 5c) |
 | **B22** | `build_manifest_2026.json` | JSON | C20, C21 (provenance) | Inputs, checksums, windows, software and the commit the build came from |
-| — | `SHA256SUMS` | text, `sha256sum` format | delivery check | SHA-256 of the seven files above |
+| — | `SHA256SUMS` | text, `sha256sum` format | delivery check | SHA-256 of the nine files above |
 
 B28 (County Cost Group and territory polygons) is not delivered on its own. Under decision D9 it is merged into B7 at tile time, so the map reads one set of polygons.
 
@@ -43,11 +45,11 @@ These follow decision D6 (18 Oct 2026).
 |---|---|
 | Encoding | UTF-8 JSON, no comments, no trailing commas. |
 | Version | Every JSON file carries `schema_version` (semantic versioning) and `bah_year`. |
-| Build link | B20, B21, B27, B31 and B32 carry `build_id`, the SHA-256 of the B22 file. All five must carry the same value (section 8). |
+| Build link | B20, B21, B27, B31, B32 and B36 carry `build_id`, the SHA-256 of the B22 file. All six must carry the same value (section 8). |
 | Area code | `^[A-Z]{2}[0-9]{3}$`, exactly as DTMO publishes it (`CO018`, `ZZ001`; the territory bucket follows the same `XX###` form). It is the only join key across files. |
 | Ordering | Area entries are sorted by code; profiles follow A12 order; modes are `rent`, `buy`. |
 | Ratios | Plain decimals (1.0463 means 104.63%), rounded to 4 decimal places, half away from zero. Never pre-multiplied to percent. p-values (B27) are rounded to 5 decimal places, the resolution of 99,999 permutations. |
-| Dollars | US dollars per month, rounded to whole dollars, half away from zero. **Exception:** the B31 benchmark costs (`cost`, `own_housing`) carry cents, because the browser computes ratios from them (section 5b.3). |
+| Dollars | US dollars per month, rounded to whole dollars, half away from zero. **Exception:** the B31 benchmark costs (`cost`, `own_housing`) carry cents, because the browser computes ratios from them (section 5b.3). B36's costs are whole dollars (section 5c). |
 | Missing values | The field is present and `null`, and the row's `status` says why (section 5.3). A field is never omitted to mean "missing". |
 | Caveats | Arrays of caveat ids. The text for each id lives in B21 (section 6.4). |
 | Enumerations | Every status, class and caveat id is a closed list in this document. A value outside its list is a contract failure. |
@@ -83,6 +85,27 @@ map.addSource("areas", {
 The URL may be absolute, and the archive may carry a content hash in its served name (D24: the tile host is separate from the site). The bytes must match `SHA256SUMS`.
 
 Every `code` in B7 has an entry in B20, and every B20 entry with a polygon appears in B7 (section 11).
+
+## 4b. B35 — ZIP code polygons (`zipcodes_2026.pmtiles`)
+
+Decision D36 (13 Nov 2026): the "Show by: ZIP code" view.
+
+| Property | Value |
+|---|---|
+| Vector layer | `zips` |
+| Features | One per ZIP code that DTMO assigns to a real MHA and that has a Census ZCTA of the same code. 2026: 14,671 of the 20,280 real-MHA ZIPs; the rest are PO-box and single-site ZIPs with no ZCTA. ZIPs in County Cost Groups and the territory bucket are not tiled: they have no benchmark (decision N1), so B7 keeps drawing those areas in the ZIP view. |
+| Feature properties | `zip` (five-character string, the join key) and `area` (the MHA code, as in B1). No values. |
+| Feature id | MapLibre promotes `zip`: `promoteId: "zip"`. |
+| Zoom | 6–10. Below zoom 6 the map shows the MHA layer, because ~15,000 polygons are too small to read there and national tiles would be several times B7's size. |
+| Geometry | The same Census 2020 ZCTAs B6 dissolves, matched ZIP to ZCTA directly, so each ZIP polygon lies inside its MHA's B7 polygon. One tippecanoe run with shared-border detection. |
+| Authority | As B7: a reconstruction from ZIP codes, not a DoD layer. |
+
+```js
+map.addSource("zips", { type: "vector", url: "pmtiles://zipcodes_2026.pmtiles", promoteId: "zip" });
+// every ZIP join: map.setFeatureState({ source: "zips", sourceLayer: "zips", id: zip }, {...})
+```
+
+As for B7, the served name may carry a content hash; the bytes must match `SHA256SUMS`. Every feature has an entry in B36, and every B36 ZIP is a feature (section 11).
 
 ## 5. B20 — attribute payload (`payload_2026.json`)
 
@@ -142,8 +165,10 @@ Field names are the pipeline's own column names, so any value can be traced to i
 | buy | `no_home_value` | MHA has no ZHVI data (2026: none) | `bah_monthly`, `cost_share_monthly` |
 | both | `ccg_no_benchmark` | Area is a County Cost Group (decision N1) | `bah_monthly`, `cost_share_monthly` |
 | both | `no_rate` | Area has no BAH rate (the territory bucket) | none |
+| both | `zip_no_benchmark` | B36 only: no local figure for this ZIP in this mode (rent: neither a ZORI nor a SAFMR; buy: no ZHVI) | `bah_monthly`, `cost_share_monthly` |
+| both | `zip_outlier` | B36 only: the ZIP's figure is outside one third to three times its MHA's, so it is left out | `bah_monthly`, `cost_share_monthly` |
 
-Every status code has a label and explanatory text in B21 `statuses`. B31 uses the same codes for each home type (section 5b.2).
+Every status code has a label and explanatory text in B21 `statuses`. B31 uses the same codes for each home type (section 5b.2); B36 uses the subset in section 5c.
 
 ### 5.5 Caveat ids
 
@@ -160,6 +185,9 @@ Every status code has a label and explanatory text in B21 `statuses`. B31 uses t
 | `insurance_2022_dollars` | row | Every buy row with a value: insurance is used as published, 2018–2022, not scaled to 2026 (decision N2) |
 | `type_factor_national` | row | B31 home types (and so any grid view using them) whose building-type or bedroom adjustment fell back to the national ratio (B29, B30) |
 | `lisa_exploratory` | overlay | The B27 file as a whole: local clusters at pseudo p < 0.05, not corrected for multiple testing (decision D2) |
+| `zip_bah_constant` | zip | Every ZIP view (B36): BAH is one rate for the whole MHA, so the ZIP view varies only the cost side and is not a test of how DoD sets BAH. Not attached to any row; the map shows it with every ZIP code. |
+| `zip_safmr_scaled` | row | B36 rent rows whose base is the ZIP's HUD SAFMR scaled to its MHA's ZORI level, because Zillow publishes no ZORI for the ZIP (B33) |
+| `zip_tax_insurance` | row | B36 buy rows with a value: tax rate and premium are the ZIP's where published, otherwise the MHA's (B34) |
 
 Caveats that apply to the whole map, such as the ZIP-to-ZCTA join dropout, are in B21 `global_caveats` rather than on any area.
 
@@ -305,7 +333,39 @@ If either `th3` or `sfh3` had status `no_zori`, the O-3 view would be `null` wit
 
 ### 5b.6 What stays on the research profiles
 
-The B27 hotspot overlay, the B19 regression and the flat-95% and SAFMR sensitivity layers exist only for the two research profiles in B20 (D20). The map shows them only when the selection equals a research profile's statutory view (E-5 or O-3, with dependents, *DoD standard* or that rank's anchor type).
+The B27 hotspot overlay, the B19 regression and the flat-95% and SAFMR sensitivity layers exist only for the two research profiles in B20 (D20). The map shows them only when the selection equals a research profile's statutory view (E-5 or O-3, with dependents, *DoD standard* or that rank's anchor type), and only by MHA: they were computed between MHAs, so the ZIP view never shows them (D36).
+
+## 5c. B36 — ZIP grid (`zipgrid_2026.json`)
+
+Decision D36 (13 Nov 2026). The values of the ZIP view. BAH is set by MHA, so B36 carries only each ZIP's costs; the browser takes BAH, the cost share and the standards from B31 by the ZIP's `area`. B36 computes nothing itself: every number comes from B33 (rent) or B34 (buy).
+
+### 5c.1 Top level
+
+| Field | Type | Meaning |
+|---|---|---|
+| `schema_version`, `bah_year`, `build_id` | | As in B20 |
+| `home_types`, `modes` | array of string | As in B31 |
+| `caveat_sets` | array of arrays | Every distinct list of caveat ids the rows use, each in section 5.5 order, the first always `[]`. A row names its list by index, because the same few lists repeat in every ZIP. |
+| `zips` | object | One entry per B35 feature, sorted by ZIP (5c.2) |
+
+### 5c.2 ZIP entry: `zips.<zip>`
+
+| Field | Type | Meaning |
+|---|---|---|
+| `area` | string | The MHA code (B1). Always a `mha` area in B20. |
+| `rent` | object | `cost`, `status`, `caveats`: three arrays of 6, as in B31 |
+| `buy` | object | `cost`, `own_housing`, `status`, `caveats`: four arrays of 6, as in B31 |
+
+| Array | Entry | Meaning |
+|---|---|---|
+| `cost` | whole dollars \| null | Rent (B33): the ZIP's base rent (its ZORI grossed up with the MHA's rent/utilities split, else its HUD SAFMR scaled to the MHA's ZORI level) times the MHA's B29 home-type factor. Buy (B34): the ZIP's ZHVI times the MHA's B30 value ratio for the home type, priced with B11's model, the ZIP's tax rate and premium where published, plus the MHA's utilities; PITI alone under `piti_only_no_zori`. |
+| `own_housing` | whole dollars \| null | Buy only: PITI alone |
+| `status` | string | Rent: `ok`, `no_zori` (the MHA has no ZORI), `zip_no_benchmark`, `zip_outlier`. Buy: `ok`, `piti_only_no_zori`, `zip_no_benchmark`, `zip_outlier`. `cost` is non-null exactly under `ok` and `piti_only_no_zori`. |
+| `caveats` | integer | Index into `caveat_sets` |
+
+### 5c.3 The browser formula for a ZIP
+
+The section 5b.4 formula, unchanged, on an entry made of the ZIP's `rent` and `buy` blocks (with `caveats` replaced by the lists they index) and `bah` from `B31.areas[zip.area]`. `pipeline/handoff/contract.py` (`zip_view`) is the reference implementation. Every ZIP of an MHA therefore has its MHA's BAH and cost share; only the cost differs.
 
 ## 6. B21 — UI metadata (`ui_metadata_2026.json`)
 
@@ -343,7 +403,8 @@ Everything the map needs to label and colour B20, so no wording or class break i
 | `metrics` | The metric ids the grid supports: `adequacy_ratio`, `design_gap_usd`, `coverage_ratio`, `surplus_usd` |
 | `standards_text` | By rank, then dependents: the DoD standard in words (C25), e.g. *98% of the way from a 3-bedroom townhouse to a 3-bedroom single-family home* |
 | `notice` | `standard` and `off_standard` texts with `{standard}` and `{home_type}` placeholders the map fills from `standards_text` and the home-type label |
-| `titles` | Control titles: `rank`, `dependents`, `home_type`, `metric`, `mode` |
+| `titles` | Control titles: `rank`, `dependents`, `home_type`, `metric`, `mode`, `geography` |
+| `geographies`, `default_geography` | `{ "id", "label" }` for `mha` and `zip`, the map's two views (D36); the map opens on `mha` |
 | `off_standard_scale` | `title` and `subtitle` for the legend when the second scale is active (section 6.2) |
 
 **Class rule.** A value belongs to class `i`, where `i` is the number of breaks less than or equal to it. A value equal to a break falls in the class above. This is the rule the pipeline uses for the class counts in the coverage manifest (`bisect_right`).
@@ -420,12 +481,12 @@ Decision D26 (3 Nov 2026). The lookup behind ZIP search (C15), built from B1 wit
 | `stages` | One entry per stage manifest (fetch, B1–B19, B28, the A8 rollup, the A14 standards check, B29, B30, B7): nodes, file, SHA-256, generated time, warnings. The build stops if the A14 check did not pass. |
 | `windows` | The benchmark periods B21 also shows |
 | `spatial` | Permutations, seed and alpha of the B17/B18 run |
-| `outputs` | B7 file name, SHA-256 and features by class |
+| `outputs` | B7 file name, SHA-256 and features by class; B35 file name, SHA-256 and features |
 
-**Build order.** B22 is written before B20, B21, B27, B31 and B32, because they embed its hash as `build_id`. B22 therefore records B7 and the stage manifests, but not the five JSON files that point to it. Their hashes go into `SHA256SUMS`, written last.
+**Build order.** B22 is written before B20, B21, B27, B31, B32 and B36, because they embed its hash as `build_id`. B22 therefore records B7, B35 and the stage manifests (B33, B34 and B35 among them), but not the six JSON files that point to it. Their hashes go into `SHA256SUMS`, written last.
 
 ```
-stage manifests, B28 → B7 → B22 → B20, B21, B27, B31, B32 → SHA256SUMS
+stage manifests, B28 → B7, B35 → B22 → B20, B21, B27, B31, B32, B36 → SHA256SUMS
 ```
 
 The build stops if a stage manifest is missing or records inputs other than the files beside it (`make verify`).
@@ -434,16 +495,17 @@ The build stops if a stage manifest is missing or records inputs other than the 
 
 The map **must**:
 
-1. Join values to polygons only by `code`, through `setFeatureState` on the `areas` source and layer.
+1. Join values to polygons only by `code`, through `setFeatureState` on the `areas` source and layer; in the ZIP view, ZIP values only by `zip`, on the `zips` source and layer (section 4b).
 2. Classify and colour with B21 `metrics` breaks and colours, using `off_standard` for every view that is not the statutory test, name the active scale in the legend, and draw every null value in `no_data_color`.
 3. Show the B21 status text for any null value the user inspects, and the caveat texts for every caveat id on the area or row in view.
 4. Label CCG and territory polygons as non-authoritative (`ccg_geometry`).
 5. Label the B27 overlay as exploratory and mark FDR-significant areas.
-6. Check that B20, B21, B27 and B31 carry the same `build_id` (and B32 when it is loaded), and that `schema_version` has major version 1; otherwise refuse to render and show an error.
+6. Check that B20, B21, B27 and B31 carry the same `build_id` (and B32 and B36 when they are loaded), and that `schema_version` has major version 1; otherwise refuse to render (B36: refuse to use it) and show an error.
 7. Show the B21 `sources` attribution (C20) and `global_caveats` (C21).
 8. Compute grid views only with the section 5b.4 formula, and show the B21 `grid.notice` for every view: the statutory wording for a standard view, the affordability wording for any other (C25).
 9. Show the B27 overlay, regression results and sensitivity layers only for a research profile's statutory view (section 5b.6). The About page reports the `findings` block as project results, apart from any map view.
 10. Show `display_name` wherever an area is named.
+11. Show the B21 caveats of level `zip` with every ZIP code the reader inspects, and the ZIP's MHA beside it (D36).
 
 The map **must not**:
 
@@ -451,6 +513,7 @@ The map **must not**:
 2. Hard-code class breaks, colours, labels, status texts or caveat texts. Interface wording that describes no data, such as "Compare" or "Reload", belongs to Layer 3.
 3. Show cluster results for areas with `cluster_scope: false`.
 4. Present the flat-95% or SAFMR layers as the test result; they are sensitivity layers.
+5. Show the B27 overlay in the ZIP view (section 5b.6).
 
 ## 10. Versioning
 
@@ -470,23 +533,24 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 1. `make layer2` runs from `data/raw` to `SHA256SUMS` and the B23 report without error. (`make handoff` alone rebuilds only the delivered files from the existing stage outputs.)
 2. `make verify` reports no failed checks.
 3. Each JSON file validates against this document: required fields present, types correct, every enumeration value from its closed list, ratios at no more than 4 decimal places (p-values 5), dollars whole (B31 costs: cents).
-4. The B7 codes and the B20 codes match exactly, except areas with no ZCTA polygon, which are listed in B23. B31 and B32 hold exactly the B20 codes.
-5. Every non-null B20 value equals its source row (B4, B12–B15) after rounding; every B31 value equals B4, A14, B29 or B30; every B32 pair equals B1; the B21 `findings` equal the B17–B19 manifests.
-6. Every status code and caveat id in B20, B27 and B31 has an entry in B21.
-7. B20, B21, B27, B31 and B32 share one `build_id`, and it equals the SHA-256 of the B22 file.
-8. `SHA256SUMS` matches all seven files.
+4. The B7 codes and the B20 codes match exactly, except areas with no ZCTA polygon, which are listed in B23. B31 and B32 hold exactly the B20 codes. B36 holds exactly the ZIPs B35 tiled, each under the area B35 gives it, and B35 is the archive its manifest recorded.
+5. Every non-null B20 value equals its source row (B4, B12–B15) after rounding; every B31 value equals B4, A14, B29 or B30; every B32 pair equals B1; every B36 area equals B1 and every B36 value B33 or B34; the B21 `findings` equal the B17–B19 manifests.
+6. Every status code and caveat id in B20, B27, B31 and B36 has an entry in B21.
+7. B20, B21, B27, B31, B32 and B36 share one `build_id`, and it equals the SHA-256 of the B22 file.
+8. `SHA256SUMS` matches all nine files.
 9. B23 records the file sizes, the counts by status, and any area whose class differs between rounded and unrounded values.
 10. B23 runs the section 5b.4 formula on B31 for both research profiles in every area and mode and finds B20's values; and recomputes two off-standard cells (E-1 with dependents in a 4 BR single-family home, O-9 with dependents in a 1 BR apartment) from B4, A14, B29 and B30.
+11. B23 runs the section 5c.3 formula on B36 for both research profiles in every ZIP and mode and finds a value exactly where the ZIP's status says it has one; and reports the scaled-SAFMR check of B33.
 
 ## 12. Delivery
 
 1. Layers 1 and 2 are completed in full first: every Layer 1 and Layer 2 node complete or scrapped, `make layer2` run end to end from `data/raw`, and the B23 report passing every check.
-2. **Location (decided 18 Oct 2026, option B):** a frozen copy in `delivery/2026/` in the repository, holding the seven delivered files, `SHA256SUMS`, and the B23 report with its manifest (`qa_2026.md`, `qa_2026_manifest.json`). Layer 3 reads only this folder. A pipeline rerun on the workstation changes `data/processed/handoff/` and nothing here; the delivery changes only by a deliberate re-delivery, entered in section 13.
+2. **Location (decided 18 Oct 2026, option B):** a frozen copy in `delivery/2026/` in the repository, holding the nine delivered files, `SHA256SUMS`, and the B23 report with its manifest (`qa_2026.md`, `qa_2026_manifest.json`). Layer 3 reads only this folder. A pipeline rerun on the workstation changes `data/processed/handoff/` and nothing here; the delivery changes only by a deliberate re-delivery, entered in section 13.
 3. `make deliver` is the only way files reach `delivery/`. It copies them only when all six gates pass (`make deliver-check` runs the gates alone):
    1. every Layer 1–2 node is complete or scrapped, apart from W1, which completes in the delivery commit
    2. the contract checks 3–8 pass
    3. `make verify` passes
-   4. the B23 verdict is PASS, for this exact build and these seven files, and the report is unedited
+   4. the B23 verdict is PASS, for this exact build and these nine files, and the report is unedited
    5. the build came from committed code: the B22 commit is an ancestor of `HEAD`, and the pipeline code, configs, tools, Makefile and requirements are unchanged since
    6. the W1 write-up is written
 
@@ -497,6 +561,7 @@ These are the exit criteria for the handoff. B20–B23 implement them, and M6 do
 
 | Version | Date | Change |
 |---|---|---|
+| 1.3.0 | 13 Nov 2026 | The ZIP view (D36; ZIP-view plan Z1–Z9). Added: B35 `zipcodes_2026.pmtiles` (section 4b) and B36 `zipgrid_2026.json` (section 5c), so nine delivered files; statuses `zip_no_benchmark` and `zip_outlier`; caveats `zip_bah_constant` (new level `zip`), `zip_safmr_scaled` and `zip_tax_insurance`; B21 `grid.geographies`, `grid.default_geography` and `grid.titles.geography`; must 1 adds the `zips` source, must 6 adds B36, must 11 and must-not 5 are new; checks 4–8 and 11 cover B35 and B36. B20, B27, B31 and B32 are unchanged in shape and value, so the MHA view is the same map. Values: B33 and B34 (section 5c.2) price each real-MHA ZIP with its MHA's home-type factors; ZIP rent comes from the ZIP's ZORI, else its HUD SAFMR scaled to the MHA's ZORI level; a ZIP figure outside one third to three times its MHA's is left out. Re-delivered under `make deliver REPLACE=1`. **Approved by the author 13 Nov 2026** (took the plan's recommendations, with Z1 changed to build it now). |
 | 1.2.1 | 7 Nov 2026 | Values and wording (D34); no field, code or id changes, so the map reads it unchanged. A local sense check found B29 and B30 counting a single-family home's extra bedrooms twice: Zillow's single-family ÷ all-homes ratio compares typical homes of different sizes, and the bedroom ratio was then applied on top. B30 also scaled bedrooms from 2 BR although the all-homes home value measures as a 3 BR home. B29 and B30 now size-match each type ratio before adding bedrooms, B30 scales bedrooms from 3 BR, and at equal bedrooms neither mode prices a single-family home below a townhouse (B30 also keeps a townhouse at or above an apartment, raising single-family homes to the condo level in the 94 MHAs where condos cost more). Changed values: rent, single-family home types; buy, townhouse and single-family home types; and every B20, B31 and B23 value built on them (O-3 in both modes, E-5 in buy mode). Unchanged: apartments in both modes, townhouses in rent mode, so E-5's rent benchmark and the B17–B19 findings. Section 5 `cost_monthly` and section 5b.2 `cost` say so, and the B21 `home_type_benchmarks` text describes the method. Re-delivered under `make deliver REPLACE=1`. **Approved by the author 7 Nov 2026.** |
 | 1.2.0 | 3 Nov 2026 | Additive (D26, D27, D29). New delivered file B32 `zips_2026.json` (section 7b). B21 gains `no_data_label`, `findings` (6.3), `areas.<code>.display_name`, `metrics.<id>.ramp_labels`, `metrics.<id>.off_standard` (6.2), `clusters.out_of_scope_label`, and in `grid` the added `titles` and `off_standard_scale`. B22 `stages` gains B19. The `zip_zcta_dropout` text explains blank land. Obligations 2, 6 and 9 amended, obligation 10 and the must-not wording note added; section 4 default view and tile URL wording changed. **Correction:** the B18 table wrote p-values at 4 decimals, so B27 did not meet the 1.0.2 rule and ten delivered `lisa_p_sim` values read 0. B18 now writes 5 decimals, and check 3 refuses a p-value of 0. Seven delivered files. Re-delivered under `make deliver REPLACE=1`. **Approved by the author 3 Nov 2026.** |
 | 1.1.0 | 24 Oct 2026 | Revised the same evening, before approval or delivery, after the first real run: a blended standard is rounded to cents before its metrics (5b.4 step 4), and all rounding is half away from zero on the exact value (sections 3, 5b.4). B23 had found 3 of 1,356 views a dollar apart. Additive (D18–D20). New delivered file B31 `grid_2026.json` (section 5b): BAH for 23 ranks × 2 dependency statuses, benchmarks for the six DoD home types, cost shares and standards, with the browser formula, its rounding and worked examples. B21 gains `grid` (section 6.1). New caveat id `type_factor_national`. B20 `cost_monthly` now comes from B29/B30 at each research profile's DoD standard: E-5 is unchanged, O-3 is recomputed (values change, interface unchanged). Consumer obligations 8–9 and the must-not exception for the grid formula; conformance check 10; six delivered files. Made before any delivery, so no consumer is affected. Revised 1 Nov 2026, before approval or delivery (D22 option B, values only): in buy mode the townhouse is priced between the condo/co-op and single-family values, so E-5's buy `cost_monthly` comes from B30 and no longer equals B11; section 5 rows `cost_monthly` and `own_housing_monthly` say so. **Approved by the author 1 Nov 2026.** |

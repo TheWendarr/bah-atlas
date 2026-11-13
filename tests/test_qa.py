@@ -109,7 +109,14 @@ class TestQA(QAFixture):
         self.assertEqual((man["codes_without_polygon"], man["rounding_class_differences"]), ([], []))
         self.assertEqual(set(man["files"]), {f"areas_{Y}.pmtiles", f"payload_{Y}.json", f"ui_metadata_{Y}.json",
                                              f"hotspots_{Y}.json", f"grid_{Y}.json", f"zips_{Y}.json",
-                                             f"build_manifest_{Y}.json"})
+                                             f"zipcodes_{Y}.pmtiles", f"zipgrid_{Y}.json", f"build_manifest_{Y}.json"})
+        # 9c: the ZIP view, 4 ZIPs x 2 profiles x 2 modes, each with a value exactly where its status has one
+        zv = man["zip_view"]
+        self.assertEqual((zv["zips"], zv["views_checked"], zv["inconsistent"], zv["b35_features"]), (4, 16, [], 4))
+        self.assertEqual(zv["primary_status"]["rent"], {"ok": 2, "no_zori": 1, "zip_outlier": 1})
+        self.assertEqual(zv["primary_status"]["buy"], {"ok": 2, "zip_no_benchmark": 1, "piti_only_no_zori": 1})
+        # E-5 rent: 80901 2238 / 2353 = 0.9511 and 80902 2238 / 1925 = 1.1626 against CO001's 1.0463
+        self.assertEqual(zv["primary_rent_zip_over_mha"]["mhas"], 1)
         # 9b: the browser formula on B31 equals B20 for both profiles in all 5 areas x 2 modes
         self.assertEqual((man["grid"]["views_compared"], man["grid"]["views_identical"]), (20, 20))
         gt = man["grid"]["traces"]
@@ -122,6 +129,7 @@ class TestQA(QAFixture):
                          (1500.0, 115, 3500.0, 0.4614))
         report = (self.data / "processed" / "qa" / f"qa_{Y}.md").read_text()
         for heading in ("## 0. Checks", "## 5. Classes changed by rounding", "## 9. Traces", "## 9b. The rank",
+                        "## 9c. The ZIP view",
                         "## 10. ZORI against SAFMR", "## 12. Limitations"):
             self.assertIn(heading, report)
         self.assertIn("VIF above 5 for ln_rent", report)          # stage warnings are carried

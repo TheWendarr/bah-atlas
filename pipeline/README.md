@@ -89,6 +89,17 @@ go to `data/interim/benchmarks_YYYY/`.
   all-homes value reproduces B11 (checked on every run). The manifest lists, as
   warnings, every MHA whose six home values leave DoD's order (`dod_order`) and
   every MHA that takes a ratio from a single ZIP (`ratios.*.mhas_on_one_zip`).
+- `zip_rent_by_type.py` — B33 (`make zip-rent`, decision D36): rent for each
+  home type in every real-MHA ZIP, for the ZIP view. The ZIP's base rent is its
+  ZORI grossed up with the MHA's rent/utilities split, else its HUD SAFMR scaled to
+  the MHA's ZORI level; the MHA's B29 factors give the home types. A base outside
+  one third to three times the MHA's is left out. The MHA's own base reproduces
+  B29 (checked on every run), and the manifest measures the scaled SAFMR against
+  ZORI where a ZIP has both.
+- `zip_ownership_by_type.py` — B34 (`make zip-own`, D36): ownership cost for each
+  home type in every real-MHA ZIP: the ZIP's ZHVI with the MHA's B30 value ratios,
+  the ZIP's A9 tax rate and A8 premium where published, B11's model and the MHA's
+  utilities. The MHA's own inputs reproduce B30 (checked on every run).
 
 - `density_to_mha.py` — B24: population density per MHA (urbanicity for the
   B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,
@@ -146,6 +157,10 @@ esda (PySAL); matplotlib for the map; spreg for B19.
   One layer, `areas`, with two properties: `code` (the join key) and `class`
   (`mha`, `ccg`, `unknown`); the frontend joins metrics with
   `promoteId: "code"` + feature-state (decision D9, data contract section 4).
+- `build_zip_pmtiles.py` — B35 (`make zip-tiles`, decision D36): the ZIP view's
+  polygons, one layer `zips` keyed on `zip` with the MHA code in `area`, every
+  real-MHA ZIP with a Census ZCTA, zoom 6–10 (data contract section 4b). Also writes
+  `zipcodes_YYYY_features.csv`, the ZIP list B36 and check 4 read.
 - `build_basemap.sh` — extracts a bounding box from a Protomaps daily planet
   build into `basemap.pmtiles` (A11 -> C4) with the pmtiles CLI.
 
@@ -166,9 +181,14 @@ Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
 - `build_grid.py` (B31) — the rank × dependents × home type grid: BAH for 46
   cells and six benchmarks per mode per area, plus the A14 cost shares and
   standards; the browser computes each view (ICD 5b.4, `contract.grid_view`).
+- `build_zip_lookup.py` (B32) — every crosswalk ZIP under its area code, for ZIP search.
+- `build_zip_grid.py` (B36, D36) — the ZIP view's costs: per B35 ZIP its MHA code and
+  the six home-type costs to rent and to buy from B33 and B34, in whole dollars, with
+  caveat lists stored once in `caveat_sets`; the browser runs the ICD 5b.4 formula
+  with the MHA's BAH (ICD 5c.3, `contract.zip_view`).
 - `validate_handoff.py` — contract checks 3-8, independent of the builders: types
-  and rounding, B7 codes against B20, every B20 and B31 value against its source,
-  references into B21, one `build_id`, and `SHA256SUMS`.
+  and rounding, B7 codes against B20, B36 ZIPs against B35, every B20, B31 and B36
+  value against its source, references into B21, one `build_id`, and `SHA256SUMS`.
 
 ## `qa/` — 2.8 QA / validation report
 
@@ -178,7 +198,8 @@ Builds the files Layer 3 receives, exactly as `docs/data-contract.md` specifies
   changes with rounding (contract check 9), codes without a polygon (check 4), join
   coverage at every step, every stage warning, three MHAs traced from their ZIP
   values to B20 with each ratio recomputed, the grid formula on B31 against B20
-  and two off-standard grid cells recomputed, ZORI against SAFMR, the H1 and H2
+  and two off-standard grid cells recomputed, the ZIP view on B36 (section 9c),
+  ZORI against SAFMR, the H1 and H2
   statistical caveats, and every caveat text the map shows. Writes
   `data/processed/qa/qa_YYYY.md` and its manifest; exit 1 if a check fails.
 
@@ -197,7 +218,7 @@ handoff, B23 and the evidence and hash checks (data contract check 1).
 `make deliver-check` runs the six D10 gates in `tools/deliver_handoff.py`: every
 Layer 1–2 node complete or scrapped (W1 aside), contract checks 3–8, `make verify`,
 a passing B23 for this exact build, a build from committed code, and a written W1.
-`make deliver` runs them and only then copies the seven files, `SHA256SUMS` and the
+`make deliver` runs them and only then copies the nine files, `SHA256SUMS` and the
 B23 report into `delivery/YYYY/`, the one place processed data enters the
 repository (data contract section 12).
 

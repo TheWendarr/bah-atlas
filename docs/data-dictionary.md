@@ -69,6 +69,15 @@ removes.
 layer and property names, the MapLibre source declaration, zoom range,
 tippecanoe version, `output_file` / `output_sha256` / `output_bytes`.
 
+### `zipcodes_YYYY.pmtiles`, `zipcodes_YYYY_features.csv` and `zipcodes_YYYY_manifest.json` (B35)
+The ZIP view's polygons (`make zip-tiles`, decision D36): one layer, `zips`, with
+`zip` (the join key) and `area` (the MHA code) on each feature, one per real-MHA ZIP
+that has a Census ZCTA, z6–z10. The features CSV (`zip, area`) lists exactly what
+was tiled; B36 and contract check 4 read it. The manifest records the A2 and B1
+inputs, feature count, ZIPs without a ZCTA, MHAs with no ZIP polygon, zooms,
+tippecanoe version and `output_sha256` for both files. Specified in
+[data contract section 4b](data-contract.md#4b-b35--zip-code-polygons-zipcodes_2026pmtiles).
+
 ### `mha_YYYY_geometry_manifest.json` (B6)
 `inputs` / `input_sha256` (A2 ZCTA file, B2 crosswalk), `counts` (MHAs written,
 multipolygon MHAs, ZIPs dropped as non-MHA, ZIPs with no ZCTA match),
@@ -177,6 +186,37 @@ medians), the MHAs whose home values leave DoD's order from `apt1` to `sfh4`
 and measured size of each Zillow series (`reference_check.series`, D34),
 limitations, coverage per type, the B11 identity check, warnings.
 
+### `zip_rent_by_type.csv` (B33, long: ZIP x home type; `make zip-rent`)
+| column          | type  | notes |
+|-----------------|-------|-------|
+| zip, mha, home_type | str | every real-MHA ZIP in B1, six rows each |
+| base_source     | str   | `zori` (the ZIP's ZORI ÷ B5 rent share), `safmr_scaled` (its HUD SAFMR 2 BR × the MHA's B8 `zori_utilities_adjusted` ÷ B10 SAFMR 2 BR median) or `none` |
+| base_monthly, base_ratio | float | the ZIP's utilities-inclusive rent for B8's reference home, and that over the MHA's B8 value |
+| rent_monthly    | float | base × B29 `applied_factor` × B29 `bedroom_ratio` for the MHA and home type |
+| factor_source   | str   | B29's, carried for the `type_factor_national` caveat |
+| status          | str   | `ok`, `no_zori` (no ZORI in the MHA), `zip_no_benchmark` or `zip_outlier` (base outside one third to three times the MHA's) |
+
+`zip_rent_by_type_manifest.json`: inputs and SHA-256 (B8 both files, B10 both files,
+B29, B1, A14), method, coverage by status and base source, the base-ratio summary,
+`safmr_check` (scaled SAFMR against the ZORI-based base where a ZIP has both), the
+B29 identity check, warnings.
+
+### `zip_ownership_by_type.csv` (B34, long: ZIP x home type; `make zip-own`)
+| column          | type  | notes |
+|-----------------|-------|-------|
+| zip, mha, home_type | str | as B33 |
+| zhvi_ratio, home_value | float | the ZIP's ZHVI over the MHA's B9 value; home value = ZIP ZHVI × B30 `home_value` ÷ B9 `zhvi_median` |
+| tax_rate, tax_source | float, str | the ZIP's ZCTA rate from A9 (`zip`) where usable, else the MHA's (`mha` or `state_fallback`) |
+| insurance_annual_usd, insurance_source | float, str | the ZIP's FIO premium (`zip`) where published, else the MHA's (`mha` or `state_fallback`) |
+| own_housing_monthly, utilities_usd, own_total_monthly | float | B11's model on the home value; B30's (MHA) utilities |
+| building_source, bedroom_source | str | B30's, for the `type_factor_national` caveat |
+| status          | str   | `ok`, `piti_only_no_zori`, `zip_no_benchmark` (no ZHVI) or `zip_outlier` |
+
+`zip_ownership_by_type_manifest.json`: inputs and SHA-256 (B9 both files, B30, A8
+rollup, A9, A8, A7, B1, A14), config SHA-256, window and rate, coverage (ZIPs with a
+value, tax and premium taken from the ZIP), the ZHVI-ratio summary, the B30 identity
+check, limitations, warnings.
+
 ### `mha_tax_insurance.csv` (A8 rollup for B11; `make taxins`)
 One row per real MHA, from `tax_insurance_to_mha.py`.
 
@@ -217,7 +257,8 @@ warnings.
 
 ### ZIP-level companions
 `zip_zori.csv`, `zip_zhvi.csv` (`zip, mha, value, months_used`) and `zip_safmr.csv`
-(`zip, mha, br0..br4, hud_rows`) keep the pre-aggregation values for the B23 QA report.
+(`zip, mha, br0..br4, hud_rows`) keep the pre-aggregation values for the B23 QA report
+and for the ZIP view (B33, B34).
 
 ### `*_manifest.json`
 Input file and SHA-256, window months actually used, coverage counts, MHAs
@@ -424,15 +465,16 @@ growth check. Then the headline H2 reading, output SHA-256, and warnings (VIF ab
 
 The files handed to Layer 3 (B7 area tiles, B20 attribute payload, B21 UI
 metadata, B22 build manifest, B27 hotspot overlay, B31 rank × dependents × home
-type grid, B32 ZIP lookup) are specified field by field in
+type grid, B32 ZIP lookup, B35 ZIP polygons, B36 ZIP grid) are specified field by field in
 the [data contract (Layer 2 → Layer 3 ICD)](data-contract.md), which governs
 them. `make handoff` writes them, with `SHA256SUMS`, to `data/processed/handoff/`
 (`pipeline/handoff/`: `build_manifest.py` B22, `build_payload.py` B20,
 `build_ui_metadata.py` B21, `build_hotspots.py` B27, `build_grid.py` B31,
-`build_zip_lookup.py` B32) and then runs
+`build_zip_lookup.py` B32, `build_zip_grid.py` B36; B35 is copied from
+`data/processed/`) and then runs
 `validate_handoff.py`, which applies contract checks 3–8. The names, codes and
 rounding rules all builders share are in `pipeline/handoff/contract.py`, with
-`grid_view`, the reference implementation of the browser formula for B31 (ICD 5b.4). B28 (County Cost Group and territory polygons) is merged into B7 under
+`grid_view` and `zip_view`, the reference implementations of the browser formula for B31 (ICD 5b.4) and B36 (5c.3). B28 (County Cost Group and territory polygons) is merged into B7 under
 decision D9. The decisions behind the contract are in the
 [M6 plan](plans/m6-plan.md).
 

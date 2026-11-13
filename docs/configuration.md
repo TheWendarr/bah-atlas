@@ -246,11 +246,12 @@ The wording the map shows, read only by B21 (`build_ui_metadata.py`), which copi
 | `no_data_label` | Legend text for `no_data_color`. |
 | `display_names` | By area code, the name the map shows where the DTMO name reads badly: `XX499` is "UNKNOWN, NA", and `GA073` is "FORT GORDON, AL" in DTMO's file. B3 and `name` keep the DTMO text. |
 | `modes` | Display label for `rent` and `buy`. |
-| `statuses` | A `label` and a `text` for each status code in data contract section 5.4. B21 stops if a code is missing or an extra one appears. |
+| `statuses` | A `label` and a `text` for each status code in data contract section 5.4, the two ZIP-view codes included. B21 stops if a code is missing or an extra one appears. |
 | `caveats` | A `title` and a `text` for each caveat id in section 5.5; B21 adds each id's level from the contract. Same check. |
 | `global_caveats` | Limitations that apply to the whole map: `id`, `title`, `text`. |
 | `geometry` | `method` and `authority` statements for the area outlines. |
-| `grid.titles` | Control titles beyond `rank` and `home_type`: `dependents`, `metric`, `mode`. |
+| `grid.titles` | Control titles beyond `rank` and `home_type`: `dependents`, `metric`, `mode`, `geography`. |
+| `grid.geographies` | Label for each of the map's two views, `mha` and `zip` (decision D36). B21 stops if either is missing or a third appears. |
 | `grid.off_standard_scale` | `title` and `subtitle` for the legend when the second scale is active. |
 | `sources` | One entry per incorporated source shown in the map's attribution (C20): `id` (node), `title`, `provider`, `url`, `license`, `used_for`. Follows [SOURCES.md](SOURCES.md). |
 

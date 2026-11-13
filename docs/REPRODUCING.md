@@ -19,7 +19,7 @@ handoff files contain: [data contract](data-contract.md) · table layouts:
 - the rent and home-value benchmarks, ownership cost and adequacy metrics for every
   MHA (B8–B15), and the benchmarks for each of DoD's six home types (B29, B30)
 - the spatial statistics (B16–B18), population density (B24) and the H2 regression (B19)
-- the seven handoff files for Layer 3, validated against the data contract (B7, B20–B22, B27, B31, B32)
+- the nine handoff files for Layer 3, validated against the data contract (B7, B20–B22, B27, B31, B32, B35, B36)
 - the QA report (B23), which re-checks every recorded hash and traces three MHAs by hand
 
 Two levels of replication are possible:
@@ -39,7 +39,7 @@ Two levels of replication are possible:
 | Git | any recent | cloning | https://git-scm.com/downloads |
 | GNU Make | 3.81 or newer | every `make` command | preinstalled on Linux; macOS: `xcode-select --install` |
 | Python | 3.11 or newer (developed on 3.14, tested on 3.13) | the pipeline | https://www.python.org/downloads/ |
-| tippecanoe | **2.17 or newer** (2026 build: 2.82.0) | the area tiles, B7 (`make tiles`, part of `make all`) | https://github.com/felt/tippecanoe |
+| tippecanoe | **2.17 or newer** (2026 build: 2.82.0) | the area tiles, B7 (`make tiles`), and the ZIP tiles, B35 (`make zip-tiles`), both part of `make all` | https://github.com/felt/tippecanoe |
 | `sha256sum` | GNU coreutils | `make handoff` | preinstalled on Linux; macOS: `brew install coreutils` if missing |
 | pmtiles CLI | optional | the basemap only (`make basemap`, Layer 3) | https://github.com/protomaps/go-pmtiles/releases |
 | GitHub CLI `gh` | optional | mirroring the tracker to GitHub (`make wbs-sync`) | https://cli.github.com |
@@ -166,9 +166,10 @@ above. Do not use `make fetch --force` in an exact replication: it replaces file
 make layer2
 ```
 
-This runs, in order: `make all` (configs, ingest, geometry, tiles, benchmarks, metrics,
-spatial statistics; `make benchmarks` includes the A14 standards check and B29, B30),
-`make regression` (B24 and B19), `make handoff` (the seven Layer 3 files, validated), `make evidence` and `make verify`, `make qa` (B23), and
+This runs, in order: `make all` (configs, ingest, geometry, area and ZIP tiles, benchmarks,
+metrics, spatial statistics; `make benchmarks` includes the A14 standards check, B29, B30
+and the ZIP view's B33, B34), `make regression` (B24 and B19), `make handoff` (the nine
+Layer 3 files, validated), `make evidence` and `make verify`, `make qa` (B23), and
 `make evidence` and `make verify` again. It stops at the first failure.
 
 The slowest step is the spatial statistics: 99,999 permutations per test (the
@@ -186,7 +187,7 @@ commit, software versions and the test log; any changed SHA-256 or count means a
 ```bash
 make verify                                        # every recorded SHA-256 agrees
 less data/processed/qa/qa_2026.md                  # the QA report: verdict at the top
-cat data/processed/handoff/SHA256SUMS              # the seven handoff files
+cat data/processed/handoff/SHA256SUMS              # the nine handoff files
 ```
 
 With exact inputs:
@@ -266,7 +267,7 @@ clone that has not run the pipeline. It needs Node.js 22 or later.
 ```bash
 make web-deps                                 # npm ci from web/package-lock.json
 cd web && npx playwright install chromium && cd ..   # once, for the browser tests
-make web-test        # formula parity on all 218,316 views, class rule, contract gate, X7 source scan
+make web-test        # formula parity on all 218,316 views and the reference ZIP views, class rule, contract gate, X7 source scan
 make web-e2e         # the built site in a real browser
 make web-perf        # X9: first load and repaint, throttled; writes docs/evidence/web_perf.json
 make web-dev         # http://localhost:8000 with the tiles copied in

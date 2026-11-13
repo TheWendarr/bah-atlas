@@ -5,8 +5,9 @@ build_manifest.py  (every stage manifest + B7 -> B22 build manifest)
 Gathers the provenance of one build into a single file (data contract section 8):
 the raw inputs and their SHA-256, the configs, every stage manifest with its hash
 and warnings, the benchmark windows, software versions, the git commit, and the
-B7 tile archive. Its own SHA-256 is the `build_id` that B20, B21, B27 and B31
-carry, so it is written before them and does not list them; SHA256SUMS covers all six.
+B7 and B35 tile archives. Its own SHA-256 is the `build_id` that B20, B21, B27, B31, B32
+and B36 carry, so it is written before them and does not list them; SHA256SUMS covers all
+nine delivered files.
 
     python pipeline/handoff/build_manifest.py --year 2026 \
         --out data/processed/handoff/build_manifest_2026.json
@@ -50,6 +51,9 @@ def stage_paths(data: Path, year: int) -> list[tuple[str, Path]]:
         ("A14", bench / "standards_check_manifest.json"),
         ("B29", bench / "mha_rent_by_type_manifest.json"),
         ("B30", bench / "mha_ownership_by_type_manifest.json"),
+        ("B33", bench / "zip_rent_by_type_manifest.json"),
+        ("B34", bench / "zip_ownership_by_type_manifest.json"),
+        ("B35", processed / f"zipcodes_{year}_manifest.json"),
         ("B12-B15", metrics / "coverage_metrics_manifest.json"),
         ("B16", spatial / "weights_manifest.json"),
         ("B17-B18", spatial / "spatial_stats_manifest.json"),
@@ -95,7 +99,7 @@ def main() -> None:
     configs = {p.name: c.sha256(p) for p in sorted(args.config_dir.glob("*.json"))}
 
     cov, tax = manifests["B12-B15"], manifests["A8"]
-    b7 = manifests["B7"]
+    b7, b35 = manifests["B7"], manifests["B35"]
     spatial = manifests["B17-B18"]
     windows = {
         "rent_zori_months": cov.get("windows", {}).get("B8"),
@@ -107,6 +111,9 @@ def main() -> None:
     }
     if not b7.get("output_file") or not b7.get("output_sha256"):
         c.die(TOOL, "the B7 manifest has no output_file / output_sha256; rerun `make tiles`")
+    b35_sha = (b35.get("output_sha256") or {}).get(b35.get("output_file") or "")
+    if not b35_sha:
+        c.die(TOOL, "the B35 manifest has no output_file / output_sha256; rerun `make zip-tiles`")
 
     manifest = {
         "node": "B22",
@@ -122,8 +129,9 @@ def main() -> None:
         "windows": windows,
         "spatial": {k: spatial.get("method", {}).get(k) for k in ("permutations", "seed", "alpha")},
         "outputs": {"B7": {"file": b7["output_file"], "sha256": b7["output_sha256"],
-                           "features_by_class": b7.get("features_by_class")}},
-        "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31, B32 -> SHA256SUMS",
+                           "features_by_class": b7.get("features_by_class")},
+                    "B35": {"file": b35["output_file"], "sha256": b35_sha, "features": b35.get("features")}},
+        "build_order": "stage manifests, B28 -> B7, B35 -> B22 -> B20, B21, B27, B31, B32, B36 -> SHA256SUMS",
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

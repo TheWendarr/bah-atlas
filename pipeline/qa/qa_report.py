@@ -19,7 +19,7 @@ What it checks and reports
                    uncommitted now: the handoff was built from committed code.
                    B22's own `dirty` flag is shown but not judged, because a
                    rebuild rewrites the docs/evidence copies before B22 runs.
-  3  files         size, gzip size and SHA-256 of the seven delivered files
+  3  files         size, gzip size and SHA-256 of the nine delivered files
                    (check 9), and SHA256SUMS
   4  status        area counts by class, and value-block counts by profile,
                    mode and status (check 9)
@@ -41,6 +41,10 @@ What it checks and reports
                    and two off-standard cells, E-1 with dependents in a 4 BR
                    single-family home and O-9 with dependents in a 1 BR apartment,
                    recomputed from B4, A14, B29 and B30 in one traced MHA
+  9c ZIP view      B33-B36 (D36): the browser formula on B36 and B31 gives a value for
+                   every ZIP with one, for both research profiles in both modes; coverage
+                   by status and rent source; the scaled-SAFMR check against ZORI; and
+                   how ZIP values spread around their MHA's
   10 ZORI vs SAFMR agreement of the primary benchmark with the HUD cross-check
   11 statistics    H1 (B17/B18: FDR result, permutation floor, k sensitivity,
                    scope) and H2 (B19: chosen model, collinearity, residual
@@ -52,7 +56,7 @@ Output (written to --out; data/processed/ is git-ignored, so the report enters
 the repository only with the D10 delivery commit)
 ------------------------------------------------------------------------------
   qa_<year>.md               the report
-  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the seven delivered
+  qa_<year>_manifest.json    node B23: inputs and SHA-256 (the nine delivered
                              files among them), verdict per check, the counts,
                              class differences, traces, output SHA-256
 
@@ -207,7 +211,7 @@ def main() -> None:
     def judge(check: str, ok: bool, detail: str, note: bool = False) -> None:
         verdict.append((check, "NOTE" if note else ("PASS" if ok else "FAIL"), detail))
 
-    payload, ui, hot, b22, grid = (read_json(files[n]) for n in ("B20", "B21", "B27", "B22", "B31"))
+    payload, ui, hot, b22, grid, zipgrid = (read_json(files[n]) for n in ("B20", "B21", "B27", "B22", "B31", "B36"))
     build_id = c.sha256(files["B22"])
     prof_cfg = read_json(args.profiles)
     profiles = {p["id"]: p for p in prof_cfg["profiles"]}
@@ -320,9 +324,11 @@ def main() -> None:
         "B24": context / "mha_density_manifest.json", "B19": spatial / "regression_manifest.json",
         "A14": bench / "standards_check_manifest.json", "B29": bench / "mha_rent_by_type_manifest.json",
         "B30": bench / "mha_ownership_by_type_manifest.json",
+        "B33": bench / "zip_rent_by_type_manifest.json", "B34": bench / "zip_ownership_by_type_manifest.json",
+        "B35": processed / f"zipcodes_{y}_manifest.json",
     }
     absent = [n for n, p in stage.items() if not p.exists()]
-    judge("Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, A14 check)", not absent,
+    judge("Every Layer 2 stage manifest present (B6-B19, B24, B28-B30, B33-B35, A14 check)", not absent,
           "all present" if not absent else f"missing: {', '.join(absent)}")
     man = {n: read_json(p) for n, p in stage.items() if p.exists()}
     cov_rows = []
@@ -544,6 +550,46 @@ def main() -> None:
     judge("Grid traces: E-1 in a 4 BR single-family home and O-9 in a 1 BR apartment", grid_ok,
           f"{grid_code}: recomputed from B4, A14, B29 and B30" if grid_code else "no traced MHA with rent values")
 
+    # 9c. ZIP view (B33-B36) --------------------------------------------------------------
+    zip_views, zip_bad, zip_status = 0, [], {m: {} for m in c.MODES}
+    spread: dict[str, list[float]] = {}
+    for z, e in (zipgrid.get("zips") or {}).items():
+        for pid in payload.get("profiles", []):
+            p = profiles[pid]
+            dep = "with" if p["has_dependents"] else "without"
+            for mode in c.MODES:
+                v = c.zip_view(grid, zipgrid, z, p["pay_grade"].upper(), dep, c.STANDARD, mode)
+                zip_views += 1
+                if pid == primary:
+                    zip_status[mode][v["status"]] = zip_status[mode].get(v["status"], 0) + 1
+                valued = v["status"] in c.ZIP_VALUED
+                if valued != (v["adequacy_ratio"] is not None):
+                    zip_bad.append(f"{z} {pid} {mode}: status {v['status']}, adequacy {v['adequacy_ratio']}")
+                mha_ratio = areas.get(e["area"], {}).get(pid, {}).get(mode, {}).get("adequacy_ratio")
+                if pid == primary and mode == "rent" and v["adequacy_ratio"] is not None and mha_ratio:
+                    spread.setdefault(e["area"], []).append(v["adequacy_ratio"] / mha_ratio)
+    judge("ZIP view: the browser formula on B36 and B31 gives a value for every ZIP that has one", not zip_bad,
+          f"{zip_views - len(zip_bad)} of {zip_views} ZIP x profile x mode views consistent"
+          + (f"; differ: {'; '.join(zip_bad[:5])}" if zip_bad else ""))
+    b33m, b34m, b35m = man.get("B33") or {}, man.get("B34") or {}, man.get("B35") or {}
+    medians = [statistics.median(v) for v in spread.values() if v]
+    wide = [statistics.quantiles(v, n=10) for v in spread.values() if len(v) >= 10]
+    zip_summary = {
+        "zips": len(zipgrid.get("zips") or {}), "views_checked": zip_views, "inconsistent": zip_bad,
+        "primary_status": zip_status, "b33_coverage": b33m.get("coverage"), "safmr_check": b33m.get("safmr_check"),
+        "b34_coverage": b34m.get("coverage"), "b35_features": b35m.get("features"),
+        "primary_rent_zip_over_mha": ({"mhas": len(medians), "median_of_mha_medians": round(statistics.median(medians), 4),
+                                       "median_p10": round(statistics.median(q[0] for q in wide), 4) if wide else None,
+                                       "median_p90": round(statistics.median(q[-1] for q in wide), 4) if wide else None}
+                                      if medians else None),
+    }
+    if medians:
+        judge("ZIP view: spread of ZIP adequacy around the MHA's (primary profile, rent)", True,
+              f"median ZIP ÷ MHA ratio {zip_summary['primary_rent_zip_over_mha']['median_of_mha_medians']} over "
+              f"{len(medians)} MHAs", note=True)
+    zip_status_rows = [[mode, st, f"{n:,}"] for mode in c.MODES for st, n in sorted(zip_status[mode].items())]
+    sc = b33m.get("safmr_check") or {}
+
     # 10. ZORI vs SAFMR -------------------------------------------------------------------
     agree_rows = []
     for pid in profiles:
@@ -644,7 +690,7 @@ def main() -> None:
         "before B22 runs, so `dirty: true` alone does not mean code was uncommitted; the check above compares the "
         "code paths directly.", "",
         "## 3. Delivered files (check 9)", "", md_table(["Node", "File", "Bytes", "gzip bytes", "SHA-256"], file_rows), "",
-        f"`SHA256SUMS` matches all seven: {'yes' if sums_ok else '**no**'}.", "",
+        f"`SHA256SUMS` matches all nine: {'yes' if sums_ok else '**no**'}.", "",
         "## 4. Counts by status (check 9)", "",
         "Areas by class: " + ", ".join(f"{k} {v}" for k, v in sorted(by_class.items())) + ".", "",
         md_table(["Profile", "Mode", "Status", "Areas"], status_rows), "",
@@ -673,6 +719,24 @@ def main() -> None:
          "No traced MHA has rent values, so the grid traces were not run."), "",
         md_table(["Rank", "Home type", "Mode", "Status", "BAH (B4)", "Cost share (A14)", "Cost (B29/B30)",
                   "(BAH + share) ÷ cost", "B31 formula", "agree"], grid_rows) if grid_rows else "", "",
+        "## 9c. The ZIP view (B33–B36)", "",
+        f"B35 draws {n_(zip_summary['b35_features'])} ZIP codes; B36 holds the same ZIPs. Run on B36 with each "
+        f"ZIP's MHA from B31, the browser formula gives {zip_views - len(zip_bad)} of {zip_views} views a value "
+        "exactly where the ZIP's status says it has one.", "",
+        f"Rent base by source (B33): {json.dumps((b33m.get('coverage') or {}).get('base_source'))}. "
+        f"Ownership (B34): {n_((b34m.get('coverage') or {}).get('zips_with_value'))} ZIPs with a value; tax rate "
+        f"from the ZIP in {n_((b34m.get('coverage') or {}).get('zips_tax_rate_from_zip'))}, premium from the ZIP in "
+        f"{n_((b34m.get('coverage') or {}).get('zips_premium_from_zip'))}.", "",
+        (f"Scaled SAFMR against ZORI in the {n_(sc.get('zips_with_both'))} ZIPs that have both: median absolute "
+         f"error {sc.get('median_abs_pct_error')}%, {sc.get('share_within_10_pct', 0):.0%} within 10%, "
+         f"{sc.get('share_within_20_pct', 0):.0%} within 20%." if sc else "No ZIP has both a ZORI and a SAFMR."), "",
+        f"Statuses for the primary profile ({primary}) at its DoD standard:", "",
+        md_table(["Mode", "Status", "ZIPs"], zip_status_rows) if zip_status_rows else "No ZIPs.", "",
+        (f"ZIP adequacy over the MHA's (primary profile, rent): median over MHAs "
+         f"{zip_summary['primary_rent_zip_over_mha']['median_of_mha_medians']}; in MHAs with at least ten valued "
+         f"ZIPs the 10th and 90th percentiles sit at a median of {zip_summary['primary_rent_zip_over_mha']['median_p10']} "
+         f"and {zip_summary['primary_rent_zip_over_mha']['median_p90']}. BAH is the same in every ZIP of an MHA, so "
+         "this is the spread of local cost." if medians else ""), "",
         "## 10. ZORI against SAFMR (rent cross-check)", "",
         "Cost = the profile's DoD standard from B29 (for E-5 the 2 BR townhouse, i.e. B8); SAFMR = HUD FY2026 at "
         "the profile's anchor bedrooms (B10, gross "
@@ -690,6 +754,7 @@ def main() -> None:
     inputs = {**{n: p for n, p in files.items()}, "B12": metrics_dir / "mha_rent_metrics.csv",
               "B14": metrics_dir / "mha_buy_metrics.csv", "B8": bench / "mha_zori.csv", "B11": bench / "mha_ownership.csv",
               "B29": bench / "mha_rent_by_type.csv", "B30": bench / "mha_ownership_by_type.csv",
+              "B33": bench / "zip_rent_by_type.csv", "B34": bench / "zip_ownership_by_type.csv",
               "A14": args.standards}
     manifest = {
         "nodes": ["B23"],
@@ -710,6 +775,7 @@ def main() -> None:
         "traces": traces,
         "grid": {"views_compared": compared, "views_identical": compared - len(grid_bad), "differences": grid_bad,
                  "traces": grid_trace},
+        "zip_view": zip_summary,
         "outputs": [report.name, f"qa_{y}_manifest.json"],
         "output_sha256": {report.name: c.sha256(report)},
     }

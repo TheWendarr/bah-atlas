@@ -10,13 +10,13 @@ they were built from, independently of the builders:
      costs: cents)
   4  the area codes in B7 (the B6 and B28 polygons it was tiled from) match the
      codes in B20, apart from codes with no polygon, which B28 lists; B31 and B32
-     hold exactly the B20 codes
+     hold exactly the B20 codes; B36 holds exactly the ZIPs B35 tiled
   5  every non-null B20 value equals its source row (B4, B12-B15) after rounding,
-     every B31 value its source (B4, A14, B29, B30), every B32 pair B1, and the
-     B21 findings the B17-B19 manifests
-  6  every status code and caveat id in B20, B27 and B31 has an entry in B21
-  7  B20, B21, B27, B31 and B32 carry one build_id, equal to the SHA-256 of B22
-  8  SHA256SUMS matches the seven delivered files (skipped with --no-sums)
+     every B31 value its source (B4, A14, B29, B30), every B32 pair B1, every B36
+     value its source (B1, B33, B34), and the B21 findings the B17-B19 manifests
+  6  every status code and caveat id in B20, B27, B31 and B36 has an entry in B21
+  7  B20, B21, B27, B31, B32 and B36 carry one build_id, equal to the SHA-256 of B22
+  8  SHA256SUMS matches the nine delivered files (skipped with --no-sums)
 
     python pipeline/handoff/validate_handoff.py --year 2026 --handoff data/processed/handoff
 
@@ -152,6 +152,9 @@ def check_ui(ck: Check, ui: dict) -> None:
     ck.expect(3, ui.get("clusters", {}).get("out_of_scope_label"), "B21: clusters lacks out_of_scope_label")
     gui = ui.get("grid") or {}
     ck.expect(3, all((gui.get("titles") or {}).get(k) for k in c.GRID_TITLES), f"B21 grid: titles need {c.GRID_TITLES}")
+    geos = gui.get("geographies") or []
+    ck.expect(3, [g.get("id") for g in geos] == list(c.GEOGRAPHIES) and all(g.get("label") for g in geos)
+              and gui.get("default_geography") == c.GEOGRAPHIES[0], f"B21 grid: geographies must be {c.GEOGRAPHIES}")
     scale = gui.get("off_standard_scale") or {}
     ck.expect(3, scale.get("title") and scale.get("subtitle"), "B21 grid: off_standard_scale is incomplete")
 
@@ -275,6 +278,75 @@ def check_grid(ck: Check, g: dict, payload: dict, ui: dict, std: dict, s: dict) 
     return statuses, caveats
 
 
+def check_zipgrid(ck: Check, zg: dict, payload: dict, s: dict) -> tuple[set[str], set[str]]:
+    """ICD 5c: B36's shape (check 3), its ZIPs against B35 (check 4), and its values against
+    B1, B33 and B34 (check 5)."""
+    statuses, caveats = set(), set()
+    ck.expect(3, zg.get("home_types") == list(c.HOME_TYPES), f"B36: home_types are not {c.HOME_TYPES}")
+    ck.expect(3, zg.get("modes") == list(c.MODES), "B36: modes are not rent, buy")
+    zips = zg.get("zips") or {}
+    ck.expect(3, list(zips) == sorted(zips), "B36: zips are not sorted")
+    sets = zg.get("caveat_sets")
+    if not isinstance(sets, list) or not sets or sets[0] != []:
+        ck.fail(3, "B36: caveat_sets must be a list whose first entry is the empty list")
+        sets = [[]]
+    ck.expect(3, len({tuple(x) for x in sets}) == len(sets), "B36: caveat_sets holds a list twice")
+    for x in sets:
+        ck.expect(3, x == sorted(x, key=lambda cv: list(c.CAVEATS).index(cv) if cv in c.CAVEATS else -1),
+                  f"B36: caveat set {x} is not in the contract's order")
+        for cv in x:
+            ck.expect(3, c.CAVEATS.get(cv) == "row", f"B36: {cv!r} in caveat_sets is not a row-level caveat")
+    ck.expect(4, set(zips) == set(s["zip_features"]),
+              f"B36 and B35 hold different ZIPs: {len(zips)} against {len(s['zip_features'])}")
+    n = len(c.HOME_TYPES)
+    areas = payload.get("areas", {})
+    for z, e in zips.items():
+        w = f"B36 {z}"
+        area = e.get("area")
+        if not c.ZIP.match(z) or areas.get(area, {}).get("class") != "mha":
+            ck.fail(3, f"{w}: malformed ZIP or area {area!r} is not an MHA in B20")
+            continue
+        ck.expect(4, s["zip_features"].get(z) == area, f"{w}: area {area} differs from B35")
+        ck.expect(5, s["crosswalk"].get(z) == area, f"{w}: area {area} differs from B1")
+        for mode in c.MODES:
+            b = e.get(mode) or {}
+            keys = ["cost", "own_housing", "status", "caveats"] if mode == "buy" else ["cost", "status", "caveats"]
+            if list(b) != keys or any(not isinstance(b[k], list) or len(b[k]) != n for k in keys):
+                ck.fail(3, f"{w} {mode}: needs {keys}, each a list of {n}")
+                continue
+            for j, t in enumerate(c.HOME_TYPES):
+                st, cost = b["status"][j], b["cost"][j]
+                statuses.add(st)
+                wt = f"{w} {mode} {t}"
+                if st not in c.ZIP_STATUSES[mode]:
+                    ck.fail(3, f"{wt}: status {st!r} not in the contract")
+                    continue
+                valued = st in c.ZIP_VALUED
+                ck.expect(3, is_dollar(cost) and (cost is not None) == valued, f"{wt}: cost {cost!r} under {st}")
+                if mode == "buy":
+                    ck.expect(3, is_dollar(b["own_housing"][j]) and (b["own_housing"][j] is not None) == valued,
+                              f"{wt}: own_housing {b['own_housing'][j]!r} under {st}")
+                ix = b["caveats"][j]
+                if not isinstance(ix, int) or isinstance(ix, bool) or not 0 <= ix < len(sets):
+                    ck.fail(3, f"{wt}: caveats {ix!r} is not an index into caveat_sets")
+                else:
+                    caveats.update(sets[ix])
+                    ck.expect(3, valued or not sets[ix], f"{wt}: caveats on a value-less row under {st}")
+                row = s["zip_rent" if mode == "rent" else "zip_own"].get((z, t))
+                if row is None:
+                    ck.fail(5, f"{wt}: no source row in {'B33' if mode == 'rent' else 'B34'}")
+                    continue
+                ck.expect(5, row["status"] == st, f"{wt}: status {st} != source {row['status']}")
+                field = ("rent_monthly" if mode == "rent" else
+                         "own_total_monthly" if st == "ok" else "own_housing_monthly")
+                ck.expect(5, cost == (c.dollars(row[field]) if valued else None),
+                          f"{wt}: cost {cost} != source {row.get(field)!r}")
+                if mode == "buy":
+                    ck.expect(5, b["own_housing"][j] == (c.dollars(row["own_housing_monthly"]) if valued else None),
+                              f"{wt}: own_housing differs from B34")
+    return statuses, caveats
+
+
 def polygon_codes(path: Path) -> set[str]:
     data = c.read_json(path, TOOL)
     return {str(f["properties"]["mha"]) for f in data.get("features", [])}
@@ -298,10 +370,11 @@ def main() -> None:
         c.die(TOOL, f"delivered file(s) missing: {', '.join(missing)}")
     ck = Check()
     build_id = c.sha256(files["B22"])
-    payload, ui, hot, grid, zips = (c.read_json(files[n], TOOL) for n in ("B20", "B21", "B27", "B31", "B32"))
+    payload, ui, hot, grid, zips, zipgrid = (c.read_json(files[n], TOOL)
+                                             for n in ("B20", "B21", "B27", "B31", "B32", "B36"))
     b22 = c.read_json(files["B22"], TOOL)
     ck.expect(3, b22.get("node") == "B22" and b22.get("stages"), "B22: not a build manifest")
-    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot), ("B31", grid), ("B32", zips)):
+    for name, doc in (("B20", payload), ("B21", ui), ("B27", hot), ("B31", grid), ("B32", zips), ("B36", zipgrid)):
         check_header(ck, name, doc, y, build_id)
 
     interim, metrics = d / "interim" / f"bah_{y}", d / "interim" / f"metrics_{y}"
@@ -319,13 +392,26 @@ def main() -> None:
             bench / "mha_ownership_by_type.csv", {"mha", "home_type", "own_housing_monthly", "own_total_monthly",
                                                   "status"}, TOOL)},
     }
+    processed = d / "processed"
+    crosswalk_all = {r["zip"]: r["mha"] for r in c.read_csv(interim / "zip_mha.csv", {"zip", "mha"}, TOOL)}
+    sources.update({
+        "crosswalk": crosswalk_all,
+        "zip_features": {r["zip"]: r["area"] for r in c.read_csv(
+            processed / f"zipcodes_{y}_features.csv", {"zip", "area"}, TOOL)},
+        "zip_rent": {(r["zip"], r["home_type"]): r for r in c.read_csv(
+            bench / "zip_rent_by_type.csv", {"zip", "home_type", "rent_monthly", "status"}, TOOL)},
+        "zip_own": {(r["zip"], r["home_type"]): r for r in c.read_csv(
+            bench / "zip_ownership_by_type.csv", {"zip", "home_type", "own_housing_monthly", "own_total_monthly",
+                                                  "status"}, TOOL)},
+    })
     statuses, caveats = check_payload(ck, payload, sources)
     g_statuses, g_caveats = check_grid(ck, grid, payload, ui, ht.load(args.standards), sources)
-    statuses |= g_statuses
-    caveats |= g_caveats
+    z_statuses, z_caveats = check_zipgrid(ck, zipgrid, payload, sources)
+    statuses |= g_statuses | z_statuses
+    caveats |= g_caveats | z_caveats
     check_ui(ck, ui)
     check_hotspots(ck, hot, payload)
-    check_zips(ck, zips, payload, {r["zip"]: r["mha"] for r in c.read_csv(interim / "zip_mha.csv", {"zip", "mha"}, TOOL)})
+    check_zips(ck, zips, payload, crosswalk_all)
     spatial_dir = d / "interim" / f"spatial_{y}"
     ck.expect(5, ui.get("findings") == c.findings(c.read_json(spatial_dir / "spatial_stats_manifest.json", TOOL),
                                                   c.read_json(spatial_dir / "regression_manifest.json", TOOL)),
@@ -339,8 +425,7 @@ def main() -> None:
     for code in payload.get("areas", {}):
         ck.expect(6, code in ui.get("areas", {}), f"area {code} has no B21 name")
 
-    # Check 4: B7's polygons and B20's codes.
-    processed = d / "processed"
+    # Check 4: B7's polygons and B20's codes; B35's archive and feature list.
     polys = polygon_codes(processed / f"mha_{y}.geojson") | polygon_codes(processed / f"non_mha_{y}.geojson")
     b28_man = c.read_json(processed / f"non_mha_{y}_geometry_manifest.json", TOOL)
     no_polygon = set(b28_man.get("codes_without_polygon", []))
@@ -353,6 +438,11 @@ def main() -> None:
               f"the B6 + B28 polygons number {len(polys)}")
     ck.expect(4, c.sha256(files["B7"]) == b7_man.get("output_sha256"), "B7 in the handoff folder is not the "
               "archive the B7 manifest recorded")
+    b35_man = c.read_json(processed / f"zipcodes_{y}_manifest.json", TOOL)
+    ck.expect(4, c.sha256(files["B35"]) == (b35_man.get("output_sha256") or {}).get(files["B35"].name),
+              "B35 in the handoff folder is not the archive the B35 manifest recorded")
+    ck.expect(4, b35_man.get("features") == len(sources["zip_features"]),
+              f"B35 has {b35_man.get('features')} features, its feature list {len(sources['zip_features'])}")
 
     # Check 8: SHA256SUMS.
     sums = args.handoff / "SHA256SUMS"

@@ -1,6 +1,6 @@
 {
   "_doc": "A13 (display text). The wording shown on the map for modes, statuses, caveats, boundaries and sources; read only by B21. Field meanings: docs/configuration.md#configui_textjson-a13-display-text. Validate with `make check-config`.",
-  "version": 2,
+  "version": 3,
   "no_data_label": "No adequacy measure",
   "display_names": {
     "GA073": "FORT GORDON, GA",
@@ -34,6 +34,14 @@
     "no_rate": {
       "label": "No BAH rate",
       "text": "These ZIP codes are in U.S. territories, where members receive Overseas Housing Allowance instead of BAH. DTMO lists them without a BAH rate."
+    },
+    "zip_no_benchmark": {
+      "label": "No figure for this ZIP code",
+      "text": "No local figure is published for this ZIP code in this mode: neither Zillow's index nor, for rent, HUD's Small Area Fair Market Rent. It cannot be measured on its own; its MHA's figure is shown with it."
+    },
+    "zip_outlier": {
+      "label": "Unusual ZIP code value",
+      "text": "This ZIP code's published figure is more than three times, or less than a third of, its MHA's typical value, which points to a very thin or unusual market. It is left out rather than shown."
     }
   },
   "caveats": {
@@ -80,6 +88,18 @@
     "type_factor_national": {
       "title": "National home-type adjustment",
       "text": "No local Zillow series for this home type covers this area, so the difference between this home type and a typical home here uses the national ratio."
+    },
+    "zip_bah_constant": {
+      "title": "BAH is set for the whole MHA",
+      "text": "DoD sets one BAH rate for every ZIP code in a Military Housing Area, priced from the area's typical housing costs. This view changes only the cost side, so it shows where in the area BAH goes further or falls short. Many ZIP codes read below their area's value by design; the ZIP view is not a test of how DoD sets BAH."
+    },
+    "zip_safmr_scaled": {
+      "title": "Rent estimated from HUD",
+      "text": "Zillow publishes no rent index for this ZIP code. Its rent is HUD's Small Area Fair Market Rent for the ZIP code, scaled so that the MHA's typical HUD rent equals its typical Zillow rent. HUD's figures are smoothed, so differences between ZIP codes are likely understated."
+    },
+    "zip_tax_insurance": {
+      "title": "ZIP code tax and insurance",
+      "text": "Property tax is this ZIP code's effective rate from the Census American Community Survey where one is published, and insurance its median premium per policy from the Treasury Federal Insurance Office where published; otherwise its MHA's figure is used."
     }
   },
   "global_caveats": [
@@ -237,7 +257,8 @@
     "titles": {
       "dependents": "Dependents",
       "metric": "Show",
-      "mode": "Housing"
+      "mode": "Housing",
+      "geography": "Show by"
     },
     "off_standard_scale": {
       "title": "How far BAH goes",
@@ -255,6 +276,10 @@
     "notice": {
       "standard": "DoD's housing standard for this rank: {standard}. The map measures BAH against the local cost of that home, its statutory target.",
       "off_standard": "DoD's housing standard for this rank is {standard}. This view shows how far BAH goes toward a {home_type} instead. DoD does not set BAH for that home, so this is not the statutory test."
+    },
+    "geographies": {
+      "mha": "Military Housing Area",
+      "zip": "ZIP code"
     }
   }
 }

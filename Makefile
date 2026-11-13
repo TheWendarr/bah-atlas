@@ -30,14 +30,14 @@ WINDOW   ?=
 WINDOW_ARG = $(if $(WINDOW),--window $(WINDOW),)
 
 .PHONY: all fetch check-config ingest geometry non-mha components tiles basemap handoff standards \
-	benchmarks zori zhvi safmr taxins ownership rent-types own-types metrics weights spatial density regression qa layer2 deliver-check deliver test clean
+	benchmarks zori zhvi safmr taxins ownership rent-types own-types zip-tiles zip-rent zip-own metrics weights spatial density regression qa layer2 deliver-check deliver test clean
 
 # The stages run in the order written. Most of that order is in the recipes and their
 # comments ("run `make ingest` first"), not in prerequisites, so `make -j` would start a
 # stage before the files it reads exist. This keeps every run serial whatever MAKEFLAGS says.
 .NOTPARALLEL:
 
-all: check-config geometry non-mha components tiles benchmarks metrics spatial
+all: check-config geometry non-mha components tiles zip-tiles benchmarks metrics spatial
 
 # Stage 0: pull every auto-pullable Layer 1 source into data/raw (A2-A7).
 fetch:
@@ -86,6 +86,13 @@ tiles:
 		--non-mha $(PROCESSED)/non_mha_$(YEAR).geojson \
 		--out $(PROCESSED)/areas_$(YEAR).pmtiles
 
+# The ZIP view's polygons (A2 + B1 -> B35, decision D36; docs/data-contract.md section 4b):
+# one layer `zips` keyed on `zip`, every real-MHA ZIP with a ZCTA, zoom 6-10.
+# Needs tippecanoe >= 2.17 and `make ingest` first.
+zip-tiles:
+	$(PYTHON) pipeline/tiles/build_zip_pmtiles.py --zcta $(ZCTA_SHP) \
+		--crosswalk $(INTERIM)/zip_mha.csv --out $(PROCESSED)/zipcodes_$(YEAR).pmtiles
+
 # Self-hosted basemap cut from a Protomaps daily build (A11). Needs the pmtiles CLI.
 # Override with e.g. `MAXZOOM=6 make basemap`; see the script header.
 basemap:
@@ -100,7 +107,7 @@ standards:
 # Each reads a ZIP-level Layer 1 source and rolls it up to the MHA through the B1
 # crosswalk. Needs `make ingest` and `make components` first (B1, B5).
 # Override the window with e.g. `make benchmarks WINDOW=2026-01:2026-06`.
-benchmarks: zori zhvi safmr taxins ownership standards rent-types own-types
+benchmarks: zori zhvi safmr taxins ownership standards rent-types own-types zip-rent zip-own
 
 # A3 + B5 -> B8: ZORI at MHA, grossed up to utilities-inclusive.
 zori:
@@ -147,6 +154,21 @@ own-types:
 		$(A16_ARGS) --crosswalk $(INTERIM)/zip_mha.csv --rent-by-type $(BENCH)/mha_rent_by_type.csv \
 		--tax-insurance $(BENCH)/mha_tax_insurance.csv --pmms $(PMMS_CSV) \
 		--ownership $(BENCH)/mha_ownership.csv --out $(BENCH) $(WINDOW_ARG)
+
+# B8 + B10 + B29 -> B33: rent for each home type in every real-MHA ZIP (D36): the ZIP's ZORI,
+# else its HUD SAFMR scaled to the MHA's ZORI level, with the MHA's B29 factors.
+zip-rent: rent-types
+	$(PYTHON) pipeline/benchmarks/zip_rent_by_type.py --zip-zori $(BENCH)/zip_zori.csv --zori $(BENCH)/mha_zori.csv \
+		--zip-safmr $(BENCH)/zip_safmr.csv --safmr $(BENCH)/mha_safmr.csv \
+		--rent-by-type $(BENCH)/mha_rent_by_type.csv --crosswalk $(INTERIM)/zip_mha.csv --out $(BENCH)
+
+# B9 + B30 + A8/A9 + A7 -> B34: ownership cost for each home type in every real-MHA ZIP (D36):
+# the ZIP's ZHVI with the MHA's B30 factors, the ZIP's tax rate and premium where published.
+zip-own: own-types
+	$(PYTHON) pipeline/benchmarks/zip_ownership_by_type.py --zip-zhvi $(BENCH)/zip_zhvi.csv --zhvi $(BENCH)/mha_zhvi.csv \
+		--own-by-type $(BENCH)/mha_ownership_by_type.csv --tax-insurance $(BENCH)/mha_tax_insurance.csv \
+		--acs $(ACS_JSON) --fio $(FIO_XLSX) --pmms $(PMMS_CSV) --crosswalk $(INTERIM)/zip_mha.csv \
+		--out $(BENCH) $(WINDOW_ARG)
 
 # --- 2.8 context joins (B24) ------------------------------------------------
 # A9 population + A2 ZCTA land area -> B24: population density per MHA, the
@@ -203,8 +225,8 @@ regression: density
 		--growth-years $(GROWTH_YEARS) --sensitivity-growth-years $(SENS_GROWTH_YEARS) \
 		--seed $(SEED) --out $(SPATIAL)
 
-# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31, B32; docs/data-contract.md) ---
-# Writes the seven delivered files and SHA256SUMS into $(HANDOFF), then validates them
+# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31, B32, B36; docs/data-contract.md) ---
+# Writes the nine delivered files and SHA256SUMS into $(HANDOFF), then validates them
 # against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
 # build is proven before B22 records it. A full rebuild from data/raw is
 # `make all handoff`. Afterwards run `make evidence verify` to record the B22 manifest.
@@ -218,7 +240,7 @@ handoff:
 	$(PYTHON) tools/collect_evidence.py --no-tests
 	$(PYTHON) tools/verify_hashes.py
 	mkdir -p $(HANDOFF)
-	cp $(PROCESSED)/areas_$(YEAR).pmtiles $(HANDOFF)/
+	cp $(PROCESSED)/areas_$(YEAR).pmtiles $(PROCESSED)/zipcodes_$(YEAR).pmtiles $(HANDOFF)/
 	$(HANDOFF_PY)/build_manifest.py --year $(YEAR) --out $(HANDOFF)/build_manifest_$(YEAR).json
 	$(HANDOFF_PY)/build_payload.py --year $(YEAR) --names $(INTERIM)/mha_names.csv \
 		--bah-rates $(INTERIM)/bah_rates.csv --rent $(METRICS)/mha_rent_metrics.csv \
@@ -240,8 +262,12 @@ handoff:
 		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/grid_$(YEAR).json
 	$(HANDOFF_PY)/build_zip_lookup.py --year $(YEAR) --zip-mha $(INTERIM)/zip_mha.csv \
 		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/zips_$(YEAR).json
+	$(HANDOFF_PY)/build_zip_grid.py --year $(YEAR) --zip-rent $(BENCH)/zip_rent_by_type.csv \
+		--zip-own $(BENCH)/zip_ownership_by_type.csv --features $(PROCESSED)/zipcodes_$(YEAR)_features.csv \
+		--build-manifest $(HANDOFF)/build_manifest_$(YEAR).json --out $(HANDOFF)/zipgrid_$(YEAR).json
 	cd $(HANDOFF) && sha256sum areas_$(YEAR).pmtiles payload_$(YEAR).json ui_metadata_$(YEAR).json \
-		hotspots_$(YEAR).json grid_$(YEAR).json zips_$(YEAR).json build_manifest_$(YEAR).json > SHA256SUMS
+		hotspots_$(YEAR).json grid_$(YEAR).json zips_$(YEAR).json zipcodes_$(YEAR).pmtiles zipgrid_$(YEAR).json \
+		build_manifest_$(YEAR).json > SHA256SUMS
 	$(HANDOFF_PY)/validate_handoff.py --year $(YEAR) --handoff $(HANDOFF)
 
 # --- 2.8 QA / validation report (B23) ----------------------------------------
@@ -292,7 +318,9 @@ clean:
 		$(PROCESSED)/mha_$(YEAR)_geometry_manifest.json \
 		$(PROCESSED)/non_mha_$(YEAR).gpkg $(PROCESSED)/non_mha_$(YEAR).geojson \
 		$(PROCESSED)/non_mha_$(YEAR)_geometry_manifest.json \
-		$(PROCESSED)/areas_$(YEAR).pmtiles $(PROCESSED)/areas_$(YEAR)_manifest.json
+		$(PROCESSED)/areas_$(YEAR).pmtiles $(PROCESSED)/areas_$(YEAR)_manifest.json \
+		$(PROCESSED)/zipcodes_$(YEAR).pmtiles $(PROCESSED)/zipcodes_$(YEAR)_manifest.json \
+		$(PROCESSED)/zipcodes_$(YEAR)_features.csv
 
 # --- Project tracking (living WBS) -------------------------------------------
 # Source of truth: docs/wbs/nodes.csv and docs/wbs/milestones.csv.
