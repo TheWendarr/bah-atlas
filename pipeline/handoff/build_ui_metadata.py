@@ -80,6 +80,8 @@ def main() -> None:
         problems.append(f"ui_text.json grid.home_types must label exactly {[c.STANDARD, *c.HOME_TYPES]}")
     if set(gt.get("geographies", {})) != set(c.GEOGRAPHIES):
         problems.append(f"ui_text.json grid.geographies must label exactly {c.GEOGRAPHIES}")
+    if gt.get("default_geography", c.GEOGRAPHIES[0]) not in c.GEOGRAPHIES:
+        problems.append(f"ui_text.json grid.default_geography must be one of {c.GEOGRAPHIES}")
     if set(gt.get("dependents", {})) != set(c.GRID_DEPENDENTS):
         problems.append(f"ui_text.json grid.dependents must label exactly {c.GRID_DEPENDENTS}")
     notice = gt.get("notice", {})
@@ -139,9 +141,10 @@ def main() -> None:
         "default_rank": primary["pay_grade"].upper(),
         "default_dependents": "with" if primary["has_dependents"] else "without",
         "default_home_type": c.STANDARD,
-        # ICD 6.1 (D36): the "Show by" control; the map opens on MHAs.
+        # ICD 6.1 (D36): the "Show by" control. The view a bare visit opens on comes from
+        # ui_text.json (D37: the ZIP view); MHAs when it is not set.
         "geographies": [{"id": g, "label": gt["geographies"][g]} for g in c.GEOGRAPHIES],
-        "default_geography": c.GEOGRAPHIES[0],
+        "default_geography": gt.get("default_geography", c.GEOGRAPHIES[0]),
         "metrics": list(c.GRID_METRICS),
         "standards_text": {g: {d: ht.describe(std["standards"][g][d], labels) for d in c.GRID_DEPENDENTS}
                            for g in std["grades"]},

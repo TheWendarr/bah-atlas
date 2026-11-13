@@ -333,7 +333,7 @@ class TestHandoff(Fixture):
         self.build()
         pay = self.payload()
         b22 = hashlib.sha256((self.out / f"build_manifest_{YEAR}.json").read_bytes()).hexdigest()
-        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.3.0", 2026, b22))
+        self.assertEqual((pay["schema_version"], pay["bah_year"], pay["build_id"]), ("1.3.1", 2026, b22))
         self.assertEqual(list(pay["areas"]), ["AK400", "CO001", "CO002", "XX001", "ZZ001"])
         co = pay["areas"]["CO001"]
         self.assertEqual((co["class"], co["cluster_scope"], co["caveats"]), ("mha", True, []))
@@ -487,7 +487,7 @@ class TestHandoff(Fixture):
         self.assertEqual(ui["grid"]["titles"]["metric"], "Show")
         self.assertEqual(ui["grid"]["titles"]["geography"], "Show by")
         self.assertEqual([g["id"] for g in ui["grid"]["geographies"]], ["mha", "zip"])
-        self.assertEqual(ui["grid"]["default_geography"], "mha")
+        self.assertEqual(ui["grid"]["default_geography"], "zip")             # D37: a bare visit opens on ZIPs
         self.assertEqual(ui["caveats"]["zip_bah_constant"]["level"], "zip")
         self.assertIn("zip_outlier", ui["statuses"])
         self.assertEqual(ui["metrics"]["adequacy_ratio"]["off_standard"]["breaks"], [0.5, 0.7, 0.9, 1.1, 1.4, 1.8])
@@ -558,6 +558,20 @@ class TestHandoff(Fixture):
             self.build(ui_text=bad)
         self.assertIn("missing ['piti_only_no_zori']", str(cm.exception))
 
+    def test_default_geography_is_from_ui_text(self) -> None:
+        text = json.loads((ROOT / "config" / "ui_text.json").read_text())
+        path = Path(self.tmp.name) / "ui_text.json"
+        del text["grid"]["default_geography"]                               # not set: MHAs
+        path.write_text(json.dumps(text))
+        self.build(ui_text=path)
+        ui = json.loads((self.out / f"ui_metadata_{YEAR}.json").read_text())
+        self.assertEqual(ui["grid"]["default_geography"], "mha")
+        text["grid"]["default_geography"] = "county"                        # not a geography: B21 stops
+        path.write_text(json.dumps(text))
+        with self.assertRaises(AssertionError) as cm:
+            self.build(ui_text=path)
+        self.assertIn("default_geography must be one of", str(cm.exception))
+
     def grid(self) -> dict:
         return json.loads((self.out / f"grid_{YEAR}.json").read_text())
 
@@ -565,7 +579,7 @@ class TestHandoff(Fixture):
         self.build()
         g = self.grid()
         self.assertEqual((g["schema_version"], g["ranks"][:5], g["home_types"], g["dependents"]),
-                         ("1.3.0", GRADES[:5], TYPES, ["with", "without"]))
+                         ("1.3.1", GRADES[:5], TYPES, ["with", "without"]))
         self.assertEqual((g["cost_share_monthly"]["with"][4], g["cost_share_monthly"]["without"][22]), (126, 187))
         self.assertEqual(g["standards"]["with"][GRADES.index("O3")], {"lower": "th3", "upper": "sfh3", "share": 0.98})
         co = g["areas"]["CO001"]

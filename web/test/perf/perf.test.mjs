@@ -90,7 +90,8 @@ test("first load: under 1 MB on the wire before the basemap, usable in under 3 s
 
 test("a selection change repaints in under 100 ms (X9)", async () => {
   const { context, page } = await throttled();
-  await page.goto(site.origin);
+  // The MHA view; a bare visit (the first-load test) opens on ZIP codes at the national zoom (D37).
+  await page.goto(`${site.origin}/#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=mha`);
   await page.waitForFunction(() => document.documentElement.dataset.state === "ready", null, { timeout: 60_000 });
   const ranks = ["O3", "E1", "W2", "O9", "E7", "E5"];
   const times = await page.evaluate(async (ranks) => {
@@ -118,8 +119,10 @@ test("a selection change repaints in under 100 ms (X9)", async () => {
 test("a selection change in the ZIP view repaints in under 100 ms (X9, C27)", async () => {
   const { context, page } = await throttled();
   await page.goto(`${site.origin}/#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=zip`);
-  await page.waitForFunction(() => document.documentElement.dataset.zip === "ready", null, { timeout: 120_000 });
+  await page.waitForFunction(() => document.documentElement.dataset.state === "ready", null, { timeout: 60_000 });
+  // D37: B36 loads once the reader zooms toward the ZIP zooms, not at the national view.
   await page.evaluate(() => window.bahAtlas.zoomTo([-104.8, 38.85], 9));
+  await page.waitForFunction(() => document.documentElement.dataset.zip === "ready", null, { timeout: 120_000 });
   await page.waitForFunction(() => window.bahAtlas.idle(), null, { timeout: 60_000 });
   const ranks = ["O3", "E1", "W2", "O9", "E7", "E5"];
   const times = await page.evaluate(async (ranks) => {

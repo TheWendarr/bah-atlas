@@ -252,6 +252,7 @@ The wording the map shows, read only by B21 (`build_ui_metadata.py`), which copi
 | `geometry` | `method` and `authority` statements for the area outlines. |
 | `grid.titles` | Control titles beyond `rank` and `home_type`: `dependents`, `metric`, `mode`, `geography`. |
 | `grid.geographies` | Label for each of the map's two views, `mha` and `zip` (decision D36). B21 stops if either is missing or a third appears. |
+| `grid.default_geography` | The view a bare visit opens on: `zip` (decision D37). Unset means `mha`; B21 stops on any other value. A link that names no view still opens on MHAs. |
 | `grid.off_standard_scale` | `title` and `subtitle` for the legend when the second scale is active. |
 | `sources` | One entry per incorporated source shown in the map's attribution (C20): `id` (node), `title`, `provider`, `url`, `license`, `used_for`. Follows [SOURCES.md](SOURCES.md). |
 

@@ -53,6 +53,8 @@ async function open(hash = "", context = {}, prepare = null) {
 }
 
 const stateOf = (page) => page.evaluate(() => window.bahAtlas.state());
+// D37: a bare visit opens on ZIP codes. The MHA features are tested in the MHA view.
+const MHA = "#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=mha";
 const hashOf = (page) => page.evaluate(() => location.hash);
 const settle = (page) => page.waitForFunction(() => window.bahAtlas.idle(), null, { timeout: 30_000 });
 const inBox = ([lng, lat], [w, s, e, n]) => lng > w && lng < e && lat > s && lat < n;
@@ -63,6 +65,7 @@ test("a link opens the view it names, with the area's panel open and the map on 
   const { page, errors } = await open("#rank=O3&dep=with&home=sfh3&mode=buy&show=surplus_usd&area=CO046&compare=NC182");
   assert.deepEqual(await stateOf(page), {
     ...initialState(UI), rank: "O3", homeType: "sfh3", mode: "buy", metric: "surplus_usd", selected: "CO046", compare: ["NC182"],
+    geography: "mha", // a link with no geography was made for the MHA map, and opens on it
   });
   assert.equal(await page.inputValue("#rank"), "O3");
   assert.equal(await page.inputValue("#metric"), "surplus_usd");
@@ -80,7 +83,7 @@ test("a link with values this build does not know falls back, and the address is
   assert.equal(state.rank, "E5");
   assert.equal(state.homeType, "standard");
   assert.equal(state.selected, null);
-  assert.equal(await hashOf(page), "#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio");
+  assert.equal(await hashOf(page), "#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=mha");
   await page.close();
 });
 
@@ -92,7 +95,7 @@ test("the address follows the controls without adding history, and the same addr
   await page.getByRole("radio", { name: "Buy (VA loan)" }).check({ force: true });
   await page.evaluate(() => window.bahAtlas.set({ selected: "NC182" }));
   const hash = await hashOf(page);
-  assert.equal(hash, "#rank=E7&dep=with&home=apt2&mode=buy&show=adequacy_ratio&area=NC182");
+  assert.equal(hash, `#rank=E7&dep=with&home=apt2&mode=buy&show=adequacy_ratio&geo=${UI.grid.default_geography}&area=NC182`);
   assert.equal(await page.evaluate(() => history.length), length);
   const state = await stateOf(page);
   const second = await open(hash);
@@ -115,7 +118,7 @@ test("editing the address changes the view (C17)", async () => {
 // C16 ------------------------------------------------------------------------------------
 
 test("the cluster switch works only on research views and says which ones (C16, must 9)", async () => {
-  const { page } = await open();
+  const { page } = await open(MHA);
   assert.equal(await page.isDisabled("#overlay"), false);
   assert.equal(await page.isVisible("#overlay-hint"), false);
   await page.selectOption("#rank", "E1");
@@ -128,7 +131,7 @@ test("the cluster switch works only on research views and says which ones (C16, 
 });
 
 test("the overlay draws B27's clusters, marks FDR areas and leaves non-CONUS areas unfilled (C16, musts 5, 9; must not 3)", async () => {
-  const { page, errors } = await open();
+  const { page, errors } = await open(MHA);
   await page.check("#overlay");
   assert.equal(await page.evaluate(() => window.bahAtlas.overlayShown()), true);
   assert.match(await hashOf(page), /&clusters=on$/);
@@ -202,7 +205,7 @@ async function search(page, text) {
 }
 
 test("ZIP search finds an MHA, a County Cost Group and the territory bucket, and opens each (C15)", async () => {
-  const { page, errors } = await open();
+  const { page, errors } = await open(MHA);
   assert.match(await search(page, "80913"), /80913 is in COLORADO SPRINGS, CO/);
   assert.equal((await stateOf(page)).selected, "CO046");
   assert.equal(await page.textContent("#panel-title"), "COLORADO SPRINGS, CO");
@@ -273,7 +276,7 @@ test("search, the overlay and its legend fit a phone with no sideways scroll (C1
 });
 
 test("every new control has an accessible name and is reached by the keyboard (X10)", async () => {
-  const { page } = await open();
+  const { page } = await open(MHA);
   for (const [role, name] of [["checkbox", "Show local clusters"], ["textbox", "ZIP code"], ["button", "Find"], ["button", "Download this view (CSV)"]]) {
     assert.equal(await page.getByRole(role, { name }).count(), 1, name);
   }

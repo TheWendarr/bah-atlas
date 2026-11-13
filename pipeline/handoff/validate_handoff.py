@@ -154,7 +154,8 @@ def check_ui(ck: Check, ui: dict) -> None:
     ck.expect(3, all((gui.get("titles") or {}).get(k) for k in c.GRID_TITLES), f"B21 grid: titles need {c.GRID_TITLES}")
     geos = gui.get("geographies") or []
     ck.expect(3, [g.get("id") for g in geos] == list(c.GEOGRAPHIES) and all(g.get("label") for g in geos)
-              and gui.get("default_geography") == c.GEOGRAPHIES[0], f"B21 grid: geographies must be {c.GEOGRAPHIES}")
+              and gui.get("default_geography") in c.GEOGRAPHIES, f"B21 grid: geographies must be {c.GEOGRAPHIES}, "
+              "with a default among them")
     scale = gui.get("off_standard_scale") or {}
     ck.expect(3, scale.get("title") and scale.get("subtitle"), "B21 grid: off_standard_scale is incomplete")
 

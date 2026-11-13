@@ -1,6 +1,6 @@
 {
   "_doc": "A13 (display text). The wording shown on the map for modes, statuses, caveats, boundaries and sources; read only by B21. Field meanings: docs/configuration.md#configui_textjson-a13-display-text. Validate with `make check-config`.",
-  "version": 3,
+  "version": 4,
   "no_data_label": "No adequacy measure",
   "display_names": {
     "GA073": "FORT GORDON, GA",
@@ -280,6 +280,7 @@
     "geographies": {
       "mha": "Military Housing Area",
       "zip": "ZIP code"
-    }
+    },
+    "default_geography": "zip"
   }
 }

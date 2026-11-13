@@ -33,8 +33,17 @@ test("a link round-trips every field of the state (C17)", () => {
   assert.deepEqual(validate(ui, stateFromHash(defaults, toHash(state))).state, state);
 });
 
-test("the default view writes the selection only (C17)", () => {
-  assert.equal(toHash(defaults), "#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio");
+test("the default view writes the selection and the geography only (C17, C26)", () => {
+  assert.equal(toHash(defaults), `#rank=E5&dep=with&home=standard&mode=rent&show=adequacy_ratio&geo=${ui.grid.default_geography}`);
+});
+
+test("a bare visit takes the B21 default geography; a link without geo opens on MHAs (C26, D37)", () => {
+  assert.equal(stateFromHash(defaults, "").geography, ui.grid.default_geography);
+  assert.equal(stateFromHash(defaults, "#").geography, ui.grid.default_geography);
+  // Every link made before D37 names a selection and no geography.
+  assert.equal(stateFromHash(defaults, "#rank=O3&dep=with&home=standard&mode=rent&show=adequacy_ratio").geography, "mha");
+  assert.equal(stateFromHash(defaults, "#rank=O3&geo=zip").geography, "zip");
+  assert.equal(stateFromHash(defaults, "#rank=O3&geo=mha").geography, "mha");
 });
 
 test("a link with bad or missing values falls back field by field (C17)", () => {
@@ -55,12 +64,15 @@ test("a hash that is not valid percent-encoding is ignored, not thrown (C17)", (
 
 // C16 ------------------------------------------------------------------------------------
 
+// Clusters exist only by MHA (must-not 5), so the overlay is tested in the MHA view.
+const mhaView = { ...defaults, geography: "mha" };
+
 test("the research view is exactly E-5 or O-3 with dependents at the statutory standard (C16, must 9)", () => {
   const found = [];
   for (const { id: rank } of ui.grid.ranks) {
     for (const { id: dependents } of ui.grid.dependents) {
       for (const { id: homeType } of ui.grid.home_types) {
-        const state = { ...defaults, rank, dependents, homeType };
+        const state = { ...mhaView, rank, dependents, homeType };
         const { research, standardView } = computeView(files, state);
         if (research) found.push(`${rank} ${dependents} ${homeType}`);
         assert.equal(research, researchProfile(ui, state, standardView));
@@ -72,18 +84,18 @@ test("the research view is exactly E-5 or O-3 with dependents at the statutory s
 });
 
 test("the overlay shows only when asked for and only on a research view (C16)", () => {
-  assert.equal(computeView(files, defaults).overlay, false);
-  assert.equal(computeView(files, { ...defaults, overlay: true }).overlay, true);
-  assert.equal(computeView(files, { ...defaults, overlay: true, rank: "E1" }).overlay, false);
-  assert.equal(computeView(files, { ...defaults, overlay: true, dependents: "without" }).overlay, false);
-  assert.equal(computeView(files, { ...defaults, overlay: true, rank: "O3", homeType: "sfh4" }).overlay, false);
+  assert.equal(computeView(files, mhaView).overlay, false);
+  assert.equal(computeView(files, { ...mhaView, overlay: true }).overlay, true);
+  assert.equal(computeView(files, { ...mhaView, overlay: true, rank: "E1" }).overlay, false);
+  assert.equal(computeView(files, { ...mhaView, overlay: true, dependents: "without" }).overlay, false);
+  assert.equal(computeView(files, { ...mhaView, overlay: true, rank: "O3", homeType: "sfh4" }).overlay, false);
 });
 
 test("every area's overlay class equals B27, and no area outside cluster_scope has one (C16, must not 3)", () => {
   const order = Object.keys(ui.clusters.classes);
   for (const [rank, profile] of [["E5", "e5_dep"], ["O3", "o3_dep"]]) {
     for (const { id: mode } of ui.modes) {
-      const { clusters } = computeView(files, { ...defaults, rank, mode, overlay: true });
+      const { clusters } = computeView(files, { ...mhaView, rank, mode, overlay: true });
       assert.equal(clusters.size, Object.keys(files.grid.areas).length);
       for (const [code, { index, fdr }] of clusters) {
         const label = `${profile} ${mode} ${code}`;
@@ -101,7 +113,7 @@ test("every area's overlay class equals B27, and no area outside cluster_scope h
 });
 
 test("the E-5 rent overlay counts equal the H1 finding in B21 (C16)", () => {
-  const { clusters } = computeView(files, { ...defaults, overlay: true });
+  const { clusters } = computeView(files, { ...mhaView, overlay: true });
   const order = Object.keys(ui.clusters.classes);
   const counts = Object.fromEntries(order.map((id) => [id, 0]));
   let fdr = 0;
@@ -114,7 +126,7 @@ test("the E-5 rent overlay counts equal the H1 finding in B21 (C16)", () => {
 });
 
 test("Alaska, Hawaii, County Cost Groups and the territory bucket are outside the overlay (C16)", () => {
-  const { clusters } = computeView(files, { ...defaults, overlay: true });
+  const { clusters } = computeView(files, { ...mhaView, overlay: true });
   for (const code of ["AK400", "AK401", "ZZ510", "XX499"]) assert.equal(clusters.get(code).index, OUT_OF_SCOPE, code);
   const hawaii = Object.keys(ui.areas).filter((code) => code.startsWith("HI"));
   assert.ok(hawaii.length > 0);
@@ -231,13 +243,15 @@ test("a text cell that a spreadsheet would run as a formula is written as text (
 const zipgrid = read("zipgrid_2026.json");
 const zipCodes = Object.keys(zipgrid.zips);
 
-test("a ZIP-view link round-trips, and the MHA view writes no geo key (C26)", () => {
-  const state = { ...defaults, geography: "zip", selected: zipCodes[0], compare: [zipCodes[1], "CO046"] };
+test("a link in either view round-trips with its geography (C26)", () => {
   const lookup = (zip) => zipgrid.zips[zip]?.area;
-  const hash = toHash(state);
+  const zipState = { ...defaults, geography: "zip", selected: zipCodes[0], compare: [zipCodes[1], "CO046"] };
+  const hash = toHash(zipState);
   assert.match(hash, /&geo=zip&area=\d{5}&compare=\d{5},CO046$/);
-  assert.deepEqual(validate(ui, stateFromHash(defaults, hash), lookup).state, state);
-  assert.doesNotMatch(toHash(defaults), /geo=/);
+  assert.deepEqual(validate(ui, stateFromHash(defaults, hash), lookup).state, zipState);
+  const mhaState = { ...defaults, geography: "mha", selected: "CO046" };
+  assert.match(toHash(mhaState), /&geo=mha&area=CO046$/);
+  assert.deepEqual(validate(ui, stateFromHash(defaults, toHash(mhaState))).state, mhaState);
 });
 
 test("the ZIP-view CSV has one row per B36 ZIP, its MHA in `area`, and zipView's values (C28)", () => {

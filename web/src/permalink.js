@@ -10,7 +10,8 @@ const KEYS = [
   ["homeType", "home"],
   ["mode", "mode"],
   ["metric", "show"],
-  // C26: written only for the ZIP view, so every link made before it keeps its meaning.
+  // C26: always written. A link from before the key existed has none and opens on MHAs,
+  // as it did when it was made (D37: a bare visit now opens on ZIP codes).
   ["geography", "geo"],
   ["selected", "area"],
   ["compare", "compare"],
@@ -18,8 +19,8 @@ const KEYS = [
 ];
 
 // The selection is always written in full, so a link keeps its meaning if a later build
-// changes the defaults. An area (or ZIP code), pinned places, the overlay and the ZIP view
-// are written only when set.
+// changes the defaults. An area (or ZIP code), pinned places and the overlay are written only
+// when set.
 export function toHash(state) {
   const parts = [];
   for (const [field, key] of KEYS) {
@@ -27,7 +28,6 @@ export function toHash(state) {
     if (field === "selected" && value === null) continue;
     if (field === "compare" && !value.length) continue;
     if (field === "overlay" && !value) continue;
-    if (field === "geography" && value !== "zip") continue;
     const text = field === "compare" ? value.map(encodeURIComponent).join(",") : encodeURIComponent(field === "overlay" ? "on" : value);
     parts.push(`${key}=${text}`);
   }
@@ -60,9 +60,13 @@ export function fromHash(hash) {
   return patch;
 }
 
-// The state a link opens: the defaults, then whatever the hash names.
+// The state a link opens: the defaults, then whatever the hash names. A link that names a
+// selection but no geography was made when the map had only MHAs (or opened on them), so it
+// opens on MHAs; only a bare visit takes the default geography.
 export function stateFromHash(defaults, hash) {
-  return { ...defaults, ...fromHash(hash) };
+  const patch = fromHash(hash);
+  const legacy = Object.keys(patch).length > 0 && !("geography" in patch);
+  return { ...defaults, ...(legacy ? { geography: "mha" } : {}), ...patch };
 }
 
 // Keeps the address in step with the state without adding history entries, so the back

@@ -61,7 +61,7 @@ only `make web-e2e-live` checks the real basemap.
 |---|---|---|
 | The delivered files disagree on build or major version | Error screen, with the explanation about builds (ICD 9, must 6) | `error` |
 | A data file, the basemap style or WebGL | Error screen, with the explanation about loading and the failed file below it | `error` |
-| The ZIP grid (B36), loaded on first use of the ZIP view | A note over the map; the map stays on MHAs. A B36 from another build is refused (must 6) | `data-zip="failed"` (otherwise `loading`, then `ready`) |
+| The ZIP grid (B36), loaded when the ZIP view first needs it | A note over the map; the map stays on MHAs. A B36 from another build is refused (must 6) | `data-zip="failed"` (otherwise `loading`, then `ready`) |
 | The area tile archive (wrong name on the tiles host, host unreachable) | The map and controls stay, with a notice over the map | `areas-unavailable` |
 
 The browser tests wait for `data-state`. A delivery whose area tiles were not uploaded
@@ -81,8 +81,8 @@ wait out a 60-second timeout in every test.
 
 | Feature | How it works | Rules it keeps |
 |---|---|---|
-| Show by (C26) | A select first in the controls: Military Housing Area or ZIP code (labels from B21). The link carries `geo=zip` only in the ZIP view, so every earlier link opens as before. A ZIP code open or pinned becomes its MHA on return to MHAs | Every value goes through `set()`; ZIP codes are checked again once B36 arrives |
-| ZIP layer (C27) | The ZIP tiles (B35) and values (B36) load the first time the view is chosen; the first load fetches neither. From zoom 6 the ZIP fills replace the MHA fills and the MHA outlines widen; farther out a note says to zoom in. County Cost Groups keep their area fill | ZIP values join only by `zip` on the `zips` source (must 1); B36 must share the build id (must 6); classes come from `zipMetricValues`, checked against `zipView` for every ZIP |
+| Show by (C26) | A select first in the controls: Military Housing Area or ZIP code (labels from B21). A bare visit opens on ZIP codes (B21 `default_geography`, D37). Every link carries `geo`; a link without it was made before D37 and opens on MHAs, as it did then. A ZIP code open or pinned becomes its MHA on return to MHAs | Every value goes through `set()`; ZIP codes are checked again once B36 arrives |
+| ZIP layer (C27) | The ZIP tiles (B35) and values (B36) load when the ZIP view is shown from zoom 5, or a ZIP code is opened, pinned or exported; the first load, at the national zoom, fetches neither. From zoom 6 the ZIP fills replace the MHA fills and the MHA outlines widen; farther out a note says to zoom in. County Cost Groups keep their area fill | ZIP values join only by `zip` on the `zips` source (must 1); B36 must share the build id (must 6); classes come from `zipMetricValues`, checked against `zipView` for every ZIP |
 | ZIP detail and tools (C28) | The panel names the ZIP's MHA and shows the MHA's figure for the chosen measure in both modes; the zip-level caveat (one BAH rate per MHA) opens with it. ZIP search opens the ZIP code in the ZIP view. ZIP codes can be pinned. The CSV has one row per ZIP code, with its MHA in `area` | Must 11; the cluster overlay is off in the ZIP view, with the reason beside the switch (must-not 5) |
 
 Both tile archives live on R2 under content-hashed names: `areas_<year>.<hash>.pmtiles`

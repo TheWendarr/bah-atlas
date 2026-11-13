@@ -25,7 +25,7 @@ test("the initial state is the B21 default view", () => {
     selected: null,
     compare: [],
     overlay: false,
-    geography: "mha",
+    geography: "zip",
   });
 });
 
@@ -166,9 +166,10 @@ const zipFiles = { ...files, zipgrid };
 const someZip = Object.keys(zipgrid.zips).find((zip) => zipgrid.zips[zip].rent.status.every((s) => s === "ok"));
 const zipArea = (zip) => zipgrid.zips[zip]?.area;
 
-test("B21 offers the MHA and the ZIP view, MHA first", () => {
+test("B21 offers the MHA and the ZIP view, and opens on ZIP codes (D37)", () => {
   assert.deepEqual(ui.grid.geographies.map((g) => g.id), ["mha", "zip"]);
-  assert.equal(ui.grid.default_geography, "mha");
+  assert.equal(ui.grid.default_geography, "zip");
+  assert.equal(initialState(ui).geography, "zip");
   assert.ok(ui.grid.titles.geography);
 });
 
@@ -183,7 +184,7 @@ test("a ZIP code is kept in the ZIP view and becomes its MHA outside it", () => 
   // A ZIP code B36 does not draw is dropped once B36 is known; nonsense is dropped at once.
   assert.equal(validate(ui, { ...zipState, selected: "00000" }, zipArea).state.selected, null);
   assert.equal(validate(ui, { ...zipState, selected: "8090" }).state.selected, null);
-  assert.equal(validate(ui, { ...zipState, geography: "county" }).state.geography, "mha");
+  assert.equal(validate(ui, { ...zipState, geography: "county" }).state.geography, ui.grid.default_geography);
 });
 
 test("the store checks ZIP codes again when B36 arrives", () => {

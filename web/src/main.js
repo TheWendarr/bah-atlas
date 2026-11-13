@@ -120,8 +120,14 @@ async function start() {
       : showArea(map, SITE.boundsPath, code, panelEl)
     ).catch((error) => console.warn(`Bounds: ${error.message}`));
 
-  // C27: the ZIP view's values (B36) and tiles (B35) load the first time it is chosen.
+  // C27: the ZIP view's values (B36) and tiles (B35) load only once they are needed: when the
+  // reader comes close enough to see ZIP codes, or a ZIP code is open, pinned or searched for.
+  // The map opens on the ZIP view (D37) at a zoom that shows MHAs, so the first load fetches
+  // neither and stays inside the X9 byte budget.
   const zipHint = document.getElementById("zip-hint");
+  const needsZipGrid = (state) =>
+    state.geography === "zip" &&
+    (map.getZoom() >= ZIP_MIN_ZOOM - 1 || isZip(state.selected) || state.compare.some(isZip));
   let zipLoading = null;
   let zipProblem = null;
   function updateZipHint() {
@@ -129,8 +135,8 @@ async function start() {
     let text = null;
     if (state.geography === "zip") {
       if (zipProblem) text = zipProblem;
-      else if (!files.zipgrid) text = ZIP_TEXT.loading;
       else if (map.getZoom() < ZIP_MIN_ZOOM) text = ZIP_TEXT.zoom;
+      else if (!files.zipgrid) text = ZIP_TEXT.loading;
     }
     zipHint.hidden = text === null;
     zipHint.textContent = text ?? "";
@@ -171,10 +177,13 @@ async function start() {
     updateZipHint();
     return zipLoading;
   }
-  map.on("zoomend", updateZipHint);
+  map.on("zoomend", () => {
+    if (needsZipGrid(store.get())) ensureZipGrid();
+    updateZipHint();
+  });
 
   function render(state, previous = null) {
-    if (state.geography === "zip") ensureZipGrid();
+    if (needsZipGrid(state)) ensureZipGrid();
     const view = computeView(files, state);
     classes = applyClasses(map, view.classes, classes);
     if (view.zipClasses) zipClasses = applyZipClasses(map, view.zipClasses, zipClasses);
@@ -281,10 +290,13 @@ async function start() {
   exportButton.dataset.action = "export-csv";
   exportButton.textContent = EXPORT_LABEL;
   footerBuild.querySelector(".footer-about").after(exportButton);
-  footerBuild.addEventListener("click", (event) => {
+  footerBuild.addEventListener("click", async (event) => {
     if (event.target.closest("[data-action=open-sources]")) sourcesDialog.showModal();
     if (event.target.closest("[data-action=export-csv]")) {
-      const state = store.get();
+      // The ZIP view's file needs B36, which may not have loaded at a national zoom.
+      if (store.get().geography === "zip") await ensureZipGrid();
+      // Without B36 (it did not load) the file holds the areas, and is named for them.
+      const state = files.zipgrid ? store.get() : { ...store.get(), geography: "mha" };
       download(toCsv(files, state), fileName(ui, state));
     }
   });

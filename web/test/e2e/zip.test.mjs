@@ -73,17 +73,18 @@ async function zoomToSprings(page, zoom = 9) {
   await settle(page);
 }
 
-test("the first load fetches no ZIP data; choosing ZIP code loads it and says to zoom in (C26, C27)", async () => {
-  const { page, errors, requests } = await open(BASE);
+test("a bare visit opens on ZIP codes and fetches no ZIP data until the reader zooms in (C26, C27, D37)", async () => {
+  const { page, errors, requests } = await open();
   await settle(page);
-  assert.ok(!requests.some((url) => /zipgrid_|zipcodes_/.test(url)), "ZIP files fetched before the ZIP view was chosen");
-  await page.selectOption("#geography", "zip");
+  assert.equal((await stateOf(page)).geography, "zip");
+  assert.equal(await page.inputValue("#geography"), "zip");
+  assert.match(await page.evaluate(() => location.hash), /&geo=zip$/);
+  assert.match(await page.textContent("#zip-hint"), /Zoom in/);
+  assert.ok(!requests.some((url) => /zipgrid_|zipcodes_/.test(url)), "ZIP files fetched at the national zoom");
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.zip), "off");
+  await zoomToSprings(page);
   await zipReady(page);
   assert.equal(await page.evaluate(() => document.documentElement.dataset.zip), "ready");
-  assert.match(await page.evaluate(() => location.hash), /&geo=zip$/);
-  assert.equal(await page.isVisible("#zip-hint"), true);
-  assert.match(await page.textContent("#zip-hint"), /Zoom in/);
-  await zoomToSprings(page);
   assert.equal(await page.isVisible("#zip-hint"), false);
   assert.equal(await page.evaluate(() => window.bahAtlas.zipLayerShown()), true);
   assert.ok((await page.evaluate(() => window.bahAtlas.renderedZips())) > 10);
@@ -91,8 +92,18 @@ test("the first load fetches no ZIP data; choosing ZIP code loads it and says to
   await page.close();
 });
 
+test("a link from before the ZIP view opens on MHAs; choosing ZIP code switches (C17, C26)", async () => {
+  const { page } = await open(BASE);
+  assert.equal((await stateOf(page)).geography, "mha");
+  assert.match(await page.evaluate(() => location.hash), /&geo=mha$/);
+  await page.selectOption("#geography", "zip");
+  assert.match(await page.evaluate(() => location.hash), /&geo=zip$/);
+  await page.close();
+});
+
 test("each ZIP code's feature-state holds the class of its zipView (C27)", async () => {
   const { page } = await open(`${BASE}&geo=zip`);
+  await zoomToSprings(page);
   await zipReady(page);
   const scale = scaleFor(UI.metrics.adequacy_ratio, true);
   const sample = Object.keys(ZIPGRID.zips).filter((_, i) => i % 211 === 0).concat(ZIP);
@@ -127,8 +138,9 @@ test("a link to a ZIP code opens its panel beside its MHA's figure, with the BAH
 
 test("clicking a ZIP code opens it; returning to MHAs opens its MHA (C26, C27)", async () => {
   const { page } = await open(`${BASE}&geo=zip`);
-  await zipReady(page);
   await zoomToSprings(page, 10);
+  await zipReady(page);
+  await settle(page);
   const point = await page.evaluate((center) => window.bahAtlas.pointOf(center), SPRINGS);
   await page.mouse.click(point[0], point[1] + 50);
   await page.waitForFunction(() => /^\d{5}$/.test(window.bahAtlas.state().selected ?? ""));
@@ -137,7 +149,7 @@ test("clicking a ZIP code opens it; returning to MHAs opens its MHA (C26, C27)",
   await page.selectOption("#geography", "mha");
   await page.waitForFunction(() => window.bahAtlas.state().geography === "mha");
   assert.equal((await stateOf(page)).selected, "CO046");
-  assert.doesNotMatch(await page.evaluate(() => location.hash), /geo=/);
+  assert.match(await page.evaluate(() => location.hash), /&geo=mha&area=CO046$/); // D37: the link always names its view
   await page.close();
 });
 
@@ -151,7 +163,6 @@ test("ZIP search opens the ZIP code in the ZIP view and its area in the MHA view
     });
   };
   const { page } = await open(`${BASE}&geo=zip`);
-  await zipReady(page);
   await search(page, ZIP);
   await page.waitForFunction((zip) => window.bahAtlas.state().selected === zip, ZIP);
   const { page: mha } = await open(BASE);
@@ -163,7 +174,6 @@ test("ZIP search opens the ZIP code in the ZIP view and its area in the MHA view
 
 test("the ZIP view has no cluster overlay and says why (C16, must 9)", async () => {
   const { page } = await open(`${BASE}&clusters=on&geo=zip`);
-  await zipReady(page);
   assert.equal(await page.isDisabled("#overlay"), true);
   assert.match(await page.textContent("#overlay-hint"), /between MHAs/);
   assert.equal(await page.evaluate(() => window.bahAtlas.overlayShown()), false);
@@ -171,8 +181,8 @@ test("the ZIP view has no cluster overlay and says why (C16, must 9)", async () 
 });
 
 test("the CSV download in the ZIP view holds one row per ZIP code, equal to the export (C19, C28)", async () => {
+  // At the national zoom B36 has not loaded; the download loads it first.
   const { page } = await open(`#rank=E1&dep=without&home=sfh4&mode=buy&show=adequacy_ratio&geo=zip`, { acceptDownloads: true });
-  await zipReady(page);
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download this view (CSV)" }).click()]);
   assert.equal(download.suggestedFilename(), "bah-atlas_2026_E1_without_sfh4_buy_zip.csv");
   const chunks = [];
@@ -200,7 +210,6 @@ test("a ZIP grid from another build is refused and the map stays on MHAs (C27, m
 
 test("the ZIP view fits a phone, and the selector is in the controls sheet (X10)", async () => {
   const { page } = await open(`${BASE}&geo=zip`, { viewport: { width: 360, height: 640 } });
-  await zipReady(page);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert.equal(overflow, 0);
   await page.locator(".controls-chip").click();
