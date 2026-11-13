@@ -3,7 +3,7 @@
 <!-- GENERATED FILE. Edit docs/wbs/nodes.csv or docs/wbs/milestones.csv, then run `make wbs`. -->
 
 **Status as of:** 13 November 2026  
-**Nodes tracked:** 76  ·  ⚫ Complete (before this week): 47  ·  🟢 Completed this week: 23  ·  🟣 In progress: 1  ·  🔴 Not started: 1  ·  ⚪ Scrapped: 4
+**Nodes tracked:** 83  ·  ⚫ Complete (before this week): 47  ·  🟢 Completed this week: 23  ·  🟣 In progress: 8  ·  🔴 Not started: 1  ·  ⚪ Scrapped: 4
 
 This page is the live project tracker. It is regenerated from [`docs/wbs/nodes.csv`](wbs/nodes.csv) every time progress changes, so the commit history of that file is the project's change log. Narrative updates (what was done, what is next, setbacks and changes) are in the [weekly progress log](#weekly-progress-log).
 
@@ -20,10 +20,18 @@ Progress counts **required** nodes only; optional and scrapped nodes are tracked
 | **M5** 2.6 Spatial Statistics | Sat 24 Oct | 3 / 3 | `██████████ 100%` | ✅ Complete |
 | **M6** 2.7 Front-End Payload + 2.8 Writeup | Fri 30 Oct | 14 / 14 | `██████████ 100%` | ✅ Complete |
 | **M7** Layer 3 Front-End | Mon 16 Nov | 20 / 21 | `██████████ 95%` | ⏳ Due in 3 days |
+| **M8** ZIP-code view (D36) | Mon 16 Nov | 0 / 7 | `░░░░░░░░░░ 0%` | ⏳ Due in 3 days |
 
 ## In progress now
 
+- 🟣 **B33** ZIP rent by home type — due 16 Nov (M8)
+- 🟣 **B34** ZIP ownership cost by home type — due 16 Nov (M8)
+- 🟣 **B35** ZIP code polygons and tiles — due 16 Nov (M8)
+- 🟣 **B36** ZIP grid payload — due 16 Nov (M8)
 - 🟣 **C21** About / data-caveats page — due 16 Nov (M7)
+- 🟣 **C26** Geography selector (MHA or ZIP code) — due 16 Nov (M8)
+- 🟣 **C27** ZIP layer and values — due 16 Nov (M8)
+- 🟣 **C28** ZIP detail panel, search, compare and export — due 16 Nov (M8)
 
 ## Nodal map
 
@@ -64,16 +72,19 @@ flowchart LR
         subgraph S2_2["2.2 Geometry"]
             B6["B6 MHA polygons"]
             B7["B7 MHA PMTiles"]
+            B35["B35 ZIP code polygons and tiles"]
         end
         subgraph S2_3["2.3 MHA Benchmarks"]
             B8["B8 ZORI at MHA"]
             B9["B9 ZHVI at MHA"]
             B10["B10 FMR at MHA"]
             B29["B29 Rent benchmark by home type at MHA"]
+            B33["B33 ZIP rent by home type"]
         end
         subgraph S2_4["2.4 Ownership Metrics"]
             B11["B11 Ownership monthly cost at MHA"]
             B30["B30 Ownership cost by home type at MHA"]
+            B34["B34 ZIP ownership cost by home type"]
         end
         subgraph S2_5["2.5 Computed Metrics"]
             B12["B12 Rent coverage ratio"]
@@ -94,6 +105,7 @@ flowchart LR
             B28["B28 CCG and territory polygons"]
             B31["B31 Grid payload"]
             B32["B32 ZIP to area lookup"]
+            B36["B36 ZIP grid payload"]
             W2["W2 Data contract"]
         end
         subgraph S2_8["2.8 Writeup, QA and Enrichments"]
@@ -132,6 +144,9 @@ flowchart LR
             C20["C20 Attribution + methodology"]
             C21["C21 About / data-caveats page"]
             C25["C25 Authorized-standard notice"]
+            C26["C26 Geography selector"]
+            C27["C27 ZIP layer and values"]
+            C28["C28 ZIP detail panel, search, compare and export"]
         end
         subgraph S3_3["3.3 Build and Delivery"]
             W3["W3 Layer 3 writeup"]
@@ -231,6 +246,22 @@ flowchart LR
     B22 --> B31
     B1 --> B32
     B22 --> B32
+    B1 --> B33
+    B8 --> B33
+    B10 --> B33
+    B29 --> B33
+    A7 --> B34
+    A8 --> B34
+    A9 --> B34
+    B1 --> B34
+    B9 --> B34
+    B30 --> B34
+    A2 --> B35
+    B1 --> B35
+    B22 --> B36
+    B33 --> B36
+    B34 --> B36
+    B35 --> B36
     B23 --> W1
     C21 --> W3
     B7 --> C1
@@ -271,6 +302,16 @@ flowchart LR
     C23 --> C24
     C6 --> C25
     C3 --> C25
+    C6 --> C26
+    C7 --> C26
+    B35 --> C27
+    B36 --> C27
+    C14 --> C27
+    C11 --> C28
+    C12 --> C28
+    C15 --> C28
+    C19 --> C28
+    C27 --> C28
     classDef done fill:#1f1f1f,stroke:#000,color:#ffffff
     classDef week fill:#2e7d32,stroke:#000,color:#ffffff
     classDef prog fill:#7b1fa2,stroke:#000,color:#ffffff
@@ -279,7 +320,7 @@ flowchart LR
     classDef opt stroke-dasharray:5 4,stroke-width:2px,stroke:#9e9e9e
     class A1,A2,A3,A4,A5,A6,A7,A8,A9,A11,A12,A13,A14,A15,A16,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,B16,B17,B18,B19,B20,B21,B22,B28,B23,B24,B27,B29,B30,B31,B32,W1,W2 done
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C19,C20,C22,C23,C24,C25 week
-    class C21 prog
+    class B33,B34,B35,B36,C21,C26,C27,C28 prog
     class W3 todo
     class A10,B25,B26,C18 gone
     class A9,A10,B19,B24,B25,B26,B27,W3,C15,C16,C17,C18,C19 opt
@@ -332,6 +373,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 |:---:|---|---|---|---|---|
 | ⚫ | **B6** | MHA polygons (ZCTA dissolve) | required | A2, B1 |  |
 | ⚫ | **B7** | MHA PMTiles | required | B6, B28 | D9 (18 Oct 2026): rebuilt in M6 as one layer `areas` (MHAs, CCGs, territory) keyed on `code`, B28 merged in one tippecanoe run; stays complete in M2. Spec: ICD section 4; completed 03 Oct |
+| 🟣 | **B35** | ZIP code polygons and tiles | required | A2, B1 | D36 (13 Nov): Z5; pipeline/tiles/build_zip_pmtiles.py (make zip-tiles); one layer `zips` keyed on `zip` with `area`, every real-MHA ZIP with a ZCTA (2026: 14,671 of 20,280), zoom 6-10, about 16 MB; writes zipcodes_2026_features.csv for B36 and check 4; delivered and hashed like B7, served from R2 under a content-hashed name (ICD 4b) |
 
 #### 2.3 MHA Benchmarks — due 10 October 2026 (M3)
 
@@ -341,6 +383,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B9** | ZHVI at MHA | required | A4, B1 | completed 08 Oct |
 | ⚫ | **B10** | FMR at MHA | required | A5, B1 | completed 08 Oct |
 | ⚫ | **B29** | Rent benchmark by home type at MHA | required | A15, B8, B10, B1 | D19: utilities-adjusted ZORI for the building type (apartment = multifamily, townhouse = all homes, single-family = SFR) times the SAFMR bedroom ratio (n BR / 2 BR) within the MHA; the 2-bedroom townhouse equals B8, so E-5 is unchanged (tested); MHAs without the type's series get a status, not a value; code ready 24 Oct: rent_by_type.py (make rent-types); 2 BR townhouse = B8 checked in every MHA; national fallback recorded per MHA (caveat type_factor_national); D34 (7 Nov): the Zillow type ratio is size-matched before the SAFMR bedroom ratio (multifamily series = 2 BR, single-family = 3 BR, A14 rent_type_series), and a single-family home is never below the townhouse of the same bedrooms; single-family values fall a median 18% (Colorado Springs 3 BR $3,982 to $3,008, held at the 3 BR townhouse by the floor in 192 of 289 MHAs), apartments and townhouses unchanged, so E-5 rent and H1/H2 unchanged; completed 24 Oct |
+| 🟣 | **B33** | ZIP rent by home type | required | B1, B8, B10, B29 | D36 (13 Nov): ZIP view, Z2/Z3/Z9; pipeline/benchmarks/zip_rent_by_type.py (make zip-rent); per real-MHA ZIP, base = ZORI / B5 rent share, else HUD SAFMR 2 BR scaled to the MHA's ZORI level (caveat zip_safmr_scaled); B29's MHA home-type factors, never one ZIP's (audit 3.1); a base outside 1/3-3x the MHA's is left out (zip_outlier); identity: the MHA base reproduces B29; manifest safmr_check measures scaled SAFMR against ZORI where a ZIP has both; tests/test_zip_view.py |
 
 #### 2.4 Ownership Metrics — due 10 October 2026 (M3)
 
@@ -348,6 +391,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 |:---:|---|---|---|---|---|
 | ⚫ | **B11** | Ownership monthly cost at MHA | required | A7, A8, B8, B9 | A8 tax/insurance are national placeholders in config/ownership.json; B8 supplies utilities; D22 (1 Nov): B11 stays the all-homes ownership cost; E-5 buy now reads B30 th2; completed 08 Oct |
 | ⚫ | **B30** | Ownership cost by home type at MHA | required | A16, B9, B11 | D19: home value for the type (ZHVI building-type ratio times the ZHVI bedroom ratio, n BR / 2 BR), then B11's VA PITI plus utilities for each type; code ready 24 Oct: ownership_by_type.py (make own-types), B11's model and functions; 2 BR townhouse = B11 checked in every MHA; premium is the MHA average for every type (limitation); D22 decided 1 Nov (option B): townhouse = condo factor + 0.5 x (single-family factor - condo factor) per MHA (config/ownership.json home_types.townhouse_position); the 2 BR townhouse is no longer B11, the all-homes value reproduces B11 (checked); rerun B11, B14-B18 and the handoff; D34 (7 Nov): B9 stands for a 3 BR home (measured 1.003 x the 3 BR value), bedrooms scale from 3 BR, and the condo (2 BR) and single-family (3 BR) ratios are size-matched before the townhouse midpoint; sizes re-measured every run, the build stops on a mismatch; keep_dod_order: in the 94 MHAs where condos cost more than houses at equal bedrooms, the single-family factor is raised to the condo factor, so costs never fall with rank; townhouse and single-family values fall, apartments unchanged; rerun B29-B31, B12-B15, the handoff and B23 (make layer2), re-delivered; completed 24 Oct |
+| 🟣 | **B34** | ZIP ownership cost by home type | required | A7, A8, A9, B1, B9, B30 | D36 (13 Nov): Z3/Z4/Z9; pipeline/benchmarks/zip_ownership_by_type.py (make zip-own); ZIP ZHVI x B30's MHA value ratio per home type; the ZIP's ACS tax rate and FIO premium where published, else the MHA's (caveat zip_tax_insurance); B11's model and B30's mortgage-rate window; MHA utilities; band as B33; identity: the MHA's own inputs reproduce B30; tests/test_zip_view.py |
 
 #### 2.5 Computed Metrics — due 17 October 2026 (M4)
 
@@ -377,6 +421,7 @@ The offline Python pipeline that turns Layer 1 into compact, web-ready packages.
 | ⚫ | **B28** | CCG and territory polygons (ZCTA dissolve, non-authoritative) | required | A2, B1 | DoD publishes no County Cost Group polygons; same ZIP-to-ZCTA dissolve as B6, annotated as non-authoritative; kept out of B16-B18; code ready 18 Oct: `make non-mha` (build_mha_geometry.py --classes ccg,unknown), tiled into B7 by `make tiles`; completed 18 Oct |
 | ⚫ | **B31** | Grid payload (BAH by rank and dependents; benchmarks by home type) | required | A14, B4, B29, B30, B22 | D20: per area, BAH for the 46 rank and dependents cells, the six benchmarks per mode and the standards table (about 250 KB); the browser computes (BAH + cost share) / benchmark using the formula and worked examples in ICD 1.1.0; B23 recomputes E-5 and O-3 this way and checks them against B20; code ready 24 Oct: build_grid.py in make handoff, ICD 1.1.0 section 5b; costs carry cents so the browser formula reproduces B20 exactly (contract.grid_view, tested); completed 24 Oct |
 | ⚫ | **B32** | ZIP to area lookup | required | B1, B22 | D26 (3 Nov): delivered file zips_2026.json from B1, keyed by area code, about 102 KB gzipped; serves C15; tracked under M7, in Delivery 2 (ICD 1.2.0); code ready 3 Nov: build_zip_lookup.py in make handoff, ICD 1.2.0 section 7b; 40,959 ZIPs in 339 areas on the DTMO crosswalk; completed 03 Nov |
+| 🟣 | **B36** | ZIP grid payload | required | B22, B33, B34, B35 | D36 (13 Nov): Z8; pipeline/handoff/build_zip_grid.py (make handoff); zipgrid_2026.json: per B35 ZIP its MHA code and the six home-type costs to rent and buy in whole dollars, statuses and caveat-set indexes (ICD 5c); the browser takes BAH from B31 by area and runs the 5b.4 formula (contract.zip_view); loaded only when the ZIP view is chosen; validate_handoff checks 3-8 and B23 section 9c cover it; ICD 1.3.0 |
 | ⚫ | **W2** | Data contract (Layer 2 to Layer 3 ICD) | required | — | docs/data-contract.md: every delivered file (B7, B20, B21, B22, B27), conventions, consumer obligations, conformance checks; written 18 Oct, complete on author review; ICD 1.1.0 (D20, additive): B31 grid file, the browser formula with worked examples, dropdown lists and standards in B21; 24 Oct: ICD 1.1.0 written (B31, B21 grid block, caveat type_factor_national, obligations 8-9, check 10); awaits author approval; 1 Nov: D22 wording added to ICD 1.1.0 (values only); ICD 1.0.3 and 1.1.0 approved by the author 1 Nov 2026; ICD 1.2.0 approved by the author 3 Nov 2026 (D26, D27, D29); completed 18 Oct |
 
 #### 2.8 Writeup, QA and Enrichments — due 30 October 2026 (M6)
@@ -425,6 +470,9 @@ The static MapLibre site. Visualizes Layer 2 output; performs no data manipulati
 | 🟢 | **C20** | Attribution + methodology | required | C3, B22 | 7 Nov: OpenStreetMap and Protomaps credit set on the basemap source (the PMTiles protocol passed none) and checked live. 8 Nov: web/src/sources.js; the area layer credits each B21 provider whose licence asks for attribution (Zillow Group, Freddie Mac), checked visible at 1280 and 360 px; footer disclaimer; a Sources and method dialog lists all 14 B21 sources with their data windows and licences, the geometry statements, and the build id, date and pipeline commit from B22; the page checks that B22's SHA-256 equals the build id and refuses to render otherwise (unit and E2E); completed 08 Nov |
 | 🟣 | **C21** | About / data-caveats page | required | B23, B22 | 8 Nov: web/about.html and src/about.js; H1 and H2 results, cluster labels, all five global caveats and the build id rendered from B21; the O-3 benchmark cross-check (88/2/68.9%, E-5 44/1/84.4%), sample selection and the shared-denominator caveat quoted from qa_2026.md, every quoted number checked against it (test/about.test.mjs); the model-form result for rent_growth_pct from B21; linked from the map footer; empty prose slots hide. Remaining: author prose in seven slots (what, question, method, h1, h2, benchmark, limits); the TODO test in test/e2e/about.test.mjs lists those still empty |
 | 🟢 | **C25** | Authorized-standard notice | required | C6, C3 | D18: shows what DoD authorizes for the selected rank and dependents, and marks that home type in the home-type dropdown as the default; 7 Nov: web/src/notice.js fills grid.notice.standard or off_standard from standards_text on every view; off-standard views turn amber and switch to the D27 scale; unit test across all 322 selections (right wording, no placeholder left); the default home type is DoD standard for this rank; completed 07 Nov |
+| 🟣 | **C26** | Geography selector (MHA or ZIP code) | required | C6, C7 | D36 (13 Nov): 'Show by' select first in the controls, labels from B21 grid.geographies; state.geography; link key geo=zip, written only for the ZIP view so older links keep their meaning; a ZIP code open or pinned becomes its MHA on return to MHAs; the cluster switch is disabled in the ZIP view with its reason |
+| 🟣 | **C27** | ZIP layer and values | required | B35, B36, C14 | D36 (13 Nov): web/src/map.js addZipLayers, setLayers; B35 tiles and B36 load on first use (none on the first load), B36 refused unless it shares the build id (must 6); ZIP fills from zoom 6 with the MHA fills cleared and MHA outlines widened, a note to zoom in below that; classes from grid.js zipMetricValues, checked against zipView for every ZIP; X9 ZIP repaint measured in make web-perf |
+| 🟣 | **C28** | ZIP detail panel, search, compare and export | required | C11, C12, C15, C19, C27 | D36 (13 Nov): ZIP panel with its MHA and the MHA's figure for the chosen measure in both modes, the zip-level caveat open; ZIP search opens the ZIP in the ZIP view; ZIP codes can be pinned; CSV export has one row per ZIP with its MHA in a new `area` column; E2E web/test/e2e/zip.test.mjs |
 
 #### 3.3 Build and Delivery — due 16 November 2026 (M7)
 

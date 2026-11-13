@@ -131,7 +131,8 @@ def load_milestones() -> list[dict]:
     claimed_nodes: dict[str, str] = {}
     for r in rows:
         r["due_date"] = parse_date(r["due"], f"milestones.csv ({r['id']})")
-        r["sublayer_list"] = r["sublayers"].split(";")
+        # A milestone may cover no whole sub-layer, only the nodes it names (M8, D36).
+        r["sublayer_list"] = [s for s in r["sublayers"].split(";") if s]
         r["node_list"] = r.get("nodes", "").split()
         for nid in r["node_list"]:
             if nid in claimed_nodes:
