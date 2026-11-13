@@ -36,7 +36,15 @@ async function basemapStyle(basemapPath, basemapUrl) {
   return style;
 }
 
-export async function createMap({ container, areasUrl, areasAttribution, basemapPath, basemapUrl, workerPath }) {
+export async function createMap({
+  container,
+  areasUrl,
+  areasAttribution,
+  basemapPath,
+  basemapUrl,
+  workerPath,
+  onAreasUnavailable = () => {},
+}) {
   setWorkerUrl(new URL(workerPath, location.href).href);
   addProtocol("pmtiles", new Protocol().tile);
 
@@ -49,6 +57,15 @@ export async function createMap({ container, areasUrl, areasAttribution, basemap
     fitBoundsOptions: { padding: 16 },
   });
   await new Promise((resolve) => map.once("load", resolve));
+
+  // An error from the area source with no tile attached means the archive itself could not
+  // be read; one failed tile is left to MapLibre, which asks again when the view changes.
+  // MapLibre writes errors to the console only while nothing listens for them, so every
+  // error is still written here.
+  map.on("error", (event) => {
+    console.error(event.error ?? event);
+    if (event.sourceId === SOURCE && !event.tile) onAreasUnavailable(event.error);
+  });
 
   // ICD section 4. promoteId makes `code` the feature id that every join uses.
   // C20: the area layer credits the data sources whose licences ask for it.

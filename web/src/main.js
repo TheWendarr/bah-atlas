@@ -24,12 +24,16 @@ import { MAX_COMPARE, createStore } from "./state.js";
 
 const SITE = __SITE__;
 
-function showError(detail) {
-  for (const id of ["map", "jump", "controls", "notice", "legend", "panel"]) {
+// Two causes share the error screen, each with its own explanation: files from different
+// builds (ICD 9, must 6), and anything else that stops the map, such as a file that did
+// not load or a browser without WebGL.
+function showError(detail, cause = "load") {
+  for (const id of ["map", "map-problem", "jump", "controls", "notice", "legend", "panel"]) {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   }
   document.getElementById("error").hidden = false;
+  document.getElementById(cause === "contract" ? "error-contract" : "error-load").hidden = false;
   document.getElementById("error-detail").textContent = detail;
   document.documentElement.dataset.state = "error";
 }
@@ -39,12 +43,13 @@ async function start() {
   const problems = checkContract(files);
   if (!problems.length) problems.push(...checkManifest(manifest, files.ui.build_id));
   if (problems.length) {
-    showError(problems.join("\n"));
+    showError(problems.join("\n"), "contract");
     return;
   }
 
   const { ui } = files;
   const store = createStore(ui);
+  let areasAvailable = true;
 
   const map = await createMap({
     container: "map",
@@ -53,6 +58,13 @@ async function start() {
     basemapPath: SITE.basemapPath,
     basemapUrl: SITE.basemapUrl,
     workerPath: SITE.workerPath,
+    // The tiles come from their own host. If it cannot be reached the map has no areas to
+    // colour, and without this notice the page would show an empty map with no reason.
+    onAreasUnavailable: () => {
+      areasAvailable = false;
+      document.getElementById("map-problem").hidden = false;
+      document.documentElement.dataset.state = "areas-unavailable";
+    },
   });
   // Both colour scales share one set of colours (D27), so the paint never changes.
   addAreaLayers(map, { colors: ui.metrics[ui.default_metric].colors, noDataColor: ui.no_data_color });
@@ -151,7 +163,7 @@ async function start() {
     if (region) jumpTo(map, region);
   });
   map.once("idle", () => {
-    document.documentElement.dataset.state = "ready";
+    if (areasAvailable) document.documentElement.dataset.state = "ready";
   });
 
   // Read by the end-to-end tests.

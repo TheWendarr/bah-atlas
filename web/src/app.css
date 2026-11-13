@@ -37,6 +37,26 @@ body {
 
 .map { position: absolute; inset: 0; background: var(--land); }
 
+/* Shown over the map when the area tiles cannot be reached. */
+.map-problem {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 3;
+  width: max-content;
+  max-width: min(520px, calc(100% - 20px));
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  background: #fff4e0;
+  border: 1px solid #d08a1e;
+  border-radius: 8px;
+  transform: translateX(-50%);
+}
+
+.map-problem[hidden] { display: none; }
+
 .error { max-width: 520px; margin: 0 auto; padding: 48px 24px; font-size: 16px; line-height: 1.5; }
 
 .error h2 { margin: 0 0 12px; font-size: 26px; font-weight: 600; line-height: 1.2; }
@@ -366,7 +386,18 @@ body {
 
   .legend { left: 8px; bottom: 48px; max-width: 200px; padding: 6px 8px; }
 
-  .legend-title, .legend-scale, .legend-list { display: none; }
+  .legend-title, .legend-scale { display: none; }
+
+  /* The ramp stands in for the class list on a phone and is hidden from screen readers
+     (legend.js), so the list is taken out of sight, not out of the page. */
+  .legend-list {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 
   .legend-title-short { display: block; margin: 0 0 4px; font-weight: 600; }
 

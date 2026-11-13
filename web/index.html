@@ -23,10 +23,17 @@
   </nav>
   <div id="legend" class="legend" role="group" aria-label="Legend" hidden></div>
   <aside id="panel" class="panel" hidden></aside>
+  <p id="map-problem" class="map-problem" role="alert" hidden>The coloured areas did not load, so the map is empty. Check the connection and reload. Some networks block the address the map tiles come from.</p>
   <section id="error" class="error" hidden>
     <h2>The map could not start</h2>
-    <p>The data files on this page do not come from the same build, so showing them together could mix results. No values are shown until they match.</p>
-    <p>This can happen just after an update. Reloading usually fixes it.</p>
+    <div id="error-contract" hidden>
+      <p>The data files on this page do not come from the same build, so showing them together could mix results. No values are shown until they match.</p>
+      <p>This can happen just after an update. Reloading usually fixes it.</p>
+    </div>
+    <div id="error-load" hidden>
+      <p>A file the map needs did not load, or this browser could not draw the map. No values are shown.</p>
+      <p>Check the connection and reload. The detail below says what failed.</p>
+    </div>
     <p><a href="">Reload</a></p>
     <pre id="error-detail" class="error-detail"></pre>
   </section>

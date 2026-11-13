@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { NO_CLASS, classIndex } from "../src/classify.js";
 import { checkContract, checkManifest, sha256Hex } from "../src/contract.js";
+import { formatMetric, percent, usd } from "../src/format.js";
 
 const BREAKS = [-500, -250, -50, 50, 250, 500];
 
@@ -23,6 +24,31 @@ test("null has no class", () => {
 test("B23's two rounding cases classify on the rounded value", () => {
   // FL057 E-5 and NJ200 O-3 rent surplus_usd: 49.92 and 49.89, both rounded to 50.
   assert.equal(classIndex(50, BREAKS), 4);
+});
+
+test("a percent rounds a tie half away from zero, as the contract rounds", () => {
+  // Each of these is a tie at one decimal of a percent. toFixed on value * 100 sent the
+  // first three down, to 226.5%, 622.9% and 110.1%.
+  assert.equal(percent(2.2655), "226.6%");
+  assert.equal(percent(6.2295), "623.0%");
+  assert.equal(percent(1.1015), "110.2%");
+  assert.equal(percent(0.9695), "97.0%");
+  assert.equal(percent(1.0465), "104.7%");
+});
+
+test("a percent away from a tie, a whole ratio and a missing value read as before", () => {
+  assert.equal(percent(0.9694), "96.9%");
+  assert.equal(percent(1.1486), "114.9%");
+  assert.equal(percent(1), "100.0%");
+  assert.equal(percent(0), "0.0%");
+  assert.equal(percent(null), "—");
+  assert.equal(formatMetric(0.9213, "percent"), "92.1%");
+});
+
+test("a negative percent takes the same minus sign as a dollar value, and never reads -0.0%", () => {
+  assert.equal(percent(-0.0155), "−1.6%");
+  assert.equal(percent(-0.00004), "0.0%");
+  assert.equal(usd(-50), "−$50");
 });
 
 const files = (overrides = {}) => ({

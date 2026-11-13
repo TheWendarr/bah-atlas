@@ -48,4 +48,16 @@ A local site uses `data/processed/basemap.pmtiles` when `make basemap` has built
 Without it the map draws on plain water color, which is also what the CI tests see, so
 only `make web-e2e-live` checks the real basemap.
 
+## When something does not load
+
+| What fails | What the page does | `data-state` on `<html>` |
+|---|---|---|
+| The delivered files disagree on build or major version | Error screen, with the explanation about builds (ICD 9, must 6) | `error` |
+| A data file, the basemap style or WebGL | Error screen, with the explanation about loading and the failed file below it | `error` |
+| The area tile archive (wrong name on the tiles host, host unreachable) | The map and controls stay, with a notice over the map | `areas-unavailable` |
+
+The browser tests wait for `data-state`. A delivery whose area tiles were not uploaded
+therefore fails `make web-e2e-live` at once with `areas-unavailable`, where it used to
+wait out a 60-second timeout in every test.
+
 Wording about the data comes from `ui_metadata_<year>.json`, never from this folder.

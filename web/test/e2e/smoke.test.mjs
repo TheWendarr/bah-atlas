@@ -42,7 +42,9 @@ after(async () => {
   site?.server.close();
 });
 
-async function open(context = {}, change = null) {
+// `change` rewrites the grid file on its way to the page; `prepare` sets up the page
+// (for example a route that fails a request) before it loads.
+async function open(context = {}, change = null, prepare = null) {
   const page = await browser.newPage(context);
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -57,6 +59,7 @@ async function open(context = {}, change = null) {
       await route.fulfill({ response, json: change(await response.json()) });
     });
   }
+  if (prepare) await prepare(page);
   await page.goto(origin);
   await page.waitForFunction(() => document.documentElement.dataset.state, null, { timeout: 60_000 });
   return { page, errors };
@@ -208,6 +211,36 @@ test("a mismatched build id shows the error screen and no map", async () => {
   assert.equal(await state(page), "error");
   assert.equal(await page.isVisible("#map"), false);
   assert.match(await page.textContent("#error-detail"), /one build id/);
+  // The screen explains this cause, and not the other one.
+  assert.equal(await page.isVisible("#error-contract"), true);
+  assert.equal(await page.isVisible("#error-load"), false);
+  await page.close();
+});
+
+test("a data file that does not load shows the error screen without blaming the build", async () => {
+  const { page } = await open({}, null, (page) => page.route("**/grid_2026.json", (route) => route.abort()));
+  assert.equal(await state(page), "error");
+  assert.equal(await page.isVisible("#map"), false);
+  assert.equal(await page.isVisible("#error-load"), true);
+  assert.equal(await page.isVisible("#error-contract"), false);
+  assert.notEqual(await page.textContent("#error-detail"), "");
+  await page.close();
+});
+
+test("if the area tiles cannot be reached the map says so and never reports ready", async () => {
+  const missing = (route) => route.fulfill({ status: 404, body: "not found" });
+  const { page } = await open({}, null, (page) => page.route("**/areas_2026.*.pmtiles", missing));
+  assert.equal(await state(page), "areas-unavailable");
+  assert.equal(await page.isVisible("#map-problem"), true);
+  // The controls still work; only the areas are missing.
+  assert.equal(await page.isVisible("#controls"), true);
+  assert.equal(await page.isVisible("#error"), false);
+  await page.close();
+});
+
+test("the tiles notice stays hidden when the tiles load", async () => {
+  const { page } = await open();
+  assert.equal(await page.isVisible("#map-problem"), false);
   await page.close();
 });
 

@@ -4,6 +4,7 @@
 
 import { formatMetric, usd } from "./format.js";
 import { labelOf } from "./notice.js";
+import { MAX_COMPARE } from "./state.js";
 
 // Interface wording that describes no data (D29).
 const UI = {
@@ -93,7 +94,7 @@ function pinButton(code, compare) {
   button.dataset.action = pinned ? "unpin" : "pin";
   button.dataset.code = code;
   button.setAttribute("aria-pressed", String(pinned));
-  if (!pinned && compare.length >= 2) {
+  if (!pinned && compare.length >= MAX_COMPARE) {
     button.disabled = true;
     button.title = UI.full;
   }
