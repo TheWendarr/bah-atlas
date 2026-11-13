@@ -7,6 +7,9 @@ import { labelOf } from "./notice.js";
 const UI = {
   edit: "Change",
   done: "Done",
+  overlay: "Show local clusters",
+  // Names the views the overlay exists for, from B21's profile and home-type labels.
+  overlayOnly: (profiles, standard) => `Only for ${profiles.join(" and ")} at the ${standard}`,
 };
 
 function select(id, title, options) {
@@ -46,6 +49,29 @@ function modeGroup(title, modes) {
   return { wrap: set, inputs };
 }
 
+// C16: the overlay switch. It is a checkbox, not a select: it adds a layer rather than
+// choosing a value. Off a research view it is disabled and says which views have one.
+function overlaySwitch(ui) {
+  const wrap = document.createElement("div");
+  wrap.className = "control control-overlay";
+  const label = document.createElement("label");
+  label.className = "overlay-option";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = "overlay";
+  input.setAttribute("aria-describedby", "overlay-hint");
+  const text = document.createElement("span");
+  text.textContent = UI.overlay;
+  label.append(input, text);
+  const hint = document.createElement("span");
+  hint.id = "overlay-hint";
+  hint.className = "overlay-hint";
+  const standard = ui.grid.home_types.find((type) => type.id === "standard").label;
+  hint.textContent = UI.overlayOnly(ui.profiles.map((profile) => profile.label), standard);
+  wrap.append(label, hint);
+  return { wrap, input, hint };
+}
+
 export function createControls(root, ui, store) {
   const titles = ui.grid.titles;
   const rank = select("rank", titles.rank, ui.grid.ranks);
@@ -53,6 +79,7 @@ export function createControls(root, ui, store) {
   const homeType = select("home-type", titles.home_type, ui.grid.home_types);
   const metric = select("metric", titles.metric, ui.grid.metrics.map((id) => ({ id, label: ui.metrics[id].short_label })));
   const mode = modeGroup(titles.mode, ui.modes);
+  const overlay = overlaySwitch(ui);
 
   // Layout C on phones: a summary chip opens the controls as a sheet.
   const chip = document.createElement("button");
@@ -68,7 +95,7 @@ export function createControls(root, ui, store) {
   const fields = document.createElement("div");
   fields.id = "controls-fields";
   fields.className = "controls-fields";
-  fields.append(rank.wrap, dependents.wrap, homeType.wrap, mode.wrap, metric.wrap);
+  fields.append(rank.wrap, dependents.wrap, homeType.wrap, mode.wrap, metric.wrap, overlay.wrap);
   root.append(chip, fields);
 
   const setOpen = (open) => {
@@ -84,9 +111,11 @@ export function createControls(root, ui, store) {
   homeType.input.addEventListener("change", () => store.set({ homeType: homeType.input.value }));
   metric.input.addEventListener("change", () => store.set({ metric: metric.input.value }));
   for (const input of mode.inputs) input.addEventListener("change", () => store.set({ mode: input.value }));
+  overlay.input.addEventListener("change", () => store.set({ overlay: overlay.input.checked }));
 
-  // Called by render with the current state and whether it is the statutory view.
-  return function update(state, standardView) {
+  // Called by render with the current state, whether it is the statutory view, and the
+  // research profile it is the statutory view of (null for any other view).
+  return function update(state, standardView, research = null) {
     rank.input.value = state.rank;
     dependents.input.value = state.dependents;
     homeType.input.value = state.homeType;
@@ -99,6 +128,9 @@ export function createControls(root, ui, store) {
       option.disabled = !def.modes.includes(state.mode);
     }
     metric.input.value = state.metric;
+    overlay.input.disabled = research === null;
+    overlay.input.checked = state.overlay && research !== null;
+    overlay.hint.hidden = research !== null;
     chipText.textContent = [
       labelOf(ui.grid.ranks, state.rank),
       labelOf(ui.grid.dependents, state.dependents),

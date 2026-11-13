@@ -18,6 +18,8 @@ const UI = {
   pin: "Pin to compare",
   unpin: "Unpin",
   full: "Two areas are pinned. Unpin one to compare this area.",
+  cluster: "Local cluster",
+  pValue: "Pseudo p-value",
 };
 
 // The cluster-analysis caveat belongs with the research overlay (ICD 9, must 9).
@@ -101,8 +103,27 @@ function pinButton(code, compare) {
   return button;
 }
 
-// Returns the panel section, or null when no area is selected.
-export function renderDetail(files, state, views, scales) {
+// C16: the selected area's B27 result while the overlay shows. Labels come from B21
+// `clusters`; the p-value is shown as delivered, to 5 decimals.
+function clusterBox(ui, entry) {
+  const box = element("div", "panel-cluster");
+  box.append(element("strong", "", UI.cluster));
+  if (entry === null) {
+    box.dataset.cluster = "out_of_scope";
+    box.append(element("p", "", ui.clusters.out_of_scope_label));
+    return box;
+  }
+  box.dataset.cluster = entry.cluster ?? "no_value";
+  const label = entry.cluster === null ? ui.no_data_label : ui.clusters.classes[entry.cluster].label;
+  box.append(element("p", "", label));
+  if (entry.lisa_p_sim !== null) box.append(element("p", "panel-cluster-p", `${UI.pValue} ${entry.lisa_p_sim.toFixed(5)}`));
+  if (entry.lisa_fdr_significant) box.append(element("p", "panel-cluster-fdr", ui.clusters.fdr_marker.label));
+  return box;
+}
+
+// Returns the panel section, or null when no area is selected. `cluster` is set only while
+// the overlay shows (render.js), with the area's B27 entry or null outside the analysis.
+export function renderDetail(files, state, views, scales, cluster = null) {
   const code = state.selected;
   if (code === null) return null;
 
@@ -186,10 +207,17 @@ export function renderDetail(files, state, views, scales) {
     section.append(statusBox(ui, status, shared ? "" : mode.label));
   });
 
-  const ids = caveatIds(files, code, byMode);
+  // The overlay's caveats join the list while it shows: the exploratory note always, and the
+  // out-of-scope note for an area outside the analysis.
+  let ids = caveatIds(files, code, byMode);
+  if (cluster) {
+    section.append(clusterBox(ui, cluster.entry));
+    const extra = ["lisa_exploratory", ...(cluster.entry === null ? ["outside_cluster_scope"] : [])];
+    ids = [...new Set([...ids, ...extra])].filter((id) => id in ui.caveats);
+  }
   // County Cost Groups and the territory bucket open with their approximate-boundary note
   // in view (ICD 9, must 4).
-  if (ids.length) section.append(caveatList(ui, ids, area.class !== "mha"));
+  if (ids.length) section.append(caveatList(ui, ids, area.class !== "mha" || cluster !== null));
 
   section.append(pinButton(code, state.compare));
   return section;

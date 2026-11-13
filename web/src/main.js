@@ -3,25 +3,33 @@
 import "./app.css";
 import { checkContract, checkManifest, loadFiles } from "./contract.js";
 import { createControls } from "./controls.js";
-import { renderLegend } from "./legend.js";
+import { renderClusterLegend, renderLegend } from "./legend.js";
+import { EXPORT_LABEL, download, fileName, toCsv } from "./export.js";
+import { showArea } from "./locate.js";
+import { stateFromHash, writeHash } from "./permalink.js";
+import { NO_VALUE } from "./research.js";
+import { createSearch } from "./search.js";
 import { renderCompare } from "./compare.js";
 import {
   addAreaLayers,
+  addClusterLayers,
   addPinnedLayer,
   addSelectionLayer,
   applyClasses,
+  applyClusters,
   basemapStyle,
   createMap,
   jumpTo,
   onAreaClick,
   reveal,
+  setOverlay,
   setPinned,
   setSelected,
 } from "./map.js";
 import { renderDetail } from "./panel.js";
 import { computeView } from "./render.js";
 import { areaAttribution, renderFooterBuild, renderSources } from "./sources.js";
-import { MAX_COMPARE, createStore } from "./state.js";
+import { MAX_COMPARE, createStore, initialState } from "./state.js";
 
 const SITE = __SITE__;
 
@@ -29,7 +37,7 @@ const SITE = __SITE__;
 // builds (ICD 9, must 6), and anything else that stops the map, such as a file that did
 // not load or a browser without WebGL.
 function showError(detail, cause = "load") {
-  for (const id of ["map", "map-problem", "jump", "controls", "notice", "legend", "panel"]) {
+  for (const id of ["map", "map-problem", "jump", "controls", "notice", "legend", "panel", "search"]) {
     const el = document.getElementById(id);
     if (el) el.hidden = true;
   }
@@ -53,7 +61,8 @@ async function start() {
   }
 
   const { ui } = files;
-  const store = createStore(ui);
+  // C17: a link opens the view it names; set() checks every value it carries.
+  const store = createStore(ui, stateFromHash(initialState(ui), location.hash));
   let areasAvailable = true;
 
   const map = await createMap({
@@ -74,6 +83,11 @@ async function start() {
   addAreaLayers(map, { colors: ui.metrics[ui.default_metric].colors, noDataColor: ui.no_data_color });
   addSelectionLayer(map);
   addPinnedLayer(map);
+  addClusterLayers(map, {
+    colors: Object.values(ui.clusters.classes).map((cluster) => cluster.color),
+    noDataColor: ui.no_data_color,
+    fdr: ui.clusters.fdr_marker,
+  });
 
   const controlsRoot = document.getElementById("controls");
   const noticeEl = document.getElementById("notice");
@@ -85,21 +99,32 @@ async function start() {
   legendEl.hidden = false;
 
   let classes = new Map();
+  let clusterStates = new Map();
   let shown = null;
+  const locate = (code) =>
+    showArea(map, SITE.boundsPath, code, panelEl).catch((error) => console.warn(`Area bounds: ${error.message}`));
 
   function render(state, previous = null) {
     const view = computeView(files, state);
     classes = applyClasses(map, view.classes, classes);
     if (!previous || previous.selected !== state.selected) setSelected(map, state.selected, previous?.selected ?? null);
     if (!previous || previous.compare !== state.compare) setPinned(map, state.compare, previous?.compare ?? []);
-    updateControls(state, view.standardView);
+    // C16: the overlay replaces the choropleth's colours and legend while it shows.
+    if (view.overlay) clusterStates = applyClusters(map, view.clusters, clusterStates);
+    setOverlay(map, view.overlay);
+    updateControls(state, view.standardView, view.research);
     noticeEl.textContent = view.notice;
     noticeEl.classList.toggle("off-standard", !view.standardView);
-    renderLegend(legendEl, ui, view.scale);
+    if (view.overlay) {
+      const noValue = [...view.clusters.values()].some((cluster) => cluster.index === NO_VALUE);
+      renderClusterLegend(legendEl, ui, { noValue });
+    } else {
+      renderLegend(legendEl, ui, view.scale);
+    }
     // One panel holds the selected area's detail (C11) above the comparison (C12), so an
     // area just clicked is always in view.
     const sections = [
-      renderDetail(files, state, view.selected, view.scales),
+      renderDetail(files, state, view.selected, view.scales, view.selectedCluster),
       renderCompare(files, state, view.compared, view.scales),
     ].filter(Boolean);
     // Keep the reader's place, and keyboard focus on the same button, when the panel is
@@ -117,11 +142,33 @@ async function start() {
     panelEl.hidden = sections.length === 0;
     panelEl.setAttribute("aria-label", sections.map((section) => section.querySelector("h2").textContent).join(", "));
     document.body.classList.toggle("panel-open", !panelEl.hidden);
+    // C17: the address follows the selection.
+    writeHash(state);
     shown = view;
   }
 
   store.subscribe((state, previous) => render(state, previous));
   render(store.get());
+  // A link that names an area opens on it.
+  if (store.get().selected !== null) locate(store.get().selected);
+  // An address edited by hand, or a link followed from the same page.
+  window.addEventListener("hashchange", () => {
+    const before = store.get().selected;
+    const { state } = store.set(stateFromHash(initialState(ui), location.hash));
+    if (state.selected !== null && state.selected !== before) locate(state.selected);
+  });
+
+  // C15: ZIP search, in the header.
+  const searchEl = document.getElementById("search");
+  createSearch(searchEl, {
+    ui,
+    url: `${SITE.dataPath}/zips_${SITE.year}.json`,
+    onFound: (code) => {
+      store.set({ selected: code });
+      locate(code);
+    },
+  });
+  searchEl.hidden = false;
 
   onAreaClick(map, (code, point) => {
     store.set({ selected: code });
@@ -152,8 +199,19 @@ async function start() {
   const sourcesDialog = document.getElementById("sources");
   renderFooterBuild(footerBuild, ui, manifest);
   renderSources(sourcesDialog, ui, manifest);
+  // C19: the current view as CSV.
+  const exportButton = document.createElement("button");
+  exportButton.type = "button";
+  exportButton.className = "footer-export";
+  exportButton.dataset.action = "export-csv";
+  exportButton.textContent = EXPORT_LABEL;
+  footerBuild.querySelector(".footer-about").after(exportButton);
   footerBuild.addEventListener("click", (event) => {
     if (event.target.closest("[data-action=open-sources]")) sourcesDialog.showModal();
+    if (event.target.closest("[data-action=export-csv]")) {
+      const state = store.get();
+      download(toCsv(files, state), fileName(ui, state));
+    }
   });
   sourcesDialog.addEventListener("click", (event) => {
     // A click on the close button, or on the backdrop outside the dialog box, closes it.
@@ -177,6 +235,8 @@ async function start() {
     classOf: (code) => classes.get(code),
     standardView: () => shown.standardView,
     featureState: (code) => map.getFeatureState({ source: "areas", sourceLayer: "areas", id: code }),
+    overlayShown: () => map.getLayoutProperty("cluster-fill", "visibility") === "visible",
+    bounds: () => map.getBounds().toArray(),
     pointOf: (lngLat) => {
       const point = map.project(lngLat);
       return [point.x, point.y];

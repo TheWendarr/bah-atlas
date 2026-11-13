@@ -12,6 +12,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, stat
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { areaBounds } from "./tools/area_bounds.mjs";
 
 const WEB = dirname(fileURLToPath(import.meta.url));
 const DIST = join(WEB, "dist");
@@ -108,6 +109,12 @@ const workerSource = join(WEB, "node_modules", "maplibre-gl", "dist", "maplibre-
 const workerName = `maplibre-gl-worker-${sha256(readFileSync(workerSource)).slice(0, 8)}.mjs`;
 copyFileSync(workerSource, join(DIST, "assets", workerName));
 
+// C15, C17: each area's bounding box, from the archive just checked above. It is named by
+// its content, like the scripts, and loaded only when the map moves to an area.
+const bounds = JSON.stringify(await areaBounds(join(DELIVERY, areasName)));
+const boundsName = `area-bounds-${sha256(bounds).slice(0, 8)}.json`;
+writeFileSync(join(DIST, "assets", boundsName), bounds);
+
 const SITE = {
   year,
   dataPath,
@@ -115,6 +122,7 @@ const SITE = {
   basemapPath: "basemap/",
   basemapUrl: dev ? localBasemap : `${site.tilesOrigin}/${site.basemap}`,
   workerPath: `assets/${workerName}`,
+  boundsPath: `assets/${boundsName}`,
 };
 
 const result = await build({

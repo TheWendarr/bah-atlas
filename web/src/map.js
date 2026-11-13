@@ -3,6 +3,7 @@
 import { MapLibreMap, addProtocol, setWorkerUrl } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import { NO_CLASS } from "./classify.js";
+import { NO_VALUE, OUT_OF_SCOPE } from "./research.js";
 
 const SOURCE = "areas";
 // D29: the map opens on the 48 states; the jump buttons reach the rest.
@@ -148,6 +149,63 @@ export function addPinnedLayer(map) {
     },
     "area-selected",
   );
+}
+
+// C16: the cluster overlay. Its own fill sits above the choropleth and its FDR outline
+// above the area outlines; both stay hidden until a research view asks for them. Areas
+// outside the analysis are left unfilled, so no cluster is ever drawn for them (ICD 9,
+// must not 3). Colours and the outline come from B21 `clusters`.
+export function addClusterLayers(map, { colors, noDataColor, fdr }) {
+  const fill = ["match", ["coalesce", ["feature-state", "cluster"], OUT_OF_SCOPE], NO_VALUE, noDataColor];
+  colors.forEach((color, index) => fill.push(index, color));
+  fill.push("transparent");
+  map.addLayer(
+    {
+      id: "cluster-fill",
+      type: "fill",
+      source: SOURCE,
+      "source-layer": SOURCE,
+      layout: { visibility: "none" },
+      paint: { "fill-color": fill },
+    },
+    "mha-outline",
+  );
+  map.addLayer(
+    {
+      id: "cluster-fdr",
+      type: "line",
+      source: SOURCE,
+      "source-layer": SOURCE,
+      layout: { visibility: "none" },
+      paint: {
+        "line-color": fdr.outline_color,
+        "line-width": fdr.outline_width,
+        "line-opacity": ["case", ["boolean", ["feature-state", "fdr"], false], 1, 0],
+      },
+    },
+    "area-pinned",
+  );
+}
+
+// The choropleth stays in place, transparent, while the overlay shows: it is the layer a
+// click is read from, and it returns at once when the overlay is turned off.
+export function setOverlay(map, visible) {
+  const visibility = visible ? "visible" : "none";
+  if (map.getLayoutProperty("cluster-fill", "visibility") === visibility) return;
+  map.setLayoutProperty("cluster-fill", "visibility", visibility);
+  map.setLayoutProperty("cluster-fdr", "visibility", visibility);
+  map.setPaintProperty("area-fill", "fill-opacity", visible ? 0 : 1);
+}
+
+// Writes only the areas whose cluster or FDR mark changed.
+export function applyClusters(map, clusters, previous = new Map()) {
+  for (const [code, value] of clusters) {
+    const before = previous.get(code);
+    if (before?.index !== value.index || before?.fdr !== value.fdr) {
+      map.setFeatureState({ source: SOURCE, sourceLayer: SOURCE, id: code }, { cluster: value.index, fdr: value.fdr });
+    }
+  }
+  return clusters;
 }
 
 export function setPinned(map, codes, previous = []) {

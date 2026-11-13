@@ -24,6 +24,7 @@ test("the initial state is the B21 default view", () => {
     metric: "adequacy_ratio",
     selected: null,
     compare: [],
+    overlay: false,
   });
 });
 

@@ -13,9 +13,11 @@
     "pmtiles": "4.5.0"
   },
   "devDependencies": {
+    "@mapbox/vector-tile": "3.0.0",
     "@maplibre/maplibre-gl-style-spec": "26.5.1",
     "@protomaps/basemaps": "5.7.2",
     "esbuild": "0.28.2",
+    "pbf": "5.1.2",
     "playwright": "1.63.0",
     "wrangler": "4.157.0"
   }

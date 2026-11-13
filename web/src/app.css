@@ -588,3 +588,135 @@ body {
 
   .sources-facts dd { margin-bottom: 4px; }
 }
+
+/* C16: the overlay switch, its legend and the panel's cluster result. */
+.control-overlay { justify-content: flex-end; }
+
+.overlay-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.overlay-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+
+.overlay-option:has(input:disabled) { color: var(--ink-muted); cursor: not-allowed; }
+
+.overlay-option:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.overlay-hint { max-width: 220px; font-size: 11px; line-height: 1.3; color: var(--ink-muted); }
+
+.overlay-hint[hidden] { display: none; }
+
+.legend-swatch-empty { background: var(--ground); border: 1px dashed var(--ink-muted); }
+
+.legend-swatch-outline { background: var(--ground); }
+
+.panel-cluster {
+  margin-top: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: #f4f6f7;
+  border-radius: 6px;
+}
+
+.panel-cluster p { margin: 3px 0 0; }
+
+.panel-cluster-p { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  /* The cluster legend has no ramp: its list shows, at the phone's legend width. */
+  .legend.legend-clusters .legend-title { display: block; font-size: 11px; }
+
+  .legend.legend-clusters { right: 8px; max-width: none; }
+
+  .legend.legend-clusters .legend-list {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 8px;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .legend.legend-clusters .legend-list li { margin: 1px 0; font-size: 10.5px; line-height: 1.2; }
+
+  .legend.legend-clusters .legend-swatch { width: 12px; height: 10px; }
+
+  .overlay-option { min-height: 42px; }
+
+  .overlay-hint { max-width: none; }
+}
+
+/* C15: ZIP search, at the right of the header. */
+.search { margin-left: auto; }
+
+.search[hidden] { display: none; }
+
+.zip-search { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 13px; }
+
+.zip-label { font-weight: 600; color: var(--ink-muted); }
+
+.zip-search input {
+  width: 7.5em;
+  min-height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  border: 1px solid #b9c0c3;
+  border-radius: 6px;
+}
+
+.zip-search button,
+.footer-export {
+  min-height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid #b9c0c3;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.zip-search button:hover,
+.footer-export:hover { background: #f1f3f4; }
+
+.zip-search input:focus-visible,
+.zip-search button:focus-visible,
+.footer-export:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.zip-result { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--ink-muted); text-align: right; }
+
+.zip-result:empty { display: none; }
+
+@media (max-width: 640px) {
+  .site-tagline { display: none; }
+
+  .search { flex: 1 1 auto; }
+
+  .zip-search { justify-content: flex-end; }
+
+  .zip-search input { width: 6.5em; min-height: 36px; }
+
+  .zip-search button { min-height: 36px; }
+
+  .zip-result { text-align: left; }
+
+  .footer-export {
+    display: inline-block;
+    min-height: 24px;
+    margin-left: 6px;
+    padding: 0 2px;
+    text-decoration: underline;
+    background: none;
+    border: 0;
+  }
+}

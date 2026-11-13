@@ -10,6 +10,9 @@ export function initialState(ui) {
     metric: ui.default_metric,
     selected: null,
     compare: [],
+    // C16: the reader's choice to show the cluster overlay. It shows only on a research
+    // view (research.js), so the choice is kept while another view is open.
+    overlay: false,
   };
 }
 
@@ -44,6 +47,10 @@ export function validate(ui, state) {
   const compare = [...new Set(pinned.filter((code) => code in ui.areas))].slice(0, MAX_COMPARE);
   if (!Array.isArray(next.compare) || compare.length !== next.compare.length) corrected.push("compare");
   next.compare = compare;
+  if (typeof next.overlay !== "boolean") {
+    next.overlay = false;
+    corrected.push("overlay");
+  }
   return { state: next, corrected };
 }
 
