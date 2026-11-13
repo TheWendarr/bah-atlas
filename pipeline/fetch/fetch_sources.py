@@ -80,9 +80,9 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import http.client
 import json
 import os
-import socket
 import sys
 import time
 import urllib.error
@@ -359,15 +359,8 @@ SOURCES: list[Source] = [
         min_bytes=1_000_000,
         notes="D19 buy-mode bedroom ratio, n BR / 2 BR per ZIP. Third-party: not redistributed.",
     ),
-    Source(
-        node_id="A10",
-        name="BEA Regional Price Parities",
-        filename="(n/a)",
-        acquisition="api",
-        landing_url="https://apps.bea.gov/api/",
-        notes="Pull the Regional dataset (RPP table) via the BEA API; iTable URLs are "
-              "the fragile ones. Needs a free BEA API key. [optional]",
-    ),
+    # A10 (BEA Regional Price Parities) was scrapped with B25 on 18 Oct 2026 (reduced H2, D8),
+    # so it has no entry: listed here, every `make fetch` reported it as action needed.
     Source(
         node_id="A11",
         name="Protomaps basemap (OSM-derived)",
@@ -412,8 +405,13 @@ def looks_like_html(head: bytes) -> bool:
 
 def redact(text: str, source: Source) -> str:
     """Remove an API key from anything that may be printed or recorded."""
-    key = os.environ.get(source.api_key_env or "", "")
-    return text.replace(key, "REDACTED") if key else text
+    key = os.environ.get(source.api_key_env or "", "").strip()
+    if not key:
+        return text
+    # request_url() sends the key URL-quoted, so an error that echoes the URL can hold either form.
+    for form in {key, urllib.parse.quote(key)}:
+        text = text.replace(form, "REDACTED")
+    return text
 
 
 def request_url(source: Source) -> str:
@@ -460,19 +458,34 @@ def validate_file(path: Path, source: Source) -> tuple[bool, str]:
 
 # --- download ----------------------------------------------------------------
 
+class IncompleteDownload(OSError):
+    """The connection closed before the whole body arrived."""
+
+
 def _stream_to(url: str, tmp: Path, timeout: int) -> None:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
     with urllib.request.urlopen(req, timeout=timeout) as resp, tmp.open("wb") as out:
         # Some CDNs (Zillow's included) can serve objects gzip-encoded even when the
         # client did not ask; urllib does not decode that, so do it here.
         body = resp
-        if (resp.headers.get("Content-Encoding") or "").lower() == "gzip":
+        encoding = (resp.headers.get("Content-Encoding") or "").lower()
+        if encoding == "gzip":
             body = gzip.GzipFile(fileobj=resp)
+        received = 0
         while True:
             chunk = body.read(CHUNK)
             if not chunk:
                 break
             out.write(chunk)
+            received += len(chunk)
+        # A read in chunks returns short, with no error, when the server drops the connection
+        # part-way. The file would then be a valid-looking CSV with rows missing, and its
+        # SHA-256 would be recorded as the source. Content-Length says how much was promised.
+        # (It counts encoded bytes, so it is not compared for a gzip body: a cut-off gzip
+        # stream fails to decode, and that error is retried like any other.)
+        declared = resp.headers.get("Content-Length") or ""
+        if not encoding and declared.isdigit() and received != int(declared):
+            raise IncompleteDownload(f"connection closed after {human(received)} of {human(int(declared))}")
 
 
 def download_direct(source: Source, dest_dir: Path, *, force: bool,
@@ -514,7 +527,10 @@ def download_direct(source: Source, dest_dir: Path, *, force: bool,
                 raise RuntimeError(redact(f"HTTP {e.code} {e.reason} — check the URL"
                                           f"{' and the API key' if source.api_key_env else ''}", source)) from None
             last_err = e
-        except (urllib.error.URLError, socket.timeout, TimeoutError) as e:
+        except (OSError, http.client.HTTPException, EOFError) as e:
+            # OSError covers URLError, timeouts, resets while the body streams and a
+            # cut-off download; EOFError is a gzip body that ends early. Before, only an
+            # error raised while connecting was retried, and the rest left a .part file.
             last_err = e
         if attempt < retries:
             time.sleep(2 ** (attempt - 1))

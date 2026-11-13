@@ -114,8 +114,20 @@ def ratio_by_mha(num: dict[str, float], den: dict[str, float], members: dict[str
         out[m] = (statistics.median(vals), "zip", len(vals)) if vals else (national, "national", 0)
     stats = {"zips_with_both": len(per_zip), "national_median": round(national, 4),
              "mhas_national_fallback": sum(v[1] == "national" for v in out.values()),
+             # A median over one ZIP is that ZIP's ratio: nothing limits an odd value there.
+             "mhas_on_one_zip": sorted(m for m, v in out.items() if v[2] == 1),
              "zips_outside_range": len(bad)}
     return out, national, stats
+
+
+def order_breaks(values: dict[str, float | None]) -> list[str]:
+    """Where one area's home types leave DoD's order (A14: cheapest first), as 'apt1 > apt2'.
+
+    Equal values are in order: with keep_dod_order three types can share one level.
+    A type without a value is skipped.
+    """
+    priced = [(t, values[t]) for t in ht.TYPE_IDS if values.get(t) is not None]
+    return [f"{a} > {b}" for (a, va), (b, vb) in zip(priced, priced[1:]) if va > vb + 0.005]
 
 
 def main() -> None:
@@ -150,7 +162,10 @@ def main() -> None:
     spec = args.window or oc.window_from_b9(args.zhvi)
     if spec is None:
         agg.die(TOOL, f"mha_zhvi_manifest.json not found beside {args.zhvi} (run `make zhvi`)")
-    window = agg.parse_window(spec)
+    try:
+        window = agg.parse_window(spec)
+    except ValueError as e:
+        agg.die(TOOL, str(e))
     print(f"B30 ownership cost by home type: B9 months {window[0]} to {window[1]}")
 
     crosswalk, cw_stats = agg.load_crosswalk(args.crosswalk, TOOL)
@@ -262,7 +277,7 @@ def main() -> None:
         "mhas_condo_above_single_family": len(inverted),
         "mhas_floored_to_condo": len(floored)}
 
-    rate, weeks, rates = oc.read_pmms(args.pmms, window)
+    rate, _, rates = oc.read_pmms(args.pmms, window)
     n_months = int(loan["term_years"] * 12)
     fee_mult = (1 + loan["funding_fee_share"]) if loan["funding_fee_financed"] else 1.0
     down, mi_share = loan["down_payment_share"], loan["mortgage_insurance_annual_share"]
@@ -350,6 +365,22 @@ def main() -> None:
     if inverted and not keep_order:
         warnings.append(f"{len(inverted)} MHA(s) have a condo/co-op factor above the single-family factor, so "
                         f"their townhouse is not between the two in DoD's order: {', '.join(sorted(inverted)[:10])}")
+    # The medians above can be in order while single MHAs are not: keep_dod_order holds the three
+    # buildings in order at equal bedrooms, and nothing holds the bedroom ladder in order.
+    values_by_mha: dict[str, dict[str, float | None]] = {}
+    for r in rows:
+        values_by_mha.setdefault(r["mha"], {})[r["home_type"]] = (float(r["home_value"]) if r.get("home_value")
+                                                                  else None)
+    out_of_order = {m: breaks for m in mhas if (breaks := order_breaks(values_by_mha[m]))}
+    if out_of_order:
+        listed = "; ".join(f"{m} ({', '.join(b)})" for m, b in list(out_of_order.items())[:10])
+        warnings.append(f"{len(out_of_order)} MHA(s) price a smaller or lower-ranked home above the next one in "
+                        f"DoD's order, from the MHA's own bedroom ratios: {listed}")
+    thin = sorted({m for k, s in stats.items() if k != "building_townhouse" for m in s["mhas_on_one_zip"]})
+    if thin:
+        warnings.append(f"{len(thin)} MHA(s) take at least one type or bedroom ratio from a single ZIP, where "
+                        f"the MHA median limits nothing: {', '.join(thin[:15])}"
+                        + (f" and {len(thin) - 15} more (ratios.*.mhas_on_one_zip)" if len(thin) > 15 else ""))
     warnings += [f"{s['zips_outside_range']} ZIP {k.replace('_', ' ')} ratio(s) outside {FACTOR_RANGE}; kept, "
                  "the MHA median limits their pull" for k, s in stats.items() if s.get("zips_outside_range")]
 
@@ -384,6 +415,8 @@ def main() -> None:
             "cost": "B11 model (config/ownership.json): P&I + tax + insurance + MI, plus B29 utilities",
         },
         "ratios": stats,
+        "dod_order": {"rule": "home_value rises (or holds) from apt1 to sfh4 within each MHA",
+                      "mhas_out_of_order": out_of_order},
         "reference_check": {**reference_check, "series": measured,
                             "reading": "series ZHVI / n-bedroom ZHVI per ZIP, median; the one nearest 1.0 (log "
                                        "scale) is the bedroom count the series stands for. B30 stops if a "

@@ -133,6 +133,28 @@ class GeometryTest(unittest.TestCase):
         self.assertIn("more than one area", p.stderr)
         self.assertIn("TX001", p.stderr)
 
+    def test_b6_stops_on_a_zcta_shared_by_two_mhas(self) -> None:
+        # The same rule for B6: a bridge that puts a TX002 ZIP into TX001's ZCTA.
+        two = write_csv(self.dir / "two_mhas.csv", ["zip", "mha"],
+                        [("00001", "TX001"), ("00002", "TX001"), ("00003", "TX002")])
+        bridge = write_csv(self.dir / "bridge.csv", ["zip", "zcta"], [("00003", "00001")])
+        p = self.run_geometry("--crosswalk", str(two), "--zip-to-zcta", str(bridge), "--out", str(self.dir / "x.gpkg"))
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("more than one MHA", p.stderr)
+        self.assertIn("TX001, TX002", p.stderr)
+        self.assertFalse((self.dir / "x.gpkg").exists())
+
+    def test_b6_accepts_a_bridge_that_keeps_mhas_apart(self) -> None:
+        # ZIP 00007 has no ZCTA of its own; the bridge places it in TX001's ZCTA 00002.
+        b2 = write_csv(self.dir / "with_po_box.csv", ["zip", "mha"],
+                       [("00001", "TX001"), ("00002", "TX001"), ("00007", "TX001")])
+        bridge = write_csv(self.dir / "bridge.csv", ["zip", "zcta"], [("00007", "00002")])
+        out = self.dir / "mha_2026.gpkg"
+        p = self.run_geometry("--crosswalk", str(b2), "--zip-to-zcta", str(bridge), "--out", str(out))
+        self.assertEqual(p.returncode, 0, p.stderr)
+        m = json.loads((self.dir / "mha_2026_geometry_manifest.json").read_text())
+        self.assertEqual((m["counts"]["mhas"], m["counts"]["zips_without_zcta"]), (1, 0))
+
 
 if __name__ == "__main__":
     unittest.main()

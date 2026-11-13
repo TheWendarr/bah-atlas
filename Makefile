@@ -203,7 +203,7 @@ regression: density
 		--growth-years $(GROWTH_YEARS) --sensitivity-growth-years $(SENS_GROWTH_YEARS) \
 		--seed $(SEED) --out $(SPATIAL)
 
-# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31; docs/data-contract.md) ---
+# --- 2.7 Layer 2 -> Layer 3 handoff (B22, B20, B21, B27, B31, B32; docs/data-contract.md) ---
 # Writes the seven delivered files and SHA256SUMS into $(HANDOFF), then validates them
 # against the contract (checks 3-8). Runs `verify` first, so the hash chain behind the
 # build is proven before B22 records it. A full rebuild from data/raw is

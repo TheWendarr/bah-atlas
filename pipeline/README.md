@@ -7,8 +7,9 @@ artifact as-is, validate loudly, emit stable outputs plus lineage.
 
 - `fetch_sources.py` — registry of every Layer 1 source with its acquisition class
   (direct / manual / api / build). Auto-pulls the direct ones into `data/raw/`
-  atomically, rejects HTML error pages and truncated files, and records provenance
-  in `data/raw/fetch_manifest.json`. Stdlib only.
+  atomically, rejects HTML error pages, files under their size floor and downloads
+  that end before the length the server declared, retries a transfer that fails
+  part-way, and records provenance in `data/raw/fetch_manifest.json`. Stdlib only.
 
 ## `ingest/` — endpoint translators
 
@@ -18,6 +19,8 @@ and warnings.
 
 - `ingest_bah_ascii.py` — DTMO BAH ASCII release (`BAH-ASCII-YYYY.zip`).
   Emits `zip_mha.csv`, `zip_mha_geo.csv`, `mha_names.csv`, `bah_rates.csv`.
+  Stops if a rate file does not hold exactly the 27 pay-grade columns, or if
+  the members of the zip are from different years.
 
 - `ingest_rate_components.py` — DTMO BAH Rate Component Breakdown PDF (A6 -> B5).
   Emits `rate_components.csv` (rent and utilities share per MHA) + manifest;
@@ -83,7 +86,9 @@ go to `data/interim/benchmarks_YYYY/`.
   townhouse sits halfway between the condo/co-op and single-family factors
   (D22). The typical size of each Zillow series is re-measured every run and
   the build stops if it no longer matches `config/ownership.json`; the
-  all-homes value reproduces B11 (checked on every run).
+  all-homes value reproduces B11 (checked on every run). The manifest lists, as
+  warnings, every MHA whose six home values leave DoD's order (`dod_order`) and
+  every MHA that takes a ratio from a single ZIP (`ratios.*.mhas_on_one_zip`).
 
 - `density_to_mha.py` — B24: population density per MHA (urbanicity for the
   B19 regression, reduced H2) from the A9 population and the A2 ZCTA land areas,

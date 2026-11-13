@@ -248,9 +248,8 @@ def main() -> None:
 
     cfg = load_config(args.config)
     loan_cfg, tax_cfg, ins_cfg = cfg["loan"], cfg["property_tax"], cfg["insurance"]
-    window_spec = args.window or window_from_b9(args.zhvi) or agg.default_window(args.profiles)
     try:
-        window = agg.parse_window(window_spec)
+        window = agg.parse_window(args.window or window_from_b9(args.zhvi) or agg.default_window(args.profiles))
     except ValueError as e:
         agg.die(TOOL, str(e))
 

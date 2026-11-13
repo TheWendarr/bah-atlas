@@ -181,6 +181,7 @@ def main() -> None:
         total = r["rent_pct"] + r["utilities_pct"]
         if abs(total - 100) > 1:
             problems.append(f"{r['mha']}: rent {r['rent_pct']}% + utilities {r['utilities_pct']}% = {total}%")
+            continue        # reported below; a row of 0% and 0% would otherwise divide by zero here
         r["rent_share"] = round(r["rent_pct"] / total, 4)
         r["utilities_share"] = round(1 - r["rent_share"], 4)
 

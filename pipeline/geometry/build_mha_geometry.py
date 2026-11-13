@@ -199,6 +199,13 @@ def main() -> None:
     # ZCTA it falls in, so the join below lands the PO-box / point ZIPs too.
     if args.zip_to_zcta:
         xwalk = apply_bridge(xwalk, args.zip_to_zcta)
+        # A bridge can send ZIPs of two MHAs to one ZCTA, and the dissolve would then give that
+        # ground to both polygons. B28 has stopped on this from the start; B6 did not check.
+        shared = shared_zctas(xwalk)
+        if shared:
+            sample = "; ".join(f"{z}: {', '.join(c)}" for z, c in list(shared.items())[:10])
+            die(f"{len(shared)} ZCTA(s) belong to more than one MHA under {Path(args.zip_to_zcta).name}, "
+                f"so polygons would overlap: {sample}")
 
     zcta = load_zcta(args.zcta)
 

@@ -171,9 +171,11 @@ identity check, warnings.
 `mha_ownership_by_type_manifest.json`: inputs and SHA-256 (B9, A4, the six A16
 files, B1, B29, A8 rollup, A7, B11, A14), config SHA-256, window and rate, the
 ratio statistics (ZIPs with both series, national median, MHAs on the national
-ratio, size-matched medians), the configured and measured size of each Zillow
-series (`reference_check.series`, D34), limitations, coverage per type, the B11
-identity check, warnings.
+ratio, MHAs whose ratio rests on one ZIP in `mhas_on_one_zip`, size-matched
+medians), the MHAs whose home values leave DoD's order from `apt1` to `sfh4`
+(`dod_order.mhas_out_of_order`, each with the pairs that break it), the configured
+and measured size of each Zillow series (`reference_check.series`, D34),
+limitations, coverage per type, the B11 identity check, warnings.
 
 ### `mha_tax_insurance.csv` (A8 rollup for B11; `make taxins`)
 One row per real MHA, from `tax_insurance_to_mha.py`.

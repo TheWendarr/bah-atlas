@@ -3,14 +3,20 @@ Tests for the fetcher's API sources (pipeline/fetch/fetch_sources.py): the Censu
 key is added to the request only, never recorded or printed, and an API answer
 that is not a Census table is rejected. No network: the download is replaced by a
 function that writes a canned response. Stdlib only.
+
+StreamTest runs the real download against a server on 127.0.0.1: a body cut off
+part-way must not be kept, and a failure while the body streams is retried.
 """
 
 from __future__ import annotations
 
+import http.server
 import json
 import os
+import socket
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -164,3 +170,95 @@ class MultiFileNodeTest(unittest.TestCase):
     def test_unknown_node_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(fs.main(["A17", "--dest", tmp]), 2)
+
+
+CSV = b"RegionName,RegionType,2026-01-31\n" + b"".join(b"%05d,zip,1500.0\n" % i for i in range(1, 2001))
+
+
+class StreamTest(unittest.TestCase):
+    """The real _stream_to, against a local server whose behaviour each test sets."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dest = Path(self.tmp.name)
+        self.plan: list[str] = []          # one entry per request: "full", "cut" or "503"
+        plan = self.plan
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                step = plan.pop(0) if plan else "full"
+                if step == "503":
+                    self.send_error(503)
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "text/csv")
+                self.send_header("Content-Length", str(len(CSV)))
+                self.end_headers()
+                self.wfile.write(CSV if step == "full" else CSV[: len(CSV) // 2])
+                self.wfile.flush()
+                if step == "cut":           # drop the connection with half the body sent
+                    self.connection.shutdown(socket.SHUT_RDWR)
+
+            def log_message(self, *_args) -> None:
+                pass
+
+        self.server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.source = fs.Source(node_id="A3", name="ZORI test", filename="zori_test.csv", acquisition="direct",
+                                url=f"http://127.0.0.1:{self.server.server_address[1]}/zori_test.csv",
+                                min_bytes=1000)
+        env = mock.patch.dict(os.environ, {"no_proxy": "127.0.0.1", "NO_PROXY": "127.0.0.1"})
+        env.start()
+        self.addCleanup(env.stop)
+        sleep = mock.patch.object(fs.time, "sleep")
+        sleep.start()
+        self.addCleanup(sleep.stop)
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.tmp.cleanup()
+
+    def fetch(self, retries: int) -> dict:
+        return fs.download_direct(self.source, self.dest, force=False, timeout=5, retries=retries)
+
+    def test_a_complete_download_is_kept(self) -> None:
+        rec = self.fetch(retries=1)
+        self.assertEqual(rec["status"], "fetched")
+        self.assertEqual((self.dest / "zori_test.csv").read_bytes(), CSV)
+        self.assertEqual(rec["bytes"], len(CSV))
+
+    def test_a_cut_off_download_is_not_kept(self) -> None:
+        # Half the body is still above the size floor and still reads as a CSV, so only the
+        # byte count against Content-Length can tell it from the whole file.
+        self.plan += ["cut", "cut"]
+        with self.assertRaises(RuntimeError) as cm:
+            self.fetch(retries=2)
+        self.assertIn("connection closed after", str(cm.exception))
+        self.assertEqual(list(self.dest.iterdir()), [])        # neither the file nor its .part
+
+    def test_a_cut_off_download_is_retried(self) -> None:
+        self.plan += ["cut"]
+        rec = self.fetch(retries=2)
+        self.assertEqual((self.dest / "zori_test.csv").read_bytes(), CSV)
+        self.assertEqual(rec["sha256"], fs.sha256_file(self.dest / "zori_test.csv"))
+
+    def test_a_server_error_is_retried(self) -> None:
+        self.plan += ["503"]
+        self.assertEqual(self.fetch(retries=2)["status"], "fetched")
+
+
+class RegistryHousekeepingTest(unittest.TestCase):
+    def test_a_scrapped_node_is_not_asked_for(self) -> None:
+        # A10 (BEA RPP) was scrapped on 18 Oct 2026; it must not come back as "action needed".
+        self.assertNotIn("A10", [s.node_id for s in fs.SOURCES])
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(fs.main(["A10", "--dest", tmp]), 2)
+
+    def test_a_key_is_redacted_in_the_form_the_request_carried(self) -> None:
+        key = "ab/cd+ef"                    # quoted in the URL as ab/cd%2Bef
+        with mock.patch.dict(os.environ, {"CENSUS_API_KEY": key}):
+            url = fs.request_url(api_source())
+            self.assertNotIn(key, url)
+            self.assertNotIn("ef", fs.redact(f"cannot reach {url}", api_source()).split("key=")[1])
+            self.assertNotIn(key, fs.redact(f"bad key {key}", api_source()))

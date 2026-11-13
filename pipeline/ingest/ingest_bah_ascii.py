@@ -101,18 +101,22 @@ def _read_member(zf: zipfile.ZipFile, name: str) -> str:
 
 
 def _locate_members(zf: zipfile.ZipFile) -> tuple[dict, str]:
-    found, year = {}, None
+    found, years = {}, {}
     for info in zf.infolist():
         base = Path(info.filename).name
         for key, pat in MEMBER_PATTERNS.items():
             m = pat.fullmatch(base)
             if m and key not in found:      # first canonical match wins
                 found[key] = info.filename
-                year = year or m.group(1)
+                years[key] = m.group(1)
     missing = [k for k in MEMBER_PATTERNS if k not in found]
     if missing:
         raise SystemExit(f"Zip is missing expected members: {missing}")
-    return found, year
+    if len(set(years.values())) != 1:
+        # A crosswalk of one year joined to the rates of another would pass every later check.
+        raise SystemExit(f"Zip members are from different years: "
+                         f"{ {found[k]: '20' + y for k, y in years.items()} }")
+    return found, years["crosswalk"]
 
 
 def parse_crosswalk(text: str) -> pd.DataFrame:
@@ -138,16 +142,22 @@ def parse_names(text: str) -> pd.DataFrame:
 
 
 def parse_rates(text: str, has_deps: bool) -> pd.DataFrame:
+    # Count the fields before naming them. Given `names`, pandas fits any file to them
+    # without complaint: with a column too many it takes the MHA codes as the row index and
+    # shifts every rate one grade to the left; with a column too few it fills the last
+    # grade with blanks. Either way the count below would always have matched.
+    counts = {len(line.split(",")) for line in text.splitlines() if line.strip()}
+    expected = len(PAY_GRADES) + 1
+    if counts != {expected}:
+        found = ", ".join(str(n - 1) for n in sorted(counts)) or "no"
+        raise SystemExit(
+            f"Rate file has {found} pay-grade columns; script expects "
+            f"{len(PAY_GRADES)}. The release schema changed -- update PAY_GRADES."
+        )
     wide = pd.read_csv(
         io.StringIO(text), header=None,
         names=["mha"] + PAY_GRADES, dtype={"mha": str},
     )
-    ncols = wide.shape[1] - 1
-    if ncols != len(PAY_GRADES):
-        raise SystemExit(
-            f"Rate file has {ncols} pay-grade columns; script expects "
-            f"{len(PAY_GRADES)}. The release schema changed -- update PAY_GRADES."
-        )
     wide["mha"] = wide["mha"].str.strip().str.upper()
     long = wide.melt(id_vars="mha", var_name="pay_grade", value_name="monthly_rate")
     long["has_dependents"] = has_deps

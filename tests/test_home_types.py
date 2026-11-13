@@ -91,6 +91,31 @@ class TestBlend(unittest.TestCase):
         self.assertEqual(ht.describe(ht.standard(cfg, "O7", True), labels), "a 4 BR single-family home, plus 2%")
 
 
+class TestOrderAndThinRatios(unittest.TestCase):
+    """B30's per-MHA checks: the medians over all MHAs can look right while one MHA does not."""
+
+    def test_order_breaks_names_each_inversion(self) -> None:
+        import ownership_by_type as ob
+        ladder = {"apt1": 100.0, "apt2": 120.0, "th2": 120.0, "th3": 150.0, "sfh3": 150.0, "sfh4": 180.0}
+        self.assertEqual(ob.order_breaks(ladder), [])                       # equal levels are in order
+        # A 1 BR priced above a 2 BR, as the 2026 delivery has in three MHAs.
+        self.assertEqual(ob.order_breaks({**ladder, "apt1": 130.0}), ["apt1 > apt2"])
+        self.assertEqual(ob.order_breaks({**ladder, "apt1": 130.0, "sfh4": 140.0}), ["apt1 > apt2", "sfh3 > sfh4"])
+        self.assertEqual(ob.order_breaks({t: None for t in ladder}), [])    # no home value, nothing to order
+        self.assertEqual(ob.order_breaks({**ladder, "apt2": None, "apt1": 125.0}), ["apt1 > th2"])
+
+    def test_a_ratio_from_one_zip_is_reported(self) -> None:
+        import ownership_by_type as ob
+        members = {"AA001": ["00501", "00502"], "AA002": ["10001", "10002"], "AA003": ["20001"]}
+        num = {"00501": 80.0, "00502": 70.0, "10001": 20.0}                 # AA002 has one ZIP with both series
+        den = {"00501": 100.0, "00502": 100.0, "10001": 100.0, "10002": 100.0}
+        out, national, stats = ob.ratio_by_mha(num, den, members, "test")
+        self.assertEqual(out["AA002"], (0.2, "zip", 1))                     # one ZIP decides the MHA
+        self.assertEqual(stats["mhas_on_one_zip"], ["AA002"])
+        self.assertEqual(out["AA003"], (national, "national", 0))           # none: the fallback, not counted
+        self.assertEqual(stats["mhas_national_fallback"], 1)
+
+
 class TestMetroNames(unittest.TestCase):
     def test_principal_city_keys(self) -> None:
         import rent_by_type as rb
@@ -311,6 +336,10 @@ class TestChain(unittest.TestCase):
         self.assertEqual(man["reference_check"]["all_homes_over_3br"]["median"], 1.0)
         self.assertEqual({k: v["nearest_bedrooms"] for k, v in man["reference_check"]["series"].items()},
                          {"all_homes": 3, "condo": 2, "single_family": 3})
+        # Every MHA in the fixture is in DoD's order, and none rests on a single ZIP.
+        self.assertEqual(man["dod_order"]["mhas_out_of_order"], {})
+        self.assertEqual(man["ratios"]["bedrooms_1"]["mhas_on_one_zip"], [])
+        self.assertFalse([w for w in man["warnings"] if "DoD's order" in w or "single ZIP" in w])
 
     def test_b30_keeps_dod_order_where_condos_cost_more(self) -> None:
         # AA002 gains condo ZIPs at 0.85 x all homes: at equal bedrooms 0.85 x 1.25 = 1.0625, above its

@@ -78,11 +78,19 @@ def parse_window(spec: str) -> tuple[str, str]:
 
 
 def default_window(profiles_path: Path) -> str:
-    """The calendar year of the BAH release in config/profiles.json (A12)."""
+    """The calendar year of the BAH release in config/profiles.json (A12).
+
+    Raises ValueError when the file cannot give that year. It used to fall back to the
+    year on the clock, so a missing or broken config moved the benchmark window to the
+    current year without a word once the BAH year had passed.
+    """
     try:
         year = json.loads(profiles_path.read_text(encoding="utf-8"))["bah_year"]
-    except (OSError, KeyError, json.JSONDecodeError):
-        year = datetime.now(timezone.utc).year
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as e:
+        raise ValueError(f"no bah_year in {profiles_path} ({type(e).__name__}: {e}); pass --window "
+                         "YYYY-MM:YYYY-MM or fix the config (make check-config)") from None
+    if not isinstance(year, int) or isinstance(year, bool) or not 2000 <= year <= 2100:
+        raise ValueError(f"bah_year in {profiles_path} is {year!r}, not a year; pass --window or fix the config")
     return f"{year}-01:{year}-12"
 
 

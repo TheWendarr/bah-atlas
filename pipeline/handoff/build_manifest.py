@@ -123,7 +123,7 @@ def main() -> None:
         "spatial": {k: spatial.get("method", {}).get(k) for k in ("permutations", "seed", "alpha")},
         "outputs": {"B7": {"file": b7["output_file"], "sha256": b7["output_sha256"],
                            "features_by_class": b7.get("features_by_class")}},
-        "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31 -> SHA256SUMS",
+        "build_order": "stage manifests, B28 -> B7 -> B22 -> B20, B21, B27, B31, B32 -> SHA256SUMS",
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

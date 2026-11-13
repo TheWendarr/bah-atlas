@@ -161,9 +161,11 @@ def main() -> None:
     agg.write_manifest(args.out / "standards_check_manifest.json", manifest)
 
     print(f"A14 standards check: {len(cells)} cells x {len(mhas)} MHAs against the 2026 rates")
-    worst = max((e for e in cells if e.get("difference") is not None), key=lambda e: abs(e["difference"]))
-    print(f"  largest difference: {worst['grade']} {worst['dependents']} A14 {worst['share']} vs implied "
-          f"{worst['implied_share_median']}")
+    worst = max((e for e in cells if e.get("difference") is not None), key=lambda e: abs(e["difference"]),
+                default=None)
+    if worst:
+        print(f"  largest difference: {worst['grade']} {worst['dependents']} A14 {worst['share']} vs implied "
+              f"{worst['implied_share_median']}")
     print(f"  {floor_cells} MHA cells set by the 75% without-dependents floor (left out)")
     for e in noted:
         print(f"  note: {e['grade']} {e['dependents']}: A14 {e['share']}, the rates imply {e['implied_share_median']}")

@@ -110,6 +110,29 @@ class TestZillow(Fixture):
         self.assertIn("00501", zips)                                          # zero-padded
         self.assertNotIn("30001", zips)
 
+    def test_the_default_window_is_the_bah_year_in_the_config(self) -> None:
+        profiles = self.d / "profiles.json"
+        profiles.write_text(json.dumps({"bah_year": 2026}), encoding="utf-8")
+        p = run("zillow_to_mha.py", "--series", "zori", "--csv", str(self.zori), "--crosswalk", str(self.crosswalk),
+                "--rate-components", str(self.components), "--out", str(self.out), "--profiles", str(profiles))
+        self.assertEqual(p.returncode, 0, p.stderr)
+        man = json.loads((self.out / "mha_zori_manifest.json").read_text())
+        self.assertEqual(man["window_requested"], "2026-01:2026-12")
+
+    def test_no_window_and_no_bah_year_stops(self) -> None:
+        # It used to fall back to the year on the clock, which moves the window once the BAH year is over.
+        for name, text in (("missing.json", None), ("no_year.json", "{}"), ("broken.json", "{not json"),
+                           ("text_year.json", '{"bah_year": "2026"}')):
+            profiles = self.d / name
+            if text is not None:
+                profiles.write_text(text, encoding="utf-8")
+            p = run("zillow_to_mha.py", "--series", "zori", "--csv", str(self.zori), "--crosswalk", str(self.crosswalk),
+                    "--rate-components", str(self.components), "--out", str(self.out), "--profiles", str(profiles))
+            self.assertNotEqual(p.returncode, 0, name)
+            self.assertIn("bah_year", p.stderr, name)
+            self.assertIn("--window", p.stderr, name)
+            self.assertNotIn("Traceback", p.stderr, name)
+
     def test_zori_requires_components(self) -> None:
         p = run("zillow_to_mha.py", "--series", "zori", "--csv", str(self.zori),
                 "--crosswalk", str(self.crosswalk), "--out", str(self.out))

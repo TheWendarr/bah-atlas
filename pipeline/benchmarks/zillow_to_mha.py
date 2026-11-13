@@ -204,9 +204,8 @@ def main() -> None:
         agg.die(TOOL, "B8 is the utilities-adjusted ZORI: pass --rate-components (B5 rate_components.csv)")
     if not args.csv.exists():
         agg.die(TOOL, f"input not found: {args.csv} (run `make fetch`)")
-    window_spec = args.window or agg.default_window(args.profiles)
     try:
-        window = agg.parse_window(window_spec)
+        window = agg.parse_window(args.window or agg.default_window(args.profiles))
     except ValueError as e:
         agg.die(TOOL, str(e))
 
